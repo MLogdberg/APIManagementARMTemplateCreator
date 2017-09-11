@@ -1,0 +1,1931 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "service_ibizmalotest_name": {
+      "defaultValue": "ibizmalotest",
+      "type": "String"
+    },
+    "apis_echo_api_name": {
+      "defaultValue": "ibizmalotest/echo-api",
+      "type": "String"
+    },
+    "groups_administrators_name": {
+      "defaultValue": "ibizmalotest/administrators",
+      "type": "String"
+    },
+    "groups_developers_name": {
+      "defaultValue": "ibizmalotest/developers",
+      "type": "String"
+    },
+    "groups_guests_name": {
+      "defaultValue": "ibizmalotest/guests",
+      "type": "String"
+    },
+    "policies_policy_name": {
+      "defaultValue": "ibizmalotest/policy",
+      "type": "String"
+    },
+    "products_starter_name": {
+      "defaultValue": "ibizmalotest/starter",
+      "type": "String"
+    },
+    "products_unlimited_name": {
+      "defaultValue": "ibizmalotest/unlimited",
+      "type": "String"
+    },
+    "subscriptions_598619205ae91f007b070001_name": {
+      "defaultValue": "ibizmalotest/598619205ae91f007b070001",
+      "type": "String"
+    },
+    "subscriptions_598619205ae91f007b070002_name": {
+      "defaultValue": "ibizmalotest/598619205ae91f007b070002",
+      "type": "String"
+    },
+    "templates_ApplicationApprovedNotificationMessage_name": {
+      "defaultValue": "ibizmalotest/ApplicationApprovedNotificationMessage",
+      "type": "String"
+    },
+    "templates_AccountClosedDeveloper_name": {
+      "defaultValue": "ibizmalotest/AccountClosedDeveloper",
+      "type": "String"
+    },
+    "templates_QuotaLimitApproachingDeveloperNotificationMessage_name": {
+      "defaultValue": "ibizmalotest/QuotaLimitApproachingDeveloperNotificationMessage",
+      "type": "String"
+    },
+    "templates_NewDeveloperNotificationMessage_name": {
+      "defaultValue": "ibizmalotest/NewDeveloperNotificationMessage",
+      "type": "String"
+    },
+    "templates_EmailChangeIdentityDefault_name": {
+      "defaultValue": "ibizmalotest/EmailChangeIdentityDefault",
+      "type": "String"
+    },
+    "templates_InviteUserNotificationMessage_name": {
+      "defaultValue": "ibizmalotest/InviteUserNotificationMessage",
+      "type": "String"
+    },
+    "templates_NewCommentNotificationMessage_name": {
+      "defaultValue": "ibizmalotest/NewCommentNotificationMessage",
+      "type": "String"
+    },
+    "templates_ConfirmSignUpIdentityDefault_name": {
+      "defaultValue": "ibizmalotest/ConfirmSignUpIdentityDefault",
+      "type": "String"
+    },
+    "templates_NewIssueNotificationMessage_name": {
+      "defaultValue": "ibizmalotest/NewIssueNotificationMessage",
+      "type": "String"
+    },
+    "templates_PurchaseDeveloperNotificationMessage_name": {
+      "defaultValue": "ibizmalotest/PurchaseDeveloperNotificationMessage",
+      "type": "String"
+    },
+    "templates_PasswordResetIdentityDefault_name": {
+      "defaultValue": "ibizmalotest/PasswordResetIdentityDefault",
+      "type": "String"
+    },
+    "templates_PasswordResetByAdminNotificationMessage_name": {
+      "defaultValue": "ibizmalotest/PasswordResetByAdminNotificationMessage",
+      "type": "String"
+    },
+    "templates_RejectDeveloperNotificationMessage_name": {
+      "defaultValue": "ibizmalotest/RejectDeveloperNotificationMessage",
+      "type": "String"
+    },
+    "templates_RequestDeveloperNotificationMessage_name": {
+      "defaultValue": "ibizmalotest/RequestDeveloperNotificationMessage",
+      "type": "String"
+    },
+    "users_1_name": {
+      "defaultValue": "ibizmalotest/1",
+      "type": "String"
+    },
+    "operations_create_resource_name": {
+      "defaultValue": "ibizmalotest/echo-api/create-resource",
+      "type": "String"
+    },
+    "operations_modify_resource_name": {
+      "defaultValue": "ibizmalotest/echo-api/modify-resource",
+      "type": "String"
+    },
+    "operations_remove_resource_name": {
+      "defaultValue": "ibizmalotest/echo-api/remove-resource",
+      "type": "String"
+    },
+    "operations_retrieve_header_only_name": {
+      "defaultValue": "ibizmalotest/echo-api/retrieve-header-only",
+      "type": "String"
+    },
+    "operations_retrieve_resource_name": {
+      "defaultValue": "ibizmalotest/echo-api/retrieve-resource",
+      "type": "String"
+    },
+    "operations_retrieve_resource_cached_name": {
+      "defaultValue": "ibizmalotest/echo-api/retrieve-resource-cached",
+      "type": "String"
+    },
+    "policies_policy_name_1": {
+      "defaultValue": "ibizmalotest/echo-api/create-resource/policy",
+      "type": "String"
+    },
+    "policies_policy_name_2": {
+      "defaultValue": "ibizmalotest/echo-api/retrieve-header-only/policy",
+      "type": "String"
+    },
+    "policies_policy_name_3": {
+      "defaultValue": "ibizmalotest/echo-api/retrieve-resource-cached/policy",
+      "type": "String"
+    },
+    "users_1_name_1": {
+      "defaultValue": "ibizmalotest/1",
+      "type": "String"
+    },
+    "users_1_name_2": {
+      "defaultValue": "ibizmalotest/1",
+      "type": "String"
+    },
+    "apis_echo_api_name_1": {
+      "defaultValue": "ibizmalotest/echo-api",
+      "type": "String"
+    },
+    "groups_administrators_name_1": {
+      "defaultValue": "ibizmalotest/administrators",
+      "type": "String"
+    },
+    "groups_developers_name_1": {
+      "defaultValue": "ibizmalotest/developers",
+      "type": "String"
+    },
+    "groups_guests_name_1": {
+      "defaultValue": "ibizmalotest/guests",
+      "type": "String"
+    },
+    "policies_policy_name_4": {
+      "defaultValue": "ibizmalotest/starter/policy",
+      "type": "String"
+    },
+    "operations_create_resource_name_1": {
+      "defaultValue": "ibizmalotest/echo-api/create-resource",
+      "type": "String"
+    },
+    "operations_modify_resource_name_1": {
+      "defaultValue": "ibizmalotest/echo-api/modify-resource",
+      "type": "String"
+    },
+    "operations_remove_resource_name_1": {
+      "defaultValue": "ibizmalotest/echo-api/remove-resource",
+      "type": "String"
+    },
+    "operations_retrieve_header_only_name_1": {
+      "defaultValue": "ibizmalotest/echo-api/retrieve-header-only",
+      "type": "String"
+    },
+    "operations_retrieve_resource_name_1": {
+      "defaultValue": "ibizmalotest/echo-api/retrieve-resource",
+      "type": "String"
+    },
+    "operations_retrieve_resource_cached_name_1": {
+      "defaultValue": "ibizmalotest/echo-api/retrieve-resource-cached",
+      "type": "String"
+    },
+    "policies_policy_name_5": {
+      "defaultValue": "ibizmalotest/echo-api/create-resource/policy",
+      "type": "String"
+    },
+    "policies_policy_name_6": {
+      "defaultValue": "ibizmalotest/echo-api/retrieve-header-only/policy",
+      "type": "String"
+    },
+    "policies_policy_name_7": {
+      "defaultValue": "ibizmalotest/echo-api/retrieve-resource-cached/policy",
+      "type": "String"
+    },
+    "users_1_name_3": {
+      "defaultValue": "ibizmalotest/1",
+      "type": "String"
+    },
+    "users_1_name_4": {
+      "defaultValue": "ibizmalotest/1",
+      "type": "String"
+    },
+    "apis_echo_api_name_2": {
+      "defaultValue": "ibizmalotest/echo-api",
+      "type": "String"
+    },
+    "groups_administrators_name_2": {
+      "defaultValue": "ibizmalotest/administrators",
+      "type": "String"
+    },
+    "groups_developers_name_2": {
+      "defaultValue": "ibizmalotest/developers",
+      "type": "String"
+    },
+    "groups_guests_name_2": {
+      "defaultValue": "ibizmalotest/guests",
+      "type": "String"
+    },
+    "operations_create_resource_name_2": {
+      "defaultValue": "ibizmalotest/echo-api/create-resource",
+      "type": "String"
+    },
+    "operations_modify_resource_name_2": {
+      "defaultValue": "ibizmalotest/echo-api/modify-resource",
+      "type": "String"
+    },
+    "operations_remove_resource_name_2": {
+      "defaultValue": "ibizmalotest/echo-api/remove-resource",
+      "type": "String"
+    },
+    "operations_retrieve_header_only_name_2": {
+      "defaultValue": "ibizmalotest/echo-api/retrieve-header-only",
+      "type": "String"
+    },
+    "operations_retrieve_resource_name_2": {
+      "defaultValue": "ibizmalotest/echo-api/retrieve-resource",
+      "type": "String"
+    },
+    "operations_retrieve_resource_cached_name_2": {
+      "defaultValue": "ibizmalotest/echo-api/retrieve-resource-cached",
+      "type": "String"
+    },
+    "policies_policy_name_8": {
+      "defaultValue": "ibizmalotest/echo-api/create-resource/policy",
+      "type": "String"
+    },
+    "policies_policy_name_9": {
+      "defaultValue": "ibizmalotest/echo-api/retrieve-header-only/policy",
+      "type": "String"
+    },
+    "policies_policy_name_10": {
+      "defaultValue": "ibizmalotest/echo-api/retrieve-resource-cached/policy",
+      "type": "String"
+    },
+    "users_1_name_5": {
+      "defaultValue": "ibizmalotest/1",
+      "type": "String"
+    },
+    "users_1_name_6": {
+      "defaultValue": "ibizmalotest/1",
+      "type": "String"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest'.",
+      "type": "Microsoft.ApiManagement/service",
+      "sku": {
+        "name": "Developer",
+        "capacity": 1
+      },
+      "name": "[parameters('service_ibizmalotest_name')]",
+      "apiVersion": "2017-03-01",
+      "location": "West Europe",
+      "tags": {},
+      "scale": null,
+      "properties": {
+        "publisherEmail": "mattias.logdberg@ibiz-solutions.se",
+        "publisherName": "Mattias Lögdberg",
+        "notificationSenderEmail": "apimgmt-noreply@mail.windowsazure.com",
+        "hostnameConfigurations": [],
+        "additionalLocations": null,
+        "virtualNetworkConfiguration": null,
+        "customProperties": null,
+        "virtualNetworkType": "None"
+      },
+      "dependsOn": []
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api'.",
+      "type": "Microsoft.ApiManagement/service/apis",
+      "name": "[parameters('apis_echo_api_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Echo API",
+        "apiRevision": "1",
+        "description": null,
+        "serviceUrl": "http://echoapi.cloudapp.net/api",
+        "path": "echo",
+        "protocols": [
+          "https"
+        ],
+        "authenticationSettings": null,
+        "subscriptionKeyParameterNames": null,
+        "isCurrent": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/groups/administrators'.",
+      "type": "Microsoft.ApiManagement/service/groups",
+      "name": "[parameters('groups_administrators_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Administrators",
+        "description": "Administrators is a built-in group. Its membership is managed by the system. Microsoft Azure subscription administrators fall into this group.",
+        "type": "system",
+        "externalId": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/groups/developers'.",
+      "type": "Microsoft.ApiManagement/service/groups",
+      "name": "[parameters('groups_developers_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Developers",
+        "description": "Developers is a built-in group. Its membership is managed by the system. Signed-in users fall into this group.",
+        "type": "system",
+        "externalId": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/groups/guests'.",
+      "type": "Microsoft.ApiManagement/service/groups",
+      "name": "[parameters('groups_guests_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Guests",
+        "description": "Guests is a built-in group. Its membership is managed by the system. Unauthenticated users visiting the developer portal fall into this group.",
+        "type": "system",
+        "externalId": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/policies/policy'.",
+      "type": "Microsoft.ApiManagement/service/policies",
+      "name": "[parameters('policies_policy_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "policyContent": "<!--\r\n    IMPORTANT:\r\n    - Policy elements can appear only within the <inbound>, <outbound>, <backend> section elements.\r\n    - Only the <forward-request> policy element can appear within the <backend> section element.\r\n    - To apply a policy to the incoming request (before it is forwarded to the backend service), place a corresponding policy element within the <inbound> section element.\r\n    - To apply a policy to the outgoing response (before it is sent back to the caller), place a corresponding policy element within the <outbound> section element.\r\n    - To add a policy position the cursor at the desired insertion point and click on the round button associated with the policy.\r\n    - To remove a policy, delete the corresponding policy statement from the policy document.\r\n    - Policies are applied in the order of their appearance, from the top down.\r\n-->\r\n<policies>\r\n  <inbound />\r\n  <backend>\r\n    <forward-request />\r\n  </backend>\r\n  <outbound />\r\n</policies>"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/products/starter'.",
+      "type": "Microsoft.ApiManagement/service/products",
+      "name": "[parameters('products_starter_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Starter",
+        "description": "Subscribers will be able to run 5 calls/minute up to a maximum of 100 calls/week.",
+        "terms": "",
+        "subscriptionRequired": true,
+        "approvalRequired": false,
+        "subscriptionsLimit": 1,
+        "state": "published"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/products/unlimited'.",
+      "type": "Microsoft.ApiManagement/service/products",
+      "name": "[parameters('products_unlimited_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Unlimited",
+        "description": "Subscribers have completely unlimited access to the API. Administrator approval is required.",
+        "terms": null,
+        "subscriptionRequired": true,
+        "approvalRequired": true,
+        "subscriptionsLimit": 1,
+        "state": "published"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/subscriptions/598619205ae91f007b070001'.",
+      "type": "Microsoft.ApiManagement/service/subscriptions",
+      "name": "[parameters('subscriptions_598619205ae91f007b070001_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "userId": "[resourceId('Microsoft.ApiManagement/service/users', parameters('users_1_name'))]",
+        "productId": "[resourceId('Microsoft.ApiManagement/service/products', parameters('products_starter_name'))]",
+        "displayName": null,
+        "state": "active",
+        "primaryKey": "9950d33fd11547b6a229643fceecb509",
+        "secondaryKey": "a73d6f65c4bb414f8319d150167f0e0b"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/users', parameters('users_1_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/products', parameters('products_starter_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/subscriptions/598619205ae91f007b070002'.",
+      "type": "Microsoft.ApiManagement/service/subscriptions",
+      "name": "[parameters('subscriptions_598619205ae91f007b070002_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "userId": "[resourceId('Microsoft.ApiManagement/service/users', parameters('users_1_name'))]",
+        "productId": "[resourceId('Microsoft.ApiManagement/service/products', parameters('products_unlimited_name'))]",
+        "displayName": null,
+        "state": "active",
+        "primaryKey": "35046dda64194123979e4f150625bb9a",
+        "secondaryKey": "b5ec7721e0e541bf9d1f36e3398c52d9"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/users', parameters('users_1_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/products', parameters('products_unlimited_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/templates/ApplicationApprovedNotificationMessage'.",
+      "type": "Microsoft.ApiManagement/service/templates",
+      "name": "[parameters('templates_ApplicationApprovedNotificationMessage_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "subject": "Your application $AppName is published in the application gallery",
+        "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          We are happy to let you know that your request to publish the $AppName application in the application gallery has been approved. Your application has been published and can be viewed <a href=\"http://$DevPortalUrl/Applications/Details/$AppId\">here</a>.\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Best,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">The $OrganizationName API Team</p>\r\n  </body>\r\n</html>",
+        "title": "Application gallery submission approved",
+        "description": "Developers who submitted their application for publication in the application gallery on the developer portal receive this email after their submission is approved.",
+        "parameters": [
+          {
+            "name": "AppId",
+            "title": "Application id",
+            "description": null
+          },
+          {
+            "name": "AppName",
+            "title": "Application name",
+            "description": null
+          },
+          {
+            "name": "DevFirstName",
+            "title": "Developer first name",
+            "description": null
+          },
+          {
+            "name": "DevLastName",
+            "title": "Developer last name",
+            "description": null
+          },
+          {
+            "name": "OrganizationName",
+            "title": "Organization name",
+            "description": null
+          },
+          {
+            "name": "DevPortalUrl",
+            "title": "Developer portal URL",
+            "description": null
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/templates/AccountClosedDeveloper'.",
+      "type": "Microsoft.ApiManagement/service/templates",
+      "name": "[parameters('templates_AccountClosedDeveloper_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "subject": "Thank you for using the $OrganizationName API!",
+        "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          On behalf of $OrganizationName and our customers we thank you for giving us a try. Your $OrganizationName API account is now closed.\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Your $OrganizationName Team</p>\r\n    <a href=\"$DevPortalUrl\">$DevPortalUrl</a>\r\n    <p />\r\n  </body>\r\n</html>",
+        "title": "Developer farewell letter",
+        "description": "Developers receive this fairwell email after they close their account.",
+        "parameters": [
+          {
+            "name": "DevFirstName",
+            "title": "Developer first name",
+            "description": null
+          },
+          {
+            "name": "DevLastName",
+            "title": "Developer last name",
+            "description": null
+          },
+          {
+            "name": "OrganizationName",
+            "title": "Organization name",
+            "description": null
+          },
+          {
+            "name": "DevPortalUrl",
+            "title": "Developer portal URL",
+            "description": null
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/templates/QuotaLimitApproachingDeveloperNotificationMessage'.",
+      "type": "Microsoft.ApiManagement/service/templates",
+      "name": "[parameters('templates_QuotaLimitApproachingDeveloperNotificationMessage_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "subject": "You are approaching an API quota limit",
+        "body": "<!DOCTYPE html >\r\n<html>\r\n  <head>\r\n    <style>\r\n          body {font-size:12pt; font-family:\"Segoe UI\",\"Segoe WP\",\"Tahoma\",\"Arial\",\"sans-serif\";}\r\n          .alert { color: red; }\r\n          .child1 { padding-left: 20px; }\r\n          .child2 { padding-left: 40px; }\r\n          .number { text-align: right; }\r\n          .text { text-align: left; }\r\n          th, td { padding: 4px 10px; min-width: 100px; }\r\n          th { background-color: #DDDDDD;}\r\n        </style>\r\n  </head>\r\n  <body>\r\n    <p>Greetings $DevFirstName $DevLastName!</p>\r\n    <p>\r\n          You are approaching the quota limit on you subscription to the <strong>$ProdName</strong> product (primary key $SubPrimaryKey).\r\n          #if ($QuotaResetDate != \"\")\r\n          This quota will be renewed on $QuotaResetDate.\r\n          #else\r\n          This quota will not be renewed.\r\n          #end\r\n        </p>\r\n    <p>Below are details on quota usage for the subscription:</p>\r\n    <p>\r\n      <table>\r\n        <thead>\r\n          <th class=\"text\">Quota Scope</th>\r\n          <th class=\"number\">Calls</th>\r\n          <th class=\"number\">Call Quota</th>\r\n          <th class=\"number\">Bandwidth</th>\r\n          <th class=\"number\">Bandwidth Quota</th>\r\n        </thead>\r\n        <tbody>\r\n          <tr>\r\n            <td class=\"text\">Subscription</td>\r\n            <td class=\"number\">\r\n                  #if ($CallsAlert == true)\r\n                  <span class=\"alert\">$Calls</span>\r\n                  #else\r\n                  $Calls\r\n                  #end\r\n                </td>\r\n            <td class=\"number\">$CallQuota</td>\r\n            <td class=\"number\">\r\n                  #if ($BandwidthAlert == true)\r\n                  <span class=\"alert\">$Bandwidth</span>\r\n                  #else\r\n                  $Bandwidth\r\n                  #end\r\n                </td>\r\n            <td class=\"number\">$BandwidthQuota</td>\r\n          </tr>\r\n              #foreach ($api in $Apis)\r\n              <tr><td class=\"child1 text\">API: $api.Name</td><td class=\"number\">\r\n                  #if ($api.CallsAlert == true)\r\n                  <span class=\"alert\">$api.Calls</span>\r\n                  #else\r\n                  $api.Calls\r\n                  #end\r\n                </td><td class=\"number\">$api.CallQuota</td><td class=\"number\">\r\n                  #if ($api.BandwidthAlert == true)\r\n                  <span class=\"alert\">$api.Bandwidth</span>\r\n                  #else\r\n                  $api.Bandwidth\r\n                  #end\r\n                </td><td class=\"number\">$api.BandwidthQuota</td></tr>\r\n              #foreach ($operation in $api.Operations)\r\n              <tr><td class=\"child2 text\">Operation: $operation.Name</td><td class=\"number\">\r\n                  #if ($operation.CallsAlert == true)\r\n                  <span class=\"alert\">$operation.Calls</span>\r\n                  #else\r\n                  $operation.Calls\r\n                  #end\r\n                </td><td class=\"number\">$operation.CallQuota</td><td class=\"number\">\r\n                  #if ($operation.BandwidthAlert == true)\r\n                  <span class=\"alert\">$operation.Bandwidth</span>\r\n                  #else\r\n                  $operation.Bandwidth\r\n                  #end\r\n                </td><td class=\"number\">$operation.BandwidthQuota</td></tr>\r\n              #end\r\n              #end\r\n            </tbody>\r\n      </table>\r\n    </p>\r\n    <p>Thank you,</p>\r\n    <p>$OrganizationName API Team</p>\r\n    <a href=\"$DevPortalUrl\">$DevPortalUrl</a>\r\n    <p />\r\n  </body>\r\n</html>",
+        "title": "Developer quota limit approaching notification",
+        "description": "Developers receive this email to alert them when they are approaching a quota limit.",
+        "parameters": [
+          {
+            "name": "DevFirstName",
+            "title": "Developer first name",
+            "description": null
+          },
+          {
+            "name": "DevLastName",
+            "title": "Developer last name",
+            "description": null
+          },
+          {
+            "name": "ProdName",
+            "title": "Product name",
+            "description": null
+          },
+          {
+            "name": "OrganizationName",
+            "title": "Organization name",
+            "description": null
+          },
+          {
+            "name": "SubPrimaryKey",
+            "title": "Primary Subscription key",
+            "description": null
+          },
+          {
+            "name": "DevPortalUrl",
+            "title": "Developer portal URL",
+            "description": null
+          },
+          {
+            "name": "QuotaResetDate",
+            "title": "Quota reset date",
+            "description": null
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/templates/NewDeveloperNotificationMessage'.",
+      "type": "Microsoft.ApiManagement/service/templates",
+      "name": "[parameters('templates_NewDeveloperNotificationMessage_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "subject": "Welcome to the $OrganizationName API!",
+        "body": "<!DOCTYPE html >\r\n<html>\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <title>Letter</title>\r\n  </head>\r\n  <body>\r\n    <h1 style=\"color:#000505;font-size:18pt;font-family:'Segoe UI'\">\r\n          Welcome to <span style=\"color:#003363\">$OrganizationName API!</span></h1>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Your $OrganizationName API program registration is completed and we are thrilled to have you as a customer. Here are a few important bits of information for your reference:</p>\r\n    <table width=\"100%\" style=\"margin:20px 0\">\r\n      <tr>\r\n            #if ($IdentityProvider == \"Basic\")\r\n            <td width=\"50%\" style=\"height:40px;vertical-align:top;font-family:'Segoe UI';font-size:12pt\">\r\n              Please use the following <strong>username</strong> when signing into any of the ${OrganizationName}-hosted developer portals:\r\n            </td><td style=\"vertical-align:top;font-family:'Segoe UI';font-size:12pt\"><strong>$DevUsername</strong></td>\r\n            #else\r\n            <td width=\"50%\" style=\"height:40px;vertical-align:top;font-family:'Segoe UI';font-size:12pt\">\r\n              Please use the following <strong>$IdentityProvider account</strong> when signing into any of the ${OrganizationName}-hosted developer portals:\r\n            </td><td style=\"vertical-align:top;font-family:'Segoe UI';font-size:12pt\"><strong>$DevUsername</strong></td>            \r\n            #end\r\n          </tr>\r\n      <tr>\r\n        <td style=\"height:40px;vertical-align:top;font-family:'Segoe UI';font-size:12pt\">\r\n              We will direct all communications to the following <strong>email address</strong>:\r\n            </td>\r\n        <td style=\"vertical-align:top;font-family:'Segoe UI';font-size:12pt\">\r\n          <a href=\"mailto:$DevEmail\" style=\"text-decoration:none\">\r\n            <strong>$DevEmail</strong>\r\n          </a>\r\n        </td>\r\n      </tr>\r\n    </table>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Best of luck in your API pursuits!</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">$OrganizationName API Team</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n      <a href=\"$DevPortalUrl\">$DevPortalUrl</a>\r\n    </p>\r\n  </body>\r\n</html>",
+        "title": "Developer welcome letter",
+        "description": "Developers receive this “welcome” email after they confirm their new account.",
+        "parameters": [
+          {
+            "name": "DevFirstName",
+            "title": "Developer first name",
+            "description": null
+          },
+          {
+            "name": "DevLastName",
+            "title": "Developer last name",
+            "description": null
+          },
+          {
+            "name": "DevUsername",
+            "title": "Developer user name",
+            "description": null
+          },
+          {
+            "name": "DevEmail",
+            "title": "Developer email",
+            "description": null
+          },
+          {
+            "name": "OrganizationName",
+            "title": "Organization name",
+            "description": null
+          },
+          {
+            "name": "DevPortalUrl",
+            "title": "Developer portal URL",
+            "description": null
+          },
+          {
+            "name": "IdentityProvider",
+            "title": "Identity Provider selected by Organization",
+            "description": null
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/templates/EmailChangeIdentityDefault'.",
+      "type": "Microsoft.ApiManagement/service/templates",
+      "name": "[parameters('templates_EmailChangeIdentityDefault_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "subject": "Please confirm the new email associated with your $OrganizationName API account",
+        "body": "<!DOCTYPE html >\r\n<html>\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <title>Letter</title>\r\n  </head>\r\n  <body>\r\n    <table width=\"100%\">\r\n      <tr>\r\n        <td>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\"></p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">You are receiving this email because you made a change to the email address on your $OrganizationName API account.</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Please click on the following link to confirm the change:</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            <a id=\"confirmUrl\" href=\"$ConfirmUrl\" style=\"text-decoration:none\">\r\n              <strong>$ConfirmUrl</strong>\r\n            </a>\r\n          </p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">If clicking the link does not work, please copy-and-paste or re-type it into your browser's address bar and hit \"Enter\".</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">$OrganizationName API Team</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            <a href=\"$DevPortalUrl\">$DevPortalUrl</a>\r\n          </p>\r\n        </td>\r\n      </tr>\r\n    </table>\r\n  </body>\r\n</html>",
+        "title": "Email change confirmation",
+        "description": "Developers receive this email to confirm a new e-mail address after they change their existing one associated with their account.",
+        "parameters": [
+          {
+            "name": "DevFirstName",
+            "title": "Developer first name",
+            "description": null
+          },
+          {
+            "name": "DevLastName",
+            "title": "Developer last name",
+            "description": null
+          },
+          {
+            "name": "OrganizationName",
+            "title": "Organization name",
+            "description": null
+          },
+          {
+            "name": "DevPortalUrl",
+            "title": "Developer portal URL",
+            "description": null
+          },
+          {
+            "name": "ConfirmUrl",
+            "title": "Developer confirmation URL",
+            "description": null
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/templates/InviteUserNotificationMessage'.",
+      "type": "Microsoft.ApiManagement/service/templates",
+      "name": "[parameters('templates_InviteUserNotificationMessage_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "subject": "You are invited to join the $OrganizationName developer network",
+        "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          Your account has been created. Please follow the link below to visit the $OrganizationName developer portal and claim it:\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n      <a href=\"$ConfirmUrl\">$ConfirmUrl</a>\r\n    </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Best,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">The $OrganizationName API Team</p>\r\n  </body>\r\n</html>",
+        "title": "Invite user",
+        "description": "An e-mail invitation to create an account, sent on request by API publishers.",
+        "parameters": [
+          {
+            "name": "OrganizationName",
+            "title": "Organization name",
+            "description": null
+          },
+          {
+            "name": "DevFirstName",
+            "title": "Developer first name",
+            "description": null
+          },
+          {
+            "name": "DevLastName",
+            "title": "Developer last name",
+            "description": null
+          },
+          {
+            "name": "ConfirmUrl",
+            "title": "Confirmation link",
+            "description": null
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/templates/NewCommentNotificationMessage'.",
+      "type": "Microsoft.ApiManagement/service/templates",
+      "name": "[parameters('templates_NewCommentNotificationMessage_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "subject": "$IssueName issue has a new comment",
+        "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">This is a brief note to let you know that $CommenterFirstName $CommenterLastName made the following comment on the issue $IssueName you created:</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">$CommentText</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          To view the issue on the developer portal click <a href=\"http://$DevPortalUrl/issues/$IssueId\">here</a>.\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Best,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">The $OrganizationName API Team</p>\r\n  </body>\r\n</html>",
+        "title": "New comment added to an issue",
+        "description": "Developers receive this email when someone comments on the issue they created on the Issues page of the developer portal.",
+        "parameters": [
+          {
+            "name": "DevFirstName",
+            "title": "Developer first name",
+            "description": null
+          },
+          {
+            "name": "DevLastName",
+            "title": "Developer last name",
+            "description": null
+          },
+          {
+            "name": "CommenterFirstName",
+            "title": "Commenter first name",
+            "description": null
+          },
+          {
+            "name": "CommenterLastName",
+            "title": "Commenter last name",
+            "description": null
+          },
+          {
+            "name": "IssueId",
+            "title": "Issue id",
+            "description": null
+          },
+          {
+            "name": "IssueName",
+            "title": "Issue name",
+            "description": null
+          },
+          {
+            "name": "CommentText",
+            "title": "Comment text",
+            "description": null
+          },
+          {
+            "name": "OrganizationName",
+            "title": "Organization name",
+            "description": null
+          },
+          {
+            "name": "DevPortalUrl",
+            "title": "Developer portal URL",
+            "description": null
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/templates/ConfirmSignUpIdentityDefault'.",
+      "type": "Microsoft.ApiManagement/service/templates",
+      "name": "[parameters('templates_ConfirmSignUpIdentityDefault_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "subject": "Please confirm your new $OrganizationName API account",
+        "body": "<!DOCTYPE html >\r\n<html>\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <title>Letter</title>\r\n  </head>\r\n  <body>\r\n    <table width=\"100%\">\r\n      <tr>\r\n        <td>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\"></p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you for joining the $OrganizationName API program! We host a growing number of cool APIs and strive to provide an awesome experience for API developers.</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">First order of business is to activate your account and get you going. To that end, please click on the following link:</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            <a id=\"confirmUrl\" href=\"$ConfirmUrl\" style=\"text-decoration:none\">\r\n              <strong>$ConfirmUrl</strong>\r\n            </a>\r\n          </p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">If clicking the link does not work, please copy-and-paste or re-type it into your browser's address bar and hit \"Enter\".</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">$OrganizationName API Team</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            <a href=\"$DevPortalUrl\">$DevPortalUrl</a>\r\n          </p>\r\n        </td>\r\n      </tr>\r\n    </table>\r\n  </body>\r\n</html>",
+        "title": "New developer account confirmation",
+        "description": "Developers receive this email to confirm their e-mail address after they sign up for a new account.",
+        "parameters": [
+          {
+            "name": "DevFirstName",
+            "title": "Developer first name",
+            "description": null
+          },
+          {
+            "name": "DevLastName",
+            "title": "Developer last name",
+            "description": null
+          },
+          {
+            "name": "OrganizationName",
+            "title": "Organization name",
+            "description": null
+          },
+          {
+            "name": "DevPortalUrl",
+            "title": "Developer portal URL",
+            "description": null
+          },
+          {
+            "name": "ConfirmUrl",
+            "title": "Developer activation URL",
+            "description": null
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/templates/NewIssueNotificationMessage'.",
+      "type": "Microsoft.ApiManagement/service/templates",
+      "name": "[parameters('templates_NewIssueNotificationMessage_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "subject": "Your request $IssueName was received",
+        "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you for contacting us. Our API team will review your issue and get back to you soon.</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          Click this <a href=\"http://$DevPortalUrl/issues/$IssueId\">link</a> to view or edit your request.\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Best,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">The $OrganizationName API Team</p>\r\n  </body>\r\n</html>",
+        "title": "New issue received",
+        "description": "This email is sent to developers after they create a new topic on the Issues page of the developer portal.",
+        "parameters": [
+          {
+            "name": "DevFirstName",
+            "title": "Developer first name",
+            "description": null
+          },
+          {
+            "name": "DevLastName",
+            "title": "Developer last name",
+            "description": null
+          },
+          {
+            "name": "IssueId",
+            "title": "Issue id",
+            "description": null
+          },
+          {
+            "name": "IssueName",
+            "title": "Issue name",
+            "description": null
+          },
+          {
+            "name": "OrganizationName",
+            "title": "Organization name",
+            "description": null
+          },
+          {
+            "name": "DevPortalUrl",
+            "title": "Developer portal URL",
+            "description": null
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/templates/PurchaseDeveloperNotificationMessage'.",
+      "type": "Microsoft.ApiManagement/service/templates",
+      "name": "[parameters('templates_PurchaseDeveloperNotificationMessage_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "subject": "Your subscription to the $ProdName",
+        "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Greetings $DevFirstName $DevLastName!</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          Thank you for subscribing to the <strong>$ProdName</strong> and welcome to the $OrganizationName developer community. We are delighted to have you as part of the team and are looking forward to the amazing applications you will build using our API!\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Below are a few subscription details for your reference:</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n      <ul>\r\n            #if ($SubStartDate != \"\")\r\n            <li style=\"font-size:12pt;font-family:'Segoe UI'\">Start date: $SubStartDate</li>\r\n            #end\r\n            \r\n            #if ($SubTerm != \"\")\r\n            <li style=\"font-size:12pt;font-family:'Segoe UI'\">Subscription term: $SubTerm</li>\r\n            #end\r\n          </ul>\r\n    </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            Visit the developer <a href=\"http://$DevPortalUrl/developer\">profile area</a> to manage your subscription and subscription keys\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">A couple of pointers to help get you started:</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n      <strong>\r\n        <a href=\"http://$DevPortalUrl/docs/services\">Learn about the API</a>\r\n      </strong>\r\n    </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">The API documentation provides all information necessary to make a request and to process a response. Code samples are provided per API operation in a variety of languages. Moreover, an interactive console allows making API calls directly from the developer portal without writing any code.</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n      <strong>\r\n        <a href=\"http://$DevPortalUrl/applications\">Feature your app in the app gallery</a>\r\n      </strong>\r\n    </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">You can publish your application on our gallery for increased visibility to potential new users.</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n      <strong>\r\n        <a href=\"http://$DevPortalUrl/issues\">Stay in touch</a>\r\n      </strong>\r\n    </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          If you have an issue, a question, a suggestion, a request, or if you just want to tell us something, go to the <a href=\"http://$DevPortalUrl/issues\">Issues</a> page on the developer portal and create a new topic.\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Happy hacking,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">The $OrganizationName API Team</p>\r\n    <a style=\"font-size:12pt;font-family:'Segoe UI'\" href=\"http://$DevPortalUrl\">$DevPortalUrl</a>\r\n  </body>\r\n</html>",
+        "title": "New subscription activated",
+        "description": "Developers receive this acknowledgement email after subscribing to a product.",
+        "parameters": [
+          {
+            "name": "DevFirstName",
+            "title": "Developer first name",
+            "description": null
+          },
+          {
+            "name": "DevLastName",
+            "title": "Developer last name",
+            "description": null
+          },
+          {
+            "name": "ProdName",
+            "title": "Product name",
+            "description": null
+          },
+          {
+            "name": "OrganizationName",
+            "title": "Organization name",
+            "description": null
+          },
+          {
+            "name": "SubStartDate",
+            "title": "Subscription start date",
+            "description": null
+          },
+          {
+            "name": "SubTerm",
+            "title": "Subscription term",
+            "description": null
+          },
+          {
+            "name": "DevPortalUrl",
+            "title": "Developer portal URL",
+            "description": null
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/templates/PasswordResetIdentityDefault'.",
+      "type": "Microsoft.ApiManagement/service/templates",
+      "name": "[parameters('templates_PasswordResetIdentityDefault_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "subject": "Your password change request",
+        "body": "<!DOCTYPE html >\r\n<html>\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <title>Letter</title>\r\n  </head>\r\n  <body>\r\n    <table width=\"100%\">\r\n      <tr>\r\n        <td>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\"></p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">You are receiving this email because you requested to change the password on your $OrganizationName API account.</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Please click on the link below and follow instructions to create your new password:</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            <a id=\"resetUrl\" href=\"$ConfirmUrl\" style=\"text-decoration:none\">\r\n              <strong>$ConfirmUrl</strong>\r\n            </a>\r\n          </p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">If clicking the link does not work, please copy-and-paste or re-type it into your browser's address bar and hit \"Enter\".</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">$OrganizationName API Team</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            <a href=\"$DevPortalUrl\">$DevPortalUrl</a>\r\n          </p>\r\n        </td>\r\n      </tr>\r\n    </table>\r\n  </body>\r\n</html>",
+        "title": "Password change confirmation",
+        "description": "Developers receive this email when they request a password change of their account. The purpose of the email is to verify that the account owner made the request and to provide a one-time perishable URL for changing the password.",
+        "parameters": [
+          {
+            "name": "DevFirstName",
+            "title": "Developer first name",
+            "description": null
+          },
+          {
+            "name": "DevLastName",
+            "title": "Developer last name",
+            "description": null
+          },
+          {
+            "name": "OrganizationName",
+            "title": "Organization name",
+            "description": null
+          },
+          {
+            "name": "DevPortalUrl",
+            "title": "Developer portal URL",
+            "description": null
+          },
+          {
+            "name": "ConfirmUrl",
+            "title": "Developer new password instruction URL",
+            "description": null
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/templates/PasswordResetByAdminNotificationMessage'.",
+      "type": "Microsoft.ApiManagement/service/templates",
+      "name": "[parameters('templates_PasswordResetByAdminNotificationMessage_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "subject": "Your password was reset",
+        "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <table width=\"100%\">\r\n      <tr>\r\n        <td>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\"></p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">The password of your $OrganizationName API account has been reset, per your request.</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n                Your new password is: <strong>$DevPassword</strong></p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Please make sure to change it next time you sign in.</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">$OrganizationName API Team</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            <a href=\"$DevPortalUrl\">$DevPortalUrl</a>\r\n          </p>\r\n        </td>\r\n      </tr>\r\n    </table>\r\n  </body>\r\n</html>",
+        "title": "Password reset by publisher notification (Password reset by admin)",
+        "description": "Developers receive this email when the publisher resets their password.",
+        "parameters": [
+          {
+            "name": "DevFirstName",
+            "title": "Developer first name",
+            "description": null
+          },
+          {
+            "name": "DevLastName",
+            "title": "Developer last name",
+            "description": null
+          },
+          {
+            "name": "DevPassword",
+            "title": "New Developer password",
+            "description": null
+          },
+          {
+            "name": "OrganizationName",
+            "title": "Organization name",
+            "description": null
+          },
+          {
+            "name": "DevPortalUrl",
+            "title": "Developer portal URL",
+            "description": null
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/templates/RejectDeveloperNotificationMessage'.",
+      "type": "Microsoft.ApiManagement/service/templates",
+      "name": "[parameters('templates_RejectDeveloperNotificationMessage_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "subject": "Your subscription request for the $ProdName",
+        "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          We would like to inform you that we reviewed your subscription request for the <strong>$ProdName</strong>.\r\n        </p>\r\n        #if ($SubDeclineReason == \"\")\r\n        <p style=\"font-size:12pt;font-family:'Segoe UI'\">Regretfully, we were unable to approve it, as subscriptions are temporarily suspended at this time.</p>\r\n        #else\r\n        <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          Regretfully, we were unable to approve it at this time for the following reason:\r\n          <div style=\"margin-left: 1.5em;\"> $SubDeclineReason </div></p>\r\n        #end\r\n        <p style=\"font-size:12pt;font-family:'Segoe UI'\"> We truly appreciate your interest. </p><p style=\"font-size:12pt;font-family:'Segoe UI'\">All the best,</p><p style=\"font-size:12pt;font-family:'Segoe UI'\">The $OrganizationName API Team</p><a style=\"font-size:12pt;font-family:'Segoe UI'\" href=\"http://$DevPortalUrl\">$DevPortalUrl</a></body>\r\n</html>",
+        "title": "Subscription request declined",
+        "description": "This email is sent to developers when their subscription requests for products requiring publisher approval is declined.",
+        "parameters": [
+          {
+            "name": "DevFirstName",
+            "title": "Developer first name",
+            "description": null
+          },
+          {
+            "name": "DevLastName",
+            "title": "Developer last name",
+            "description": null
+          },
+          {
+            "name": "SubDeclineReason",
+            "title": "Reason for declining subscription",
+            "description": null
+          },
+          {
+            "name": "ProdName",
+            "title": "Product name",
+            "description": null
+          },
+          {
+            "name": "OrganizationName",
+            "title": "Organization name",
+            "description": null
+          },
+          {
+            "name": "DevPortalUrl",
+            "title": "Developer portal URL",
+            "description": null
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/templates/RequestDeveloperNotificationMessage'.",
+      "type": "Microsoft.ApiManagement/service/templates",
+      "name": "[parameters('templates_RequestDeveloperNotificationMessage_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "subject": "Your subscription request for the $ProdName",
+        "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          Thank you for your interest in our <strong>$ProdName</strong> API product!\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          We were delighted to receive your subscription request. We will promptly review it and get back to you at <strong>$DevEmail</strong>.\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">The $OrganizationName API Team</p>\r\n    <a style=\"font-size:12pt;font-family:'Segoe UI'\" href=\"http://$DevPortalUrl\">$DevPortalUrl</a>\r\n  </body>\r\n</html>",
+        "title": "Subscription request received",
+        "description": "This email is sent to developers to acknowledge receipt of their subscription requests for products requiring publisher approval.",
+        "parameters": [
+          {
+            "name": "DevFirstName",
+            "title": "Developer first name",
+            "description": null
+          },
+          {
+            "name": "DevLastName",
+            "title": "Developer last name",
+            "description": null
+          },
+          {
+            "name": "DevEmail",
+            "title": "Developer email",
+            "description": null
+          },
+          {
+            "name": "ProdName",
+            "title": "Product name",
+            "description": null
+          },
+          {
+            "name": "OrganizationName",
+            "title": "Organization name",
+            "description": null
+          },
+          {
+            "name": "DevPortalUrl",
+            "title": "Developer portal URL",
+            "description": null
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/users/1'.",
+      "type": "Microsoft.ApiManagement/service/users",
+      "name": "[parameters('users_1_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "firstName": "Administrator",
+        "lastName": "",
+        "email": "mattias.logdberg@ibiz-solutions.se",
+        "state": "active",
+        "note": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/create-resource'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_create_resource_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Create resource",
+        "method": "POST",
+        "urlTemplate": "/resource",
+        "description": "A demonstration of a POST call based on the echo backend above. The request body is expected to contain JSON-formatted data (see example below). A policy is used to automatically transform any request sent in JSON directly to XML. In a real-world scenario this could be used to enable modern clients to speak to a legacy backend.",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/modify-resource'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_modify_resource_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Modify Resource",
+        "method": "PUT",
+        "urlTemplate": "/resource",
+        "description": "A demonstration of a PUT call handled by the same \"echo\" backend as above. You can now specify a request body in addition to headers and it will be returned as well.",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/remove-resource'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_remove_resource_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Remove resource",
+        "method": "DELETE",
+        "urlTemplate": "/resource",
+        "description": "A demonstration of a DELETE call which traditionally deletes the resource. It is based on the same \"echo\" backend as in all other operations so nothing is actually deleted.",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/retrieve-header-only'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_retrieve_header_only_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Retrieve header only",
+        "method": "HEAD",
+        "urlTemplate": "/resource",
+        "description": "The HEAD operation returns only headers. In this demonstration a policy is used to set additional headers when the response is returned and to enable JSONP.",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/retrieve-resource'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_retrieve_resource_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Retrieve resource",
+        "method": "GET",
+        "urlTemplate": "/resource",
+        "description": "A demonstration of a GET call on a sample resource. It is handled by an \"echo\" backend which returns a response equal to the request (the supplied headers and body are being returned as received).",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/retrieve-resource-cached'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_retrieve_resource_cached_name')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Retrieve resource (cached)",
+        "method": "GET",
+        "urlTemplate": "/resource-cached",
+        "description": "A demonstration of a GET call with caching enabled on the same \"echo\" backend as above. Cache TTL is set to 1 hour. When you make the first request the headers you supplied will be cached. Subsequent calls will return the same headers as the first time even if you change them in your request.",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/create-resource/policies/policy'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "name": "[parameters('policies_policy_name_1')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "policyContent": "<policies>\r\n  <inbound>\r\n    <base />\r\n    <json-to-xml apply=\"always\" consider-accept-header=\"false\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n</policies>"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_create_resource_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_create_resource_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_create_resource_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/retrieve-header-only/policies/policy'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "name": "[parameters('policies_policy_name_2')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "policyContent": "<policies>\r\n  <inbound>\r\n    <base />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n    <set-header name=\"X-My-Sample\" exists-action=\"override\">\r\n      <value>This is a sample</value>\r\n      <!-- for multiple headers with the same name add additional value elements -->\r\n    </set-header>\r\n    <jsonp callback-parameter-name=\"ProcessResponse\" />\r\n  </outbound>\r\n</policies>"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_header_only_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_header_only_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_header_only_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/retrieve-resource-cached/policies/policy'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "name": "[parameters('policies_policy_name_3')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "policyContent": "<policies>\r\n  <inbound>\r\n    <base />\r\n    <cache-lookup vary-by-developer=\"false\" vary-by-developer-groups=\"false\">\r\n      <vary-by-header>Accept</vary-by-header>\r\n      <vary-by-header>Accept-Charset</vary-by-header>\r\n    </cache-lookup>\r\n    <rewrite-uri template=\"/resource\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n    <cache-store duration=\"3600\" />\r\n  </outbound>\r\n</policies>"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_resource_cached_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_resource_cached_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_resource_cached_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/users/1'.",
+      "type": "Microsoft.ApiManagement/service/users",
+      "name": "[parameters('users_1_name_1')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "firstName": "Administrator",
+        "lastName": "",
+        "email": "mattias.logdberg@ibiz-solutions.se",
+        "state": "active",
+        "note": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/users/1'.",
+      "type": "Microsoft.ApiManagement/service/users",
+      "name": "[parameters('users_1_name_2')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "firstName": "Administrator",
+        "lastName": "",
+        "email": "mattias.logdberg@ibiz-solutions.se",
+        "state": "active",
+        "note": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api'.",
+      "type": "Microsoft.ApiManagement/service/apis",
+      "name": "[parameters('apis_echo_api_name_1')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Echo API",
+        "apiRevision": "1",
+        "description": null,
+        "serviceUrl": "http://echoapi.cloudapp.net/api",
+        "path": "echo",
+        "protocols": [
+          "https"
+        ],
+        "authenticationSettings": null,
+        "subscriptionKeyParameterNames": null,
+        "isCurrent": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/groups/administrators'.",
+      "type": "Microsoft.ApiManagement/service/groups",
+      "name": "[parameters('groups_administrators_name_1')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Administrators",
+        "description": "Administrators is a built-in group. Its membership is managed by the system. Microsoft Azure subscription administrators fall into this group.",
+        "type": "system",
+        "externalId": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/groups/developers'.",
+      "type": "Microsoft.ApiManagement/service/groups",
+      "name": "[parameters('groups_developers_name_1')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Developers",
+        "description": "Developers is a built-in group. Its membership is managed by the system. Signed-in users fall into this group.",
+        "type": "system",
+        "externalId": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/groups/guests'.",
+      "type": "Microsoft.ApiManagement/service/groups",
+      "name": "[parameters('groups_guests_name_1')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Guests",
+        "description": "Guests is a built-in group. Its membership is managed by the system. Unauthenticated users visiting the developer portal fall into this group.",
+        "type": "system",
+        "externalId": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/products/starter/policies/policy'.",
+      "type": "Microsoft.ApiManagement/service/products/policies",
+      "name": "[parameters('policies_policy_name_4')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "policyContent": "<!--\r\n            IMPORTANT:\r\n            - Policy elements can appear only within the <inbound>, <outbound>, <backend> section elements.\r\n            - Only the <forward-request> policy element can appear within the <backend> section element.\r\n            - To apply a policy to the incoming request (before it is forwarded to the backend service), place a corresponding policy element within the <inbound> section element.\r\n            - To apply a policy to the outgoing response (before it is sent back to the caller), place a corresponding policy element within the <outbound> section element.\r\n            - To add a policy position the cursor at the desired insertion point and click on the round button associated with the policy.\r\n            - To remove a policy, delete the corresponding policy statement from the policy document.\r\n            - Position the <base> element within a section element to inherit all policies from the corresponding section element in the enclosing scope.\r\n            - Remove the <base> element to prevent inheriting policies from the corresponding section element in the enclosing scope.\r\n            - Policies are applied in the order of their appearance, from the top down.\r\n        -->\r\n<policies>\r\n  <inbound>\r\n    <rate-limit calls=\"5\" renewal-period=\"60\" />\r\n    <quota calls=\"100\" renewal-period=\"604800\" />\r\n    <base />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n</policies>"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/products', parameters('products_starter_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/create-resource'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_create_resource_name_1')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Create resource",
+        "method": "POST",
+        "urlTemplate": "/resource",
+        "description": "A demonstration of a POST call based on the echo backend above. The request body is expected to contain JSON-formatted data (see example below). A policy is used to automatically transform any request sent in JSON directly to XML. In a real-world scenario this could be used to enable modern clients to speak to a legacy backend.",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/modify-resource'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_modify_resource_name_1')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Modify Resource",
+        "method": "PUT",
+        "urlTemplate": "/resource",
+        "description": "A demonstration of a PUT call handled by the same \"echo\" backend as above. You can now specify a request body in addition to headers and it will be returned as well.",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/remove-resource'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_remove_resource_name_1')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Remove resource",
+        "method": "DELETE",
+        "urlTemplate": "/resource",
+        "description": "A demonstration of a DELETE call which traditionally deletes the resource. It is based on the same \"echo\" backend as in all other operations so nothing is actually deleted.",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/retrieve-header-only'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_retrieve_header_only_name_1')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Retrieve header only",
+        "method": "HEAD",
+        "urlTemplate": "/resource",
+        "description": "The HEAD operation returns only headers. In this demonstration a policy is used to set additional headers when the response is returned and to enable JSONP.",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/retrieve-resource'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_retrieve_resource_name_1')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Retrieve resource",
+        "method": "GET",
+        "urlTemplate": "/resource",
+        "description": "A demonstration of a GET call on a sample resource. It is handled by an \"echo\" backend which returns a response equal to the request (the supplied headers and body are being returned as received).",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/retrieve-resource-cached'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_retrieve_resource_cached_name_1')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Retrieve resource (cached)",
+        "method": "GET",
+        "urlTemplate": "/resource-cached",
+        "description": "A demonstration of a GET call with caching enabled on the same \"echo\" backend as above. Cache TTL is set to 1 hour. When you make the first request the headers you supplied will be cached. Subsequent calls will return the same headers as the first time even if you change them in your request.",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/create-resource/policies/policy'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "name": "[parameters('policies_policy_name_5')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "policyContent": "<policies>\r\n  <inbound>\r\n    <base />\r\n    <json-to-xml apply=\"always\" consider-accept-header=\"false\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n</policies>"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_create_resource_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_create_resource_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_create_resource_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/retrieve-header-only/policies/policy'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "name": "[parameters('policies_policy_name_6')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "policyContent": "<policies>\r\n  <inbound>\r\n    <base />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n    <set-header name=\"X-My-Sample\" exists-action=\"override\">\r\n      <value>This is a sample</value>\r\n      <!-- for multiple headers with the same name add additional value elements -->\r\n    </set-header>\r\n    <jsonp callback-parameter-name=\"ProcessResponse\" />\r\n  </outbound>\r\n</policies>"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_header_only_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_header_only_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_header_only_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/retrieve-resource-cached/policies/policy'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "name": "[parameters('policies_policy_name_7')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "policyContent": "<policies>\r\n  <inbound>\r\n    <base />\r\n    <cache-lookup vary-by-developer=\"false\" vary-by-developer-groups=\"false\">\r\n      <vary-by-header>Accept</vary-by-header>\r\n      <vary-by-header>Accept-Charset</vary-by-header>\r\n    </cache-lookup>\r\n    <rewrite-uri template=\"/resource\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n    <cache-store duration=\"3600\" />\r\n  </outbound>\r\n</policies>"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_resource_cached_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_resource_cached_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_resource_cached_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/users/1'.",
+      "type": "Microsoft.ApiManagement/service/users",
+      "name": "[parameters('users_1_name_3')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "firstName": "Administrator",
+        "lastName": "",
+        "email": "mattias.logdberg@ibiz-solutions.se",
+        "state": "active",
+        "note": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/users/1'.",
+      "type": "Microsoft.ApiManagement/service/users",
+      "name": "[parameters('users_1_name_4')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "firstName": "Administrator",
+        "lastName": "",
+        "email": "mattias.logdberg@ibiz-solutions.se",
+        "state": "active",
+        "note": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api'.",
+      "type": "Microsoft.ApiManagement/service/apis",
+      "name": "[parameters('apis_echo_api_name_2')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Echo API",
+        "apiRevision": "1",
+        "description": null,
+        "serviceUrl": "http://echoapi.cloudapp.net/api",
+        "path": "echo",
+        "protocols": [
+          "https"
+        ],
+        "authenticationSettings": null,
+        "subscriptionKeyParameterNames": null,
+        "isCurrent": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/groups/administrators'.",
+      "type": "Microsoft.ApiManagement/service/groups",
+      "name": "[parameters('groups_administrators_name_2')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Administrators",
+        "description": "Administrators is a built-in group. Its membership is managed by the system. Microsoft Azure subscription administrators fall into this group.",
+        "type": "system",
+        "externalId": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/groups/developers'.",
+      "type": "Microsoft.ApiManagement/service/groups",
+      "name": "[parameters('groups_developers_name_2')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Developers",
+        "description": "Developers is a built-in group. Its membership is managed by the system. Signed-in users fall into this group.",
+        "type": "system",
+        "externalId": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/groups/guests'.",
+      "type": "Microsoft.ApiManagement/service/groups",
+      "name": "[parameters('groups_guests_name_2')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Guests",
+        "description": "Guests is a built-in group. Its membership is managed by the system. Unauthenticated users visiting the developer portal fall into this group.",
+        "type": "system",
+        "externalId": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/create-resource'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_create_resource_name_2')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Create resource",
+        "method": "POST",
+        "urlTemplate": "/resource",
+        "description": "A demonstration of a POST call based on the echo backend above. The request body is expected to contain JSON-formatted data (see example below). A policy is used to automatically transform any request sent in JSON directly to XML. In a real-world scenario this could be used to enable modern clients to speak to a legacy backend.",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/modify-resource'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_modify_resource_name_2')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Modify Resource",
+        "method": "PUT",
+        "urlTemplate": "/resource",
+        "description": "A demonstration of a PUT call handled by the same \"echo\" backend as above. You can now specify a request body in addition to headers and it will be returned as well.",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/remove-resource'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_remove_resource_name_2')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Remove resource",
+        "method": "DELETE",
+        "urlTemplate": "/resource",
+        "description": "A demonstration of a DELETE call which traditionally deletes the resource. It is based on the same \"echo\" backend as in all other operations so nothing is actually deleted.",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/retrieve-header-only'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_retrieve_header_only_name_2')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Retrieve header only",
+        "method": "HEAD",
+        "urlTemplate": "/resource",
+        "description": "The HEAD operation returns only headers. In this demonstration a policy is used to set additional headers when the response is returned and to enable JSONP.",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/retrieve-resource'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_retrieve_resource_name_2')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Retrieve resource",
+        "method": "GET",
+        "urlTemplate": "/resource",
+        "description": "A demonstration of a GET call on a sample resource. It is handled by an \"echo\" backend which returns a response equal to the request (the supplied headers and body are being returned as received).",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/retrieve-resource-cached'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[parameters('operations_retrieve_resource_cached_name_2')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "displayName": "Retrieve resource (cached)",
+        "method": "GET",
+        "urlTemplate": "/resource-cached",
+        "description": "A demonstration of a GET call with caching enabled on the same \"echo\" backend as above. Cache TTL is set to 1 hour. When you make the first request the headers you supplied will be cached. Subsequent calls will return the same headers as the first time even if you change them in your request.",
+        "policies": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/create-resource/policies/policy'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "name": "[parameters('policies_policy_name_8')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "policyContent": "<policies>\r\n  <inbound>\r\n    <base />\r\n    <json-to-xml apply=\"always\" consider-accept-header=\"false\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n</policies>"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_create_resource_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_create_resource_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_create_resource_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/retrieve-header-only/policies/policy'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "name": "[parameters('policies_policy_name_9')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "policyContent": "<policies>\r\n  <inbound>\r\n    <base />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n    <set-header name=\"X-My-Sample\" exists-action=\"override\">\r\n      <value>This is a sample</value>\r\n      <!-- for multiple headers with the same name add additional value elements -->\r\n    </set-header>\r\n    <jsonp callback-parameter-name=\"ProcessResponse\" />\r\n  </outbound>\r\n</policies>"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_header_only_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_header_only_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_header_only_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/apis/echo-api/operations/retrieve-resource-cached/policies/policy'.",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "name": "[parameters('policies_policy_name_10')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "policyContent": "<policies>\r\n  <inbound>\r\n    <base />\r\n    <cache-lookup vary-by-developer=\"false\" vary-by-developer-groups=\"false\">\r\n      <vary-by-header>Accept</vary-by-header>\r\n      <vary-by-header>Accept-Charset</vary-by-header>\r\n    </cache-lookup>\r\n    <rewrite-uri template=\"/resource\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n    <cache-store duration=\"3600\" />\r\n  </outbound>\r\n</policies>"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_resource_cached_name'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_resource_cached_name_1'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apis_echo_api_name_2'))]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('operations_retrieve_resource_cached_name_2'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/users/1'.",
+      "type": "Microsoft.ApiManagement/service/users",
+      "name": "[parameters('users_1_name_5')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "firstName": "Administrator",
+        "lastName": "",
+        "email": "mattias.logdberg@ibiz-solutions.se",
+        "state": "active",
+        "note": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/9cca2074-157f-4a67-921d-91de0dcf1616/resourceGroups/deploymentdemo-api/providers/Microsoft.ApiManagement/service/ibizmalotest/users/1'.",
+      "type": "Microsoft.ApiManagement/service/users",
+      "name": "[parameters('users_1_name_6')]",
+      "apiVersion": "2017-03-01",
+      "scale": null,
+      "properties": {
+        "firstName": "Administrator",
+        "lastName": "",
+        "email": "mattias.logdberg@ibiz-solutions.se",
+        "state": "active",
+        "note": null
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalotest_name'))]"
+      ]
+    }
+  ]
+}

@@ -8,7 +8,7 @@ Clone the project, open, and build.
 
 Open PowerShell and Import the module:
 
-`Import-Module C:\{pathToSolution}\APIManagement\APIManagementTemplate\bin\Debug\APIManagementTemplate.dll`
+`Import-Module C:\{pathToSolution}\APIManagementARMTemplateCreator\APIManagementTemplate\bin\Debug\APIManagementTemplate.dll`
 
 Run the PowerShell command `Get-APIManagementTemplate`.  You can pipe the output as needed, and recommended you pipe in a token from `armclient`
 

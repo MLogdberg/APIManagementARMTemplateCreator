@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APIManagementTemplate", "APIManagementTemplate\APIManagementTemplate.csproj", "{284B85D0-239C-480C-BC4A-E06F408082C2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APIManagementTemplate.Test", "APIManagementTemplate.Test\APIManagementTemplate.Test.csproj", "{2AAB280F-27B0-409D-B71E-E5F4C38AE5A4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{284B85D0-239C-480C-BC4A-E06F408082C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{284B85D0-239C-480C-BC4A-E06F408082C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{284B85D0-239C-480C-BC4A-E06F408082C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{284B85D0-239C-480C-BC4A-E06F408082C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2AAB280F-27B0-409D-B71E-E5F4C38AE5A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AAB280F-27B0-409D-B71E-E5F4C38AE5A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AAB280F-27B0-409D-B71E-E5F4C38AE5A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AAB280F-27B0-409D-B71E-E5F4C38AE5A4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,33 @@
+﻿{
+  "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo",
+  "name": "ibizmalo",
+  "type": "Microsoft.ApiManagement/service",
+  "tags": {},
+  "location": "West Europe",
+  "etag": "AAAAAACfcp0=",
+  "properties": {
+    "publisherEmail": "mattias.logdberg@ibiz-solutions.se",
+    "publisherName": "ibiz",
+    "notificationSenderEmail": "apimgmt-noreply@mail.windowsazure.com",
+    "provisioningState": "Succeeded",
+    "targetProvisioningState": "",
+    "createdAtUtc": "2016-09-05T14:26:33.4282165Z",
+    "gatewayUrl": "https://ibizmalo.azure-api.net",
+    "portalUrl": "https://ibizmalo.portal.azure-api.net",
+    "managementApiUrl": "https://ibizmalo.management.azure-api.net",
+    "scmUrl": "https://ibizmalo.scm.azure-api.net",
+    "hostnameConfigurations": [],
+    "staticIps": [
+      "52.174.17.245"
+    ],
+    "additionalLocations": null,
+    "virtualNetworkConfiguration": null,
+    "customProperties": null,
+    "virtualNetworkType": "None",
+    "certificates": null
+  },
+  "sku": {
+    "name": "Developer",
+    "capacity": 1
+  }
+}
