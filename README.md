@@ -1,4 +1,4 @@
-## API Management ARM Template Creator Script
+## API Management ARM Template Creator
 
 This is a PowerShell script module to extract API Management to ARM templates, focus is to provide a module for easy deployments.  
 
