@@ -31,7 +31,7 @@ namespace APIManagementTemplate
             }
             AuthenticationContext ac = new AuthenticationContext(authstring, true);
 
-            var ar = ac.AcquireTokenAsync(Constants.ResourceUrl, Constants.ClientId, new Uri(Constants.RedirectUrl), new PlatformParameters(PromptBehavior.Auto)).GetAwaiter().GetResult();
+            var ar = ac.AcquireTokenAsync(Constants.ResourceUrl, Constants.ClientId, new Uri(Constants.RedirectUrl), new PlatformParameters(PromptBehavior.RefreshSession)).GetAwaiter().GetResult();
             token = ar.AccessToken;
             return token;
         }

@@ -155,7 +155,7 @@ namespace APIManagementTemplate
                         propertyObject["properties"]["value"] = $"[concat('sv=',{identifiedProperty.extraInfo}.queries.sv,'&sig=',{identifiedProperty.extraInfo}.queries.sig)]";
                     }
                     template.AddProperty(propertyObject);
-                    foreach(var apiName in identifiedProperty.apis)
+                    foreach (var apiName in identifiedProperty.apis)
                     {
                         var apiTemplate = template.resources.Where(rr => rr.Value<string>("name") == apiName).FirstOrDefault();
                         apiTemplate.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_{servicename}_name'),parameters('property_{propertyObject.Value<string>("name")}_name'))]");
@@ -180,7 +180,7 @@ namespace APIManagementTemplate
                 var idp = identifiedProperties.Where(pp => pp.name == name).FirstOrDefault();
                 if (idp == null)
                 {
-                    this.identifiedProperties.Add(new Property() { name = name, type = Property.PropertyType.Standard,apis = new List<string>(new string[] {apiname }) });
+                    this.identifiedProperties.Add(new Property() { name = name, type = Property.PropertyType.Standard, apis = new List<string>(new string[] { apiname }) });
                 }
                 else if (!idp.apis.Contains(apiname))
                 {
@@ -197,79 +197,77 @@ namespace APIManagementTemplate
         {
             var policyContent = policy["properties"].Value<string>("policyContent");
 
-            var commentMatch = Regex.Match(policyContent, "<!--[ ]+({+.*\"azureResource.*)-->");
+            var commentMatch = Regex.Match(policyContent, "<!--[ ]*(?<json>{+.*\"azureResource.*)-->");
             if (commentMatch.Success)
             {
                 var policyXMLDoc = XDocument.Parse(policyContent);
-                foreach (var node in policyXMLDoc.Descendants("backend").Nodes().OfType<XComment>())
+                var json = commentMatch.Groups["json"].Value;
+
+                JObject azureResourceObject = JObject.Parse(json).Value<JObject>("azureResource");
+                if (azureResourceObject != null)
                 {
-                    string commentText = node.ToString().Replace("<!--", "").Replace("-->", "");
-                    JObject azureResourceObject = JObject.Parse(commentText).Value<JObject>("azureResource");
-                    if (azureResourceObject != null)
+                    string reourceType = azureResourceObject.Value<string>("type");
+                    string id = azureResourceObject.Value<string>("id");
+
+                    if (reourceType == "logicapp")
                     {
-                        string reourceType = azureResourceObject.Value<string>("type");
-                        string id = azureResourceObject.Value<string>("id");
+                        var logicAppNameMatch = Regex.Match(id, "resourceGroups/(?<resourceGroupName>.*)/providers/Microsoft.Logic/workflows/(?<name>.*)/triggers/(?<triggerName>.*)");
+                        string logicAppName = logicAppNameMatch.Groups["name"].Value;
+                        string logicApptriggerName = logicAppNameMatch.Groups["triggerName"].Value;
+                        string logicAppResourceGroup = logicAppNameMatch.Groups["resourceGroupName"].Value;
 
-                        if (reourceType == "logicapp")
+                        string listCallbackUrl = $"listCallbackUrl(resourceId(parameters('{template.AddParameter($"logicApp_{logicAppName}_resourcegroup", "string", logicAppResourceGroup)}'),'Microsoft.Logic/workflows/triggers', parameters('{template.AddParameter($"logicApp_{logicAppName}_name", "string", logicAppName)}'),parameters('{template.AddParameter($"logicApp_{logicAppName}_trigger", "string", logicApptriggerName)}')), providers('Microsoft.Logic', 'workflows').apiVersions[0])";
+
+                        //var resourceid = id.Substring(id.IndexOf("Microsoft.Logic"));
+
+                        //Set the Base URL
+                        var backendService = policyXMLDoc.Descendants().Where(dd => dd.Name == "set-backend-service" && dd.Attribute("id").Value == "apim-generated-policy").FirstOrDefault();
+                        var baseUrl = backendService.Attribute("base-url");
+                        if (baseUrl != null)
                         {
-                            var logicAppNameMatch = Regex.Match(id, "resourceGroups/(?<resourceGroupName>.*)/providers/Microsoft.Logic/workflows/(?<name>.*)/triggers/(?<triggerName>.*)");
-                            string logicAppName = logicAppNameMatch.Groups["name"].Value;
-                            string logicApptriggerName = logicAppNameMatch.Groups["triggerName"].Value;
-                            string logicAppResourceGroup = logicAppNameMatch.Groups["resourceGroupName"].Value;
+                            int index = policyContent.IndexOf(baseUrl.Value);
 
-                            string listCallbackUrl = $"listCallbackUrl(resourceId(parameters('{template.AddParameter($"logicApp_{logicAppName}_resourcegroup", "string", logicAppResourceGroup)}'),'Microsoft.Logic/workflows/triggers', parameters('{template.AddParameter($"logicApp_{logicAppName}_name", "string", logicAppName)}'),parameters('{template.AddParameter($"logicApp_{logicAppName}_trigger", "string", logicApptriggerName)}')), providers('Microsoft.Logic', 'workflows').apiVersions[0])";
-
-                            //var resourceid = id.Substring(id.IndexOf("Microsoft.Logic"));
-
-                            //Set the Base URL
-                            var backendService = policyXMLDoc.Descendants().Where(dd => dd.Name == "set-backend-service" && dd.Attribute("id").Value == "apim-generated-policy").FirstOrDefault();
-                            var baseUrl = backendService.Attribute("base-url");
-                            if (baseUrl != null)
-                            {
-                                int index = policyContent.IndexOf(baseUrl.Value);                                
-
-                                policy["properties"]["policyContent"] = "[Concat('" + policyContent.Substring(0, index) + "'," + $"{listCallbackUrl}.basePath" + ",'" + policyContent.Substring(index + baseUrl.Value.Length) + "')]";
-                            }
-                            //handle the property
-
-                            var rewriteElement = policyXMLDoc.Descendants().Where(dd => dd.Name == "rewrite-uri" && dd.Attribute("id").Value == "apim-generated-policy").FirstOrDefault();
-                            var rewritetemplate = rewriteElement.Attribute("template");
-                            if (rewritetemplate != null)
-                            {
-                                var match = Regex.Match(rewritetemplate.Value, "{{(?<name>[a-zA-Z0-9]*)}}");
-                                if (match.Success)
-                                {
-                                    string propname = match.Groups["name"].Value;
-                                    this.identifiedProperties.Add(new Property()
-                                    {
-                                        type = Property.PropertyType.LogicApp,
-                                        name = propname,
-                                        extraInfo = listCallbackUrl,
-                                        apis = new List<string>(new string[] { apiname })
-                                    });
-                                }
-                            }
-                            /*
-                            <policies>
-                              <inbound>
-                                <rewrite-uri id="apim-generated-policy" template="?api-version=2016-06-01&amp;sp=/triggers/request/run&amp;{{orderrequest59a6b4783fb21a7984df42ae}}" />
-                                <set-backend-service id="apim-generated-policy" base-url="https://prod-48.westeurope.logic.azure.com/workflows/bc406236bfff482a836ca4f6caabbb17/triggers/request/paths/invoke" />
-                                <base />
-                                <set-header name="Ocp-Apim-Subscription-Key" exists-action="delete" />
-                              </inbound>
-                              <outbound>
-                                <base />
-                              </outbound>
-                              <backend>
-                                <base />
-                                <!-- { "azureResource": { "type": "logicapp", "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.Logic/workflows/INT001-GetOrderInfo/triggers/request" } } -->
-                              </backend>
-                            </policies>
-                            */
-
-                            //sv=1.0&sig=k3M13MzEcb-MpID5XdwL8C76YFXImxYEP8bnSPd046M
-                            //policyXMLDoc.Descendants().Where(dd => dd.HasAttributes && dd.Attribute("id") != null).ToList()
+                            policy["properties"]["policyContent"] = "[Concat('" + policyContent.Substring(0, index) + "'," + $"{listCallbackUrl}.basePath" + ",'" + policyContent.Substring(index + baseUrl.Value.Length) + "')]";
                         }
+                        //handle the property
+
+                        var rewriteElement = policyXMLDoc.Descendants().Where(dd => dd.Name == "rewrite-uri" && dd.Attribute("id").Value == "apim-generated-policy").FirstOrDefault();
+                        var rewritetemplate = rewriteElement.Attribute("template");
+                        if (rewritetemplate != null)
+                        {
+                            var match = Regex.Match(rewritetemplate.Value, "{{(?<name>[a-zA-Z0-9]*)}}");
+                            if (match.Success)
+                            {
+                                string propname = match.Groups["name"].Value;
+                                this.identifiedProperties.Add(new Property()
+                                {
+                                    type = Property.PropertyType.LogicApp,
+                                    name = propname,
+                                    extraInfo = listCallbackUrl,
+                                    apis = new List<string>(new string[] { apiname })
+                                });
+                            }
+                        }
+                        /*
+                        <policies>
+                          <inbound>
+                            <rewrite-uri id="apim-generated-policy" template="?api-version=2016-06-01&amp;sp=/triggers/request/run&amp;{{orderrequest59a6b4783fb21a7984df42ae}}" />
+                            <set-backend-service id="apim-generated-policy" base-url="https://prod-48.westeurope.logic.azure.com/workflows/bc406236bfff482a836ca4f6caabbb17/triggers/request/paths/invoke" />
+                            <base />
+                            <set-header name="Ocp-Apim-Subscription-Key" exists-action="delete" />
+                          </inbound>
+                          <outbound>
+                            <base />
+                          </outbound>
+                          <backend>
+                            <base />
+                            <!-- { "azureResource": { "type": "logicapp", "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.Logic/workflows/INT001-GetOrderInfo/triggers/request" } } -->
+                          </backend>
+                        </policies>
+                        */
+
+                        //sv=1.0&sig=k3M13MzEcb-MpID5XdwL8C76YFXImxYEP8bnSPd046M
+                        //policyXMLDoc.Descendants().Where(dd => dd.HasAttributes && dd.Attribute("id") != null).ToList()
                     }
                 }
             }
