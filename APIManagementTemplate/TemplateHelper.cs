@@ -23,12 +23,12 @@ namespace APIManagementTemplate
             var backend = docu.Descendants("set-backend-service").FirstOrDefault();
             if (backend != null)
             {
-                string id = backend.Attribute("backend-id").Value;
-                if(id == "apim-generated-policy")
+                XAttribute id = backend.Attribute("backend-id");
+                if (id == null || id.Value == "apim-generated-policy")
                 {
                     return "";
                 }
-                return id;
+                return id.Value;
             }
             return "";
         }
