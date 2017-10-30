@@ -81,11 +81,22 @@ namespace APIManagementTemplate
             ValueFromPipeline = true
         )]
 
+        public string DebugOutPutFolder = "";
+        [Parameter(
+            Mandatory = false,
+            HelpMessage = "If set, result from rest interface will be saved to this folder",
+            ValueFromPipeline = true
+        )]
+
+
         public string ClaimsDump;
 
         protected override void ProcessRecord()
         {
             AzureResourceCollector resourceCollector = new AzureResourceCollector();
+
+            if (!string.IsNullOrEmpty(DebugOutPutFolder))
+                resourceCollector.DebugOutputFolder = DebugOutPutFolder;
 
             if (ClaimsDump == null)
             {
@@ -105,11 +116,32 @@ namespace APIManagementTemplate
                 return;
             }
             TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup,APIFilters,ExportGroups,ExportProducts,ExportPIManagementInstance,resourceCollector);
+            try
+            {
 
-
-            JObject result = generator.GenerateTemplate().Result;
-            WriteObject(result.ToString());
-
+                JObject result = generator.GenerateTemplate().Result;
+                WriteObject(result.ToString());
+            }
+            catch(Exception ex)
+            {
+                if( ex is AggregateException)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine("Aggregation exception thrown, se following exceptions for more information");
+                    AggregateException ae = (AggregateException)ex;
+                    foreach(var e in ae.InnerExceptions)
+                    {
+                        sb.AppendLine($"Exception: {e.Message}");
+                        sb.AppendLine($"{e.StackTrace}");
+                        sb.AppendLine("-------------------------------------------");
+                    }
+                    throw new Exception($"Aggregation Exception thrown, {ae.Message}, first Exception message is: {ae.InnerExceptions.First().Message}, for more information read the output file.");
+                }
+                else
+                {
+                    throw ex;
+                }
+            }
         }
     }
 }

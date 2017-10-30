@@ -74,9 +74,21 @@
     <EmbeddedResource Include="Samples\MaloInstance-Preview-Export.json" />
     <EmbeddedResource Include="Samples\malo-apiminstance.json" />
     <EmbeddedResource Include="Samples\Policies\AzureResource-LogicApp-unmodified.json" />
+    <EmbeddedResource Include="Samples\BasicLogicApp\service-ibizmalo-apis-order-operations-59a6b4730d691205f068a8be-policies.json" />
+    <EmbeddedResource Include="Samples\BasicLogicApp\service-ibizmalo-apis-order-operations-59a6b4730d691205f068a8be.json" />
+    <EmbeddedResource Include="Samples\BasicLogicApp\service-ibizmalo-apis-order-operations.json" />
+    <EmbeddedResource Include="Samples\BasicLogicApp\service-ibizmalo-apis-order-policies.json" />
+    <EmbeddedResource Include="Samples\BasicLogicApp\service-ibizmalo-apis-order.json" />
+    <EmbeddedResource Include="Samples\BasicLogicApp\service-ibizmalo-apis.json" />
+    <EmbeddedResource Include="Samples\BasicLogicApp\service-ibizmalo-groups.json" />
+    <EmbeddedResource Include="Samples\BasicLogicApp\service-ibizmalo-products-57cd81afe568130059060001.json" />
+    <EmbeddedResource Include="Samples\BasicLogicApp\service-ibizmalo-products-57cd81b0e568130059060002.json" />
+    <EmbeddedResource Include="Samples\BasicLogicApp\service-ibizmalo-products.json" />
+    <EmbeddedResource Include="Samples\BasicLogicApp\service-ibizmalo-properties.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />
+    <Folder Include="Samples\ProductsApi\" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

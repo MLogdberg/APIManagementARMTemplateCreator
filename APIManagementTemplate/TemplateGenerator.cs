@@ -79,9 +79,17 @@ namespace APIManagementTemplate
                     foreach (JObject policy in (operationPolicies == null ? new JArray() : operationPolicies.Value<JArray>("value")))
                     {
                         var pol = template.CreatePolicy(policy);
-                        //Handle Azure Resources
-                        this.PolicyHandeAzureResources(pol, apiTemplateResource.Value<string>("name"), template);
+
+                        //add properties
                         this.PolicyHandleProperties(pol, apiTemplateResource.Value<string>("name"));
+
+                        //Handle Azure Resources
+                        if (!this.PolicyHandeAzureResources(pol, apiTemplateResource.Value<string>("name"), template))
+                        {
+                            var operationSuffix = apiInstance.Value<string>("name") + "_" + operationInstance.Value<string>("name");
+                            PolicyHandeBackendUrl(pol, operationSuffix, template);
+                        }
+                        
                         operationTemplateResource.Value<JArray>("resources").Add(pol);
                         //handle nextlink?
                     }
@@ -92,6 +100,7 @@ namespace APIManagementTemplate
                 foreach (JObject policy in (apiPolicies == null ? new JArray() : apiPolicies.Value<JArray>("value")))
                 {
                     var policyTemplateResource = template.CreatePolicy(policy);
+                    PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
                     this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"));
                     apiTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
 
@@ -193,14 +202,15 @@ namespace APIManagementTemplate
 
         public List<Property> identifiedProperties = new List<Property>();
 
-        public void PolicyHandeAzureResources(JObject policy, string apiname, DeploymentTemplate template)
+        public bool PolicyHandeAzureResources(JObject policy, string apiname, DeploymentTemplate template)
         {
             var policyContent = policy["properties"].Value<string>("policyContent");
+            var policyXMLDoc = XDocument.Parse(policyContent);
 
             var commentMatch = Regex.Match(policyContent, "<!--[ ]*(?<json>{+.*\"azureResource.*)-->");
             if (commentMatch.Success)
             {
-                var policyXMLDoc = XDocument.Parse(policyContent);
+
                 var json = commentMatch.Groups["json"].Value;
 
                 JObject azureResourceObject = JObject.Parse(json).Value<JObject>("azureResource");
@@ -211,31 +221,23 @@ namespace APIManagementTemplate
 
                     if (reourceType == "logicapp")
                     {
-                        var logicAppNameMatch = Regex.Match(id, "resourceGroups/(?<resourceGroupName>.*)/providers/Microsoft.Logic/workflows/(?<name>.*)/triggers/(?<triggerName>.*)");
+                        var logicAppNameMatch = Regex.Match(id, @"resourceGroups/(?<resourceGroupName>[\w-_d]*)/providers/Microsoft.Logic/workflows/(?<name>[\w-_d]*)/triggers/(?<triggerName>[\w-_d]*)");
                         string logicAppName = logicAppNameMatch.Groups["name"].Value;
                         string logicApptriggerName = logicAppNameMatch.Groups["triggerName"].Value;
                         string logicAppResourceGroup = logicAppNameMatch.Groups["resourceGroupName"].Value;
 
                         string listCallbackUrl = $"listCallbackUrl(resourceId(parameters('{template.AddParameter($"logicApp_{logicAppName}_resourcegroup", "string", logicAppResourceGroup)}'),'Microsoft.Logic/workflows/triggers', parameters('{template.AddParameter($"logicApp_{logicAppName}_name", "string", logicAppName)}'),parameters('{template.AddParameter($"logicApp_{logicAppName}_trigger", "string", logicApptriggerName)}')), providers('Microsoft.Logic', 'workflows').apiVersions[0])";
 
-                        //var resourceid = id.Substring(id.IndexOf("Microsoft.Logic"));
-
                         //Set the Base URL
                         var backendService = policyXMLDoc.Descendants().Where(dd => dd.Name == "set-backend-service" && dd.Attribute("id").Value == "apim-generated-policy").FirstOrDefault();
-                        var baseUrl = backendService.Attribute("base-url");
-                        if (baseUrl != null)
-                        {
-                            int index = policyContent.IndexOf(baseUrl.Value);
+                        policy["properties"]["policyContent"] = CreatePolicyContentReplaceBaseUrl(backendService, policyContent, $"{listCallbackUrl}.basePath");
 
-                            policy["properties"]["policyContent"] = "[Concat('" + policyContent.Substring(0, index) + "'," + $"{listCallbackUrl}.basePath" + ",'" + policyContent.Substring(index + baseUrl.Value.Length) + "')]";
-                        }
-                        //handle the property
-
-                        var rewriteElement = policyXMLDoc.Descendants().Where(dd => dd.Name == "rewrite-uri" && dd.Attribute("id").Value == "apim-generated-policy").FirstOrDefault();
+                        //Handle the sig property
+                        var rewriteElement = policyXMLDoc.Descendants().Where(dd => dd.Name == "rewrite-uri").LastOrDefault();
                         var rewritetemplate = rewriteElement.Attribute("template");
                         if (rewritetemplate != null)
                         {
-                            var match = Regex.Match(rewritetemplate.Value, "{{(?<name>[a-zA-Z0-9]*)}}");
+                            var match = Regex.Match(rewritetemplate.Value, @"{{(?<name>[\w-_d]*)}}");
                             if (match.Success)
                             {
                                 string propname = match.Groups["name"].Value;
@@ -266,16 +268,55 @@ namespace APIManagementTemplate
                         </policies>
                         */
 
-                        //sv=1.0&sig=k3M13MzEcb-MpID5XdwL8C76YFXImxYEP8bnSPd046M
-                        //policyXMLDoc.Descendants().Where(dd => dd.HasAttributes && dd.Attribute("id") != null).ToList()
+                    }
+                    else if (reourceType == "funcapp")
+                    {
+                        /*
+                        var logicAppNameMatch = Regex.Match(id, "resourceGroups/(?<resourceGroupName>.*)/providers/Microsoft.Logic/workflows/(?<name>.*)/triggers/(?<triggerName>.*)");
+                        string functionAppName = logicAppNameMatch.Groups["name"].Value;
+                        string functionName = logicAppNameMatch.Groups["triggerName"].Value;
+                        string functionResourceGroup = logicAppNameMatch.Groups["resourceGroupName"].Value;*/
                     }
                 }
+
+            }
+            return commentMatch.Success;
+        }
+        public void PolicyHandeBackendUrl(JObject policy, string apiname, DeploymentTemplate template)
+        {
+            var policyContent = policy["properties"].Value<string>("policyContent");
+            var policyXMLDoc = XDocument.Parse(policyContent);
+            //find the last backend service and add as parameter
+            var backendService = policyXMLDoc.Descendants().Where(dd => dd.Name == "set-backend-service").LastOrDefault();
+            if (backendService != null)
+            {
+
+                if (backendService.Attribute("base-url") != null)
+                {
+                    var baseUrl = backendService.Attribute("base-url");
+                    var paramname = template.AddParameter($"api_{apiname}_backendurl", "string", backendService.Attribute("base-url").Value);
+                    policy["properties"]["policyContent"] = CreatePolicyContentReplaceBaseUrl(backendService, policyContent, $"parameters('{paramname}')");
+                }
+
             }
 
-
-            //find propertoes /named values
         }
 
 
+        private string CreatePolicyContentReplaceBaseUrl(XElement backendService, string policyContent, string replaceText)
+        {
+            var baseUrl = backendService.Attribute("base-url");
+            if (baseUrl != null)
+            {
+                int index = policyContent.IndexOf(baseUrl.Value);
+
+                return "[Concat('" + policyContent.Substring(0, index) + "'," + replaceText + ",'" + policyContent.Substring(index + baseUrl.Value.Length) + "')]";
+            }
+            return policyContent;
+        }
+
     }
+
+
+
 }

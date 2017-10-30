@@ -52,7 +52,7 @@ namespace APIManagementTemplate.Test
 
             var policy = (JObject)array[0];
 
-            TemplateGenerator generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest","",false,false,false,new MockResourceCollector());
+            TemplateGenerator generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest","",false,false,false,new MockResourceCollector("path"));
             var template = new DeploymentTemplate();
             template.CreatePolicy(policy);
 
@@ -196,6 +196,14 @@ namespace APIManagementTemplate.Test
 
             Assert.AreEqual("countyNo", oparation["properties"]["templateParameters"][0].Value<string>("name"));
             Assert.AreEqual("other", oparation["properties"]["templateParameters"][1].Value<string>("name"));
+        }
+
+        [TestMethod]
+        public void ScenarioTestLogicApps()
+        {
+            var collector = new MockResourceCollector("BasicLogicApp");
+            TemplateGenerator generator = new TemplateGenerator("ibizmalo", "subscr", "resourcegroup", "orders", true, true, false, collector);
+            JObject result = generator.GenerateTemplate().Result;
         }
     }
 

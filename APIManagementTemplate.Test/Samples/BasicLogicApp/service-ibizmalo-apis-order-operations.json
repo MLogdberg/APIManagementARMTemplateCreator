@@ -1,0 +1,17 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/order/operations/59a6b4730d691205f068a8be",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "59a6b4730d691205f068a8be",
+      "properties": {
+        "displayName": "request-invoke",
+        "method": "POST",
+        "urlTemplate": "/request/paths/invoke",
+        "description": "Utlös en körning av logikappen.",
+        "policies": null
+      }
+    }
+  ],
+  "nextLink": ""
+}
