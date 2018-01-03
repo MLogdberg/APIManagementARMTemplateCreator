@@ -46,10 +46,10 @@ namespace APIManagementTemplate
             ValueFromPipeline = true
         )]
 
-        public bool ExportAuthroizationServers = true;
+        public bool ExportAuthorizationServers = true;
         [Parameter(
             Mandatory = false,
-            HelpMessage = "Export AuthroizationServers",
+            HelpMessage = "Export AuthorizationServers",
             ValueFromPipeline = true
         )]
 
@@ -81,6 +81,13 @@ namespace APIManagementTemplate
             ValueFromPipeline = true
         )]
 
+        public bool ParametrizePropertiesOnly = false;
+        [Parameter(
+            Mandatory = false,
+            HelpMessage = "Set to 'true' when all environment-specific parameters are defined as properties",
+            ValueFromPipeline = true
+        )]
+
         public string ClaimsDump;
 
         protected override void ProcessRecord()
@@ -104,7 +111,7 @@ namespace APIManagementTemplate
             {
                 return;
             }
-            TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup,APIFilters,ExportGroups,ExportProducts,ExportPIManagementInstance,resourceCollector);
+            TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup,APIFilters,ExportGroups,ExportProducts,ExportPIManagementInstance,ParametrizePropertiesOnly,resourceCollector);
 
 
             JObject result = generator.GenerateTemplate().Result;

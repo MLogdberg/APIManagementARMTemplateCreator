@@ -28,9 +28,10 @@ namespace APIManagementTemplate
         private bool exportPIManagementInstance;
         private bool exportGroups;
         private bool exportProducts;
+        private bool parametrizePropertiesOnly;
 
         IResourceCollector resourceCollector;
-        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, IResourceCollector resourceCollector)
+        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -39,6 +40,7 @@ namespace APIManagementTemplate
             this.exportGroups = exportGroups;
             this.exportProducts = exportProducts;
             this.exportPIManagementInstance = exportPIManagementInstance;
+            this.parametrizePropertiesOnly = parametrizePropertiesOnly;
             this.resourceCollector = resourceCollector;
         }
 
@@ -49,7 +51,7 @@ namespace APIManagementTemplate
 
         public async Task<JObject> GenerateTemplate()
         {
-            DeploymentTemplate template = new DeploymentTemplate();
+            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly);
             if (exportPIManagementInstance)
             {
                 var apim = await resourceCollector.GetResource(GetAPIMResourceIDString());
@@ -108,7 +110,7 @@ namespace APIManagementTemplate
                             apiTemplateResource["dependsOn"] = new JArray();
 
                         //add dependeOn
-                        apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('service_{servicename}_name'), parameters('backend_{backendInstance.Value<string>("name")}_name'))]");
+                        apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('APIM_servicename'), parameters('backend_{backendInstance.Value<string>("name")}_name'))]");
                     }
 
                     //handle nextlink?
@@ -155,10 +157,14 @@ namespace APIManagementTemplate
                         propertyObject["properties"]["value"] = $"[concat('sv=',{identifiedProperty.extraInfo}.queries.sv,'&sig=',{identifiedProperty.extraInfo}.queries.sig)]";
                     }
                     template.AddProperty(propertyObject);
-                    foreach (var apiName in identifiedProperty.apis)
+
+                    if (!parametrizePropertiesOnly)
                     {
-                        var apiTemplate = template.resources.Where(rr => rr.Value<string>("name") == apiName).FirstOrDefault();
-                        apiTemplate.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_{servicename}_name'),parameters('property_{propertyObject.Value<string>("name")}_name'))]");
+                        foreach (var apiName in identifiedProperty.apis)
+                        {
+                            var apiTemplate = template.resources.Where(rr => rr.Value<string>("name") == apiName).FirstOrDefault();
+                            apiTemplate.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('APIM_servicename'),parameters('property_{propertyObject.Value<string>("name")}_name'))]");
+                        }
                     }
                 }
             }
@@ -173,7 +179,7 @@ namespace APIManagementTemplate
         public void PolicyHandleProperties(JObject policy, string apiname)
         {
             var policyContent = policy["properties"].Value<string>("policyContent");
-            var match = Regex.Match(policyContent, "{{(?<name>[a-zA-Z0-9]*)}}");
+            var match = Regex.Match(policyContent, "{{(?<name>[-_.a-zA-Z0-9]*)}}");
             while (match.Success)
             {
                 string name = match.Groups["name"].Value;
@@ -235,7 +241,7 @@ namespace APIManagementTemplate
                         var rewritetemplate = rewriteElement.Attribute("template");
                         if (rewritetemplate != null)
                         {
-                            var match = Regex.Match(rewritetemplate.Value, "{{(?<name>[a-zA-Z0-9]*)}}");
+                            var match = Regex.Match(rewritetemplate.Value, "{{(?<name>[-_.a-zA-Z0-9]*)}}");
                             if (match.Success)
                             {
                                 string propname = match.Groups["name"].Value;
