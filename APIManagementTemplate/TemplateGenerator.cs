@@ -110,7 +110,7 @@ namespace APIManagementTemplate
                             apiTemplateResource["dependsOn"] = new JArray();
 
                         //add dependeOn
-                        apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('APIM_servicename'), parameters('backend_{backendInstance.Value<string>("name")}_name'))]");
+                        apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('service_{servicename}_name'), parameters('backend_{backendInstance.Value<string>("name")}_name'))]");
                     }
 
                     //handle nextlink?
@@ -163,7 +163,7 @@ namespace APIManagementTemplate
                         foreach (var apiName in identifiedProperty.apis)
                         {
                             var apiTemplate = template.resources.Where(rr => rr.Value<string>("name") == apiName).FirstOrDefault();
-                            apiTemplate.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('APIM_servicename'),parameters('property_{propertyObject.Value<string>("name")}_name'))]");
+                            apiTemplate.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_{servicename}_name'),parameters('property_{propertyObject.Value<string>("name")}_name'))]");
                         }
                     }
                 }
