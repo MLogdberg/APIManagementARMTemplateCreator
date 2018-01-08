@@ -354,7 +354,11 @@ namespace APIManagementTemplate.Models
             }
             resource["dependsOn"] = dependsOn;
 
-            this.resources.Add(resource);
+            // Avoid duplicates.
+            if (this.resources.Count(rr => rr.Value<string>("name") == obj.name) == 0)
+            {
+                this.resources.Add(resource);
+            }
         }
 
         public JObject AddProduct(JObject restObject)
