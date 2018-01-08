@@ -92,31 +92,37 @@ namespace APIManagementTemplate
 
         protected override void ProcessRecord()
         {
-            AzureResourceCollector resourceCollector = new AzureResourceCollector();
-
-            if (ClaimsDump == null)
+            try
             {
-                if (String.IsNullOrEmpty(Token))
+                AzureResourceCollector resourceCollector = new AzureResourceCollector();
+
+                if (ClaimsDump == null)
                 {
-                    Token = resourceCollector.Login(TenantName);
-                    //WriteVerbose(Token);
+                    if (String.IsNullOrEmpty(Token))
+                    {
+                        Token = resourceCollector.Login(TenantName);
+                        //WriteVerbose(Token);
+                    }
                 }
+                else if (ClaimsDump.Contains("Token copied"))
+                {
+                    Token = Clipboard.GetText().Replace("Bearer ", "");
+                    resourceCollector.token = Token;
+                }
+                else
+                {
+                    return;
+                }
+                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector);
+
+
+                JObject result = generator.GenerateTemplate().Result;
+                WriteObject(result.ToString());
             }
-            else if (ClaimsDump.Contains("Token copied"))
+            catch (Exception ex)
             {
-                Token = Clipboard.GetText().Replace("Bearer ", "");
-                resourceCollector.token = Token;
+                WriteError(new ErrorRecord(ex, "0", ErrorCategory.ParserError, this));
             }
-            else
-            {
-                return;
-            }
-            TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup,APIFilters,ExportGroups,ExportProducts,ExportPIManagementInstance,ParametrizePropertiesOnly,resourceCollector);
-
-
-            JObject result = generator.GenerateTemplate().Result;
-            WriteObject(result.ToString());
-
         }
     }
 }

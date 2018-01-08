@@ -357,6 +357,65 @@ namespace APIManagementTemplate.Models
             this.resources.Add(resource);
         }
 
+        public JObject AddProduct(JObject restObject)
+        {
+            if (restObject == null)
+                return null;
+
+            string name = restObject.Value<string>("name");
+            string type = restObject.Value<string>("type");
+
+
+            var matches = Regex.Match(restObject.Value<string>("id"), "/service/(?<servicename>[a-zA-Z0-9_-]*)/");
+            string servicename = matches.Groups["servicename"].Value;
+
+            var obj = new ResourceTemplate();
+            obj.comments = "Generated for resource " + restObject.Value<string>("id");
+            obj.name = parametrizePropertiesOnly ? $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/{name}')]" : $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/' ,parameters('{AddParameter($"product_{name}_name", "string", name)}'))]";
+            obj.type = type;
+            var resource = JObject.FromObject(obj);
+            resource["properties"] = restObject["properties"];
+
+            var dependsOn = new JArray();
+            if (APIMInstanceAdded)
+            {
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]");
+
+            }
+            resource["dependsOn"] = dependsOn;
+
+            this.resources.Add(resource);
+            return resource;
+        }
+
+        public JObject AddProductSubObject(JObject restObject)
+        {
+            if (restObject == null)
+                return null;
+
+            string name = restObject.Value<string>("name");
+            string type = restObject.Value<string>("type");
+
+            var matches = Regex.Match(restObject.Value<string>("id"), "/service/(?<servicename>[a-zA-Z0-9_-]*)/products/(?<productname>[a-zA-Z0-9_-]*)");
+            string servicename = matches.Groups["servicename"].Value;
+            string productname = matches.Groups["productname"].Value;
+
+            productname = parametrizePropertiesOnly ? $"'{productname}'" : $"parameters('{AddParameter($"api_{productname}_name", "string", productname)}')";
+
+            var obj = new ResourceTemplate();
+            obj.comments = "Generated for resource " + restObject.Value<string>("id");
+            obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/', {productname}, '/{name}')]";
+            obj.type = type;
+            var resource = JObject.FromObject(obj);
+            resource["properties"] = restObject["properties"];
+
+            var dependsOn = new JArray();
+            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/products', parameters('service_{servicename}_name'), {productname})]");
+            resource["dependsOn"] = dependsOn;
+
+            return resource;
+        }
+
         public void AddProperty(JObject restObject)
         {
             if (restObject == null)

@@ -135,10 +135,28 @@ namespace APIManagementTemplate
                 foreach (JObject productObject in (products == null ? new JArray() : products.Value<JArray>("value")))
                 {
                     var id = productObject.Value<string>("id");
-                    var instance = await resourceCollector.GetResource(id);
-                    //template.Add(operationInstance);
+                    var productInstance = await resourceCollector.GetResource(id);
+                    var productTemplateResource = template.AddProduct(productObject);
 
-                    //TODO!!!!
+                    var productApis = await resourceCollector.GetResource(id + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
+
+                    if (productApis == null)
+                    {
+                        // Skip product if not related to an API in the filter.
+                        break;
+                    }
+
+                    foreach (JObject productApi in (productApis == null ? new JArray() : productApis.Value<JArray>("value")))
+                    {
+                        productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(productApi));
+                    }
+
+                    var groups = await resourceCollector.GetResource(id + "/groups");
+                    foreach (JObject groupObject in (groups == null ? new JArray() : groups.Value<JArray>("value")))
+                    {
+                        if (groupObject["properties"].Value<bool>("builtIn") == false)
+                            productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(groupObject));
+                    }
                 }
             }
 
@@ -168,9 +186,6 @@ namespace APIManagementTemplate
                     }
                 }
             }
-
-
-
 
             return JObject.FromObject(template);
 
