@@ -111,7 +111,9 @@ namespace APIManagementTemplate
                 }
                 else
                 {
-                    return;
+                    // Allow VSTS Powershell task to pass the token.
+                    Token = ClaimsDump;
+                    resourceCollector.token = ClaimsDump;
                 }
                 TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector);
 
