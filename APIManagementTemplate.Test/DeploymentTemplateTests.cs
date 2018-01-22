@@ -52,7 +52,7 @@ namespace APIManagementTemplate.Test
 
             var policy = (JObject)array[0];
 
-            TemplateGenerator generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest","",false,false,false,new MockResourceCollector());
+            TemplateGenerator generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest","",false,false,false,false,new MockResourceCollector());
             var template = new DeploymentTemplate();
             template.CreatePolicy(policy);
 
