@@ -111,7 +111,15 @@ namespace APIManagementTemplate
                     if (!string.IsNullOrEmpty(backendid))
                     {
                         var backendInstance = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/backends/" + backendid);
-                        template.AddBackend(backendInstance);
+                        var property = template.AddBackend(backendInstance);
+
+                        if(property != null)
+                        {
+                            var idp = this.identifiedProperties.Where(pp => pp.name.Contains(property.name + "_manual-invoke_")).FirstOrDefault();
+                            idp.extraInfo = property.extraInfo;
+                            idp.type = Property.PropertyType.LogicAppRevisionGa;
+                        }
+
 
                         if (apiTemplateResource.Value<JArray>("dependsOn") == null)
                             apiTemplateResource["dependsOn"] = new JArray();
@@ -163,6 +171,10 @@ namespace APIManagementTemplate
                     {
                         propertyObject["properties"]["value"] = $"[concat('sv=',{identifiedProperty.extraInfo}.queries.sv,'&sig=',{identifiedProperty.extraInfo}.queries.sig)]";
                     }
+                    else if (identifiedProperty.type == Property.PropertyType.LogicAppRevisionGa)
+                    {
+                        propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo}.queries.sig]";
+                    }
                     template.AddProperty(propertyObject);
                     foreach (var apiName in identifiedProperty.apis)
                     {
@@ -182,7 +194,7 @@ namespace APIManagementTemplate
         public void PolicyHandleProperties(JObject policy, string apiname)
         {
             var policyContent = policy["properties"].Value<string>("policyContent");
-            var match = Regex.Match(policyContent, "{{(?<name>[a-zA-Z0-9]*)}}");
+            var match = Regex.Match(policyContent, "{{(?<name>[a-zA-Z0-9_-]*)}}");
             while (match.Success)
             {
                 string name = match.Groups["name"].Value;

@@ -64,6 +64,7 @@
     <Compile Include="Models\ResourceTemplate.cs" />
     <Compile Include="AzureResourceCollector.cs" />
     <Compile Include="IResourceCollector.cs" />
+    <Compile Include="AzureResourceId.cs" />
     <Compile Include="TemplateHelper.cs" />
     <Compile Include="TemplateGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

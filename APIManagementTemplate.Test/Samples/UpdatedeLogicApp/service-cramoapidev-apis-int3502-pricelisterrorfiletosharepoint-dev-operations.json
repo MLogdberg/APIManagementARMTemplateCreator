@@ -1,0 +1,55 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/13ea6145-d7f4-4d0f-b406-7394a2b64fb4/resourceGroups/Api-Default-West-Europe/providers/Microsoft.ApiManagement/service/cramoapidev/apis/int3502-pricelisterrorfiletosharepoint-dev/operations/5a58a593b7ba010f9c611816",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "5a58a593b7ba010f9c611816",
+      "properties": {
+        "displayName": "Upload file",
+        "method": "POST",
+        "urlTemplate": "/manual/paths/invoke",
+        "templateParameters": [],
+        "description": "Utlös en körning av logikappen.",
+        "request": {
+          "description": "Begärantexten.",
+          "queryParameters": [],
+          "headers": [
+            {
+              "name": "Content-Type",
+              "description": "",
+              "type": "string",
+              "defaultValue": "application/json",
+              "required": false,
+              "values": [
+                "application/json"
+              ]
+            }
+          ],
+          "representations": [
+            {
+              "contentType": "application/json",
+              "sample": null,
+              "typeName": "request-manual"
+            }
+          ]
+        },
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Logikapp-reponsen.",
+            "representations": [
+              {
+                "contentType": "application/json",
+                "sample": null,
+                "typeName": "ManualPathsInvokePost200ApplicationJsonResponse"
+              }
+            ],
+            "headers": []
+          }
+        ],
+        "policies": null
+      }
+    }
+  ],
+  "nextLink": ""
+}

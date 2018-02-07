@@ -54,6 +54,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="AzureResourceIdTests.cs" />
     <Compile Include="DeploymentTemplateTests.cs" />
     <Compile Include="MockResourceCollector.cs" />
     <Compile Include="TemplateHelperTests.cs" />
@@ -85,6 +86,14 @@
     <EmbeddedResource Include="Samples\BasicLogicApp\service-ibizmalo-products-57cd81b0e568130059060002.json" />
     <EmbeddedResource Include="Samples\BasicLogicApp\service-ibizmalo-products.json" />
     <EmbeddedResource Include="Samples\BasicLogicApp\service-ibizmalo-properties.json" />
+    <EmbeddedResource Include="Samples\UpdatedeLogicApp\service-cramoapidev-apis-int3502-pricelisterrorfiletosharepoint-dev-operations-5a58a593b7ba010f9c611816-policies.json" />
+    <EmbeddedResource Include="Samples\UpdatedeLogicApp\service-cramoapidev-apis-int3502-pricelisterrorfiletosharepoint-dev-operations-5a58a593b7ba010f9c611816.json" />
+    <EmbeddedResource Include="Samples\UpdatedeLogicApp\service-cramoapidev-apis-int3502-pricelisterrorfiletosharepoint-dev-operations.json" />
+    <EmbeddedResource Include="Samples\UpdatedeLogicApp\service-cramoapidev-apis-int3502-pricelisterrorfiletosharepoint-dev-policies.json" />
+    <EmbeddedResource Include="Samples\UpdatedeLogicApp\service-cramoapidev-apis-int3502-pricelisterrorfiletosharepoint-dev.json" />
+    <EmbeddedResource Include="Samples\UpdatedeLogicApp\service-cramoapidev-apis.json" />
+    <EmbeddedResource Include="Samples\UpdatedeLogicApp\service-cramoapidev-backends-LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV.json" />
+    <EmbeddedResource Include="Samples\UpdatedeLogicApp\service-cramoapidev-properties.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />

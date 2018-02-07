@@ -69,7 +69,7 @@ namespace APIManagementTemplate.Models
             this.resources.Remove(resource);
         }
 
-        public string AddParameter(string paramname, string type, string defaultvalue)
+        public string AddParameter(string paramname, string type, object defaultvalue)
         {
             return AddParameter(paramname, type, new JProperty("defaultValue", defaultvalue));
         }
@@ -140,10 +140,11 @@ namespace APIManagementTemplate.Models
 
         public void AddParameterFromObject(JObject obj, string propertyName, string propertyType, string paramNamePrefix = "")
         {
+            
             var propValue = (string)obj[propertyName];
-            if (propValue.StartsWith("[") && propValue.EndsWith("]"))
+            if (propValue == null ||( propValue.StartsWith("[") && propValue.EndsWith("]")))
                 return;
-            obj[propertyName] = WrapParameterName(this.AddParameter(paramNamePrefix + "_" + propertyName, propertyType, propValue));
+            obj[propertyName] = WrapParameterName(this.AddParameter(paramNamePrefix + "_" + propertyName, propertyType, obj[propertyName]));
         }
 
         /**
@@ -207,6 +208,10 @@ namespace APIManagementTemplate.Models
 
             AddParameterFromObject((JObject)resource["properties"], "apiRevision", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "serviceUrl", "string", name);
+            AddParameterFromObject((JObject)resource["properties"], "apiVersion", "string", name);
+            AddParameterFromObject((JObject)resource["properties"], "apiVersionSetId", "string", name);
+            AddParameterFromObject((JObject)resource["properties"], "isCurrent", "boolean", name);
+
 
             if (APIMInstanceAdded)
             {
@@ -289,10 +294,11 @@ namespace APIManagementTemplate.Models
             }
         }
 
-        public void AddBackend(JObject restObject)
+        public Property AddBackend(JObject restObject)
         {
+            Property retval = null;
             if (restObject == null)
-                return;
+                return retval;
 
             string name = restObject.Value<string>("name");
             string type = restObject.Value<string>("type");
@@ -307,7 +313,34 @@ namespace APIManagementTemplate.Models
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
 
-            AddParameterFromObject((JObject)resource["properties"], "url", "string", name);
+
+            if (restObject["properties"]["resourceId"] != null)
+            {
+                string resourceid = restObject["properties"].Value<string>("resourceId");
+                if (resourceid.Contains("providers/Microsoft.Logic/workflows")) //Logic App
+                {
+                    var aid = new AzureResourceId(resourceid.Replace("https://management.azure.com/",""));
+                    aid.SubscriptionId = "',subscription().subscriptionId,'";
+                    var rgparamname = AddParameter(name + "_resourceGroup", "string", aid.ResourceGroupName);
+                    var laname = aid.ValueAfter("workflows");
+                    var logicappname = AddParameter(name + "_logicAppName", "string", laname);
+                    aid.ResourceGroupName = "',parameters('" + rgparamname + "'),'";
+                    aid.ReplaceValueAfter("workflows", "',parameters('" + logicappname + "')");
+                    resource["properties"]["resourceId"] = "[concat('https://management.azure.com/','" + aid.ToString() + ")]";
+                    resource["properties"]["url"] = $"listCallbackUrl(resourceId(parameters('{rgparamname}'), 'Microsoft.Logic/workflows/triggers', parameters('{logicappname}'), 'manual'), providers('Microsoft.Logic', 'workflows').apiVersions[0])";
+                    retval = new Property()
+                    {
+                        type = Property.PropertyType.LogicApp,
+                        name = laname.ToLower(),
+                        extraInfo = resource["properties"].Value<string>("url")
+                    };
+                    
+                }
+            }
+            else
+            {
+                AddParameterFromObject((JObject)resource["properties"], "url", "string", name);
+            }
 
             if (APIMInstanceAdded)
             {
@@ -315,7 +348,10 @@ namespace APIManagementTemplate.Models
             }
 
             this.resources.Add(resource);
+            return retval;
         }
+
+
         public void AddGroup(JObject restObject)
         {
             if (restObject == null)
