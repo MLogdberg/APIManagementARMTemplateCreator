@@ -210,7 +210,7 @@ namespace APIManagementTemplate.Models
             AddParameterFromObject((JObject)resource["properties"], "serviceUrl", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "apiVersion", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "apiVersionSetId", "string", name);
-            AddParameterFromObject((JObject)resource["properties"], "isCurrent", "boolean", name);
+            AddParameterFromObject((JObject)resource["properties"], "isCurrent", "bool", name);
 
 
             if (APIMInstanceAdded)
