@@ -109,6 +109,35 @@ namespace APIManagementTemplate.Models
             }
             return realParameterName;
         }
+       
+        public string AddVariable(string variablename, string value)
+        {
+            string realVariableName = variablename;
+
+            if (this.variables[variablename] == null)
+            {
+                this.variables.Add(variablename, value);
+            }
+            else
+            {
+                foreach (var p in this.variables)
+                {
+                    if (p.Key.StartsWith(variablename))
+                    {
+                        for (int i = 2; i < 100; i++)
+                        {
+                            realVariableName = variablename + i.ToString();
+                            if (this.variables[realVariableName] == null)
+                            {
+                                this.variables.Add(realVariableName, value);
+                                return realVariableName;
+                            }
+                        }
+                    }
+                }
+            }
+            return realVariableName;
+        }
 
 
         public override string ToString()
@@ -140,9 +169,9 @@ namespace APIManagementTemplate.Models
 
         public void AddParameterFromObject(JObject obj, string propertyName, string propertyType, string paramNamePrefix = "")
         {
-            
+
             var propValue = (string)obj[propertyName];
-            if (propValue == null ||( propValue.StartsWith("[") && propValue.EndsWith("]")))
+            if (propValue == null || (propValue.StartsWith("[") && propValue.EndsWith("]")))
                 return;
             obj[propertyName] = WrapParameterName(this.AddParameter(paramNamePrefix + "_" + propertyName, propertyType, obj[propertyName]));
         }
@@ -216,7 +245,8 @@ namespace APIManagementTemplate.Models
             if (APIMInstanceAdded)
             {
                 resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]" });
-            }else
+            }
+            else
             {
                 resource["dependsOn"] = new JArray(); ;
             }
@@ -319,22 +349,25 @@ namespace APIManagementTemplate.Models
                 string resourceid = restObject["properties"].Value<string>("resourceId");
                 if (resourceid.Contains("providers/Microsoft.Logic/workflows")) //Logic App
                 {
-                    var aid = new AzureResourceId(resourceid.Replace("https://management.azure.com/",""));
+                    var aid = new AzureResourceId(resourceid.Replace("https://management.azure.com/", ""));
                     aid.SubscriptionId = "',subscription().subscriptionId,'";
                     var rgparamname = AddParameter(name + "_resourceGroup", "string", aid.ResourceGroupName);
                     var laname = aid.ValueAfter("workflows");
                     var logicappname = AddParameter(name + "_logicAppName", "string", laname);
                     aid.ResourceGroupName = "',parameters('" + rgparamname + "'),'";
                     aid.ReplaceValueAfter("workflows", "',parameters('" + logicappname + "')");
+
                     resource["properties"]["resourceId"] = "[concat('https://management.azure.com/','" + aid.ToString() + ")]";
-                    resource["properties"]["url"] = $"listCallbackUrl(resourceId(parameters('{rgparamname}'), 'Microsoft.Logic/workflows/triggers', parameters('{logicappname}'), 'manual'), providers('Microsoft.Logic', 'workflows').apiVersions[0])";
+                    string listcallbackref = $"listCallbackUrl(resourceId(parameters('{rgparamname}'), 'Microsoft.Logic/workflows/triggers', parameters('{logicappname}'), 'manual'), providers('Microsoft.Logic', 'workflows').apiVersions[0])";
+
+                    resource["properties"]["url"] = $"[substring({listcallbackref}.basePath,0,add(10,indexOf({listcallbackref}.basePath,'/triggers/')))]";
                     retval = new Property()
                     {
                         type = Property.PropertyType.LogicApp,
                         name = laname.ToLower(),
-                        extraInfo = resource["properties"].Value<string>("url")
+                        extraInfo = listcallbackref
                     };
-                    
+
                 }
             }
             else
@@ -429,7 +462,7 @@ namespace APIManagementTemplate.Models
             string servicename = "";
             string apiname = "";
             string operationname = "";
-            
+
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
