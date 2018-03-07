@@ -203,7 +203,7 @@ namespace APIManagementTemplate.Test
         public void ScenarioTestLogicApps()
         {
             var collector = new MockResourceCollector("BasicLogicApp");
-            TemplateGenerator generator = new TemplateGenerator("ibizmalo", "subscr", "resourcegroup", "orders", true, true,false, false, collector);
+            TemplateGenerator generator = new TemplateGenerator("ibizmalo", "subscr", "resourcegroup", "orders", true, false,false, false, collector);
             JObject result = generator.GenerateTemplate().Result;
         }
 
