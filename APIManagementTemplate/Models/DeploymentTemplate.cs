@@ -560,7 +560,7 @@ namespace APIManagementTemplate.Models
 
                 servicename = rid.ValueAfter("service");
                 apiname = rid.ValueAfter("apis");
-                operationname = rid.ValueAfter("operations"):
+                operationname = rid.ValueAfter("operations");
                 apiname = parametrizePropertiesOnly ? $"'{apiname}'" : $"parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}')";
                 operationname = parametrizePropertiesOnly ? $"'{operationname}'" : $"parameters('{AddParameter($"operations_{operationname}_name", "string", operationname)}')";
                 obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/', {apiname}, '/', {operationname}, '/', {name})]";
