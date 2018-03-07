@@ -28,9 +28,10 @@ namespace APIManagementTemplate
         private bool exportPIManagementInstance;
         private bool exportGroups;
         private bool exportProducts;
+        private bool parametrizePropertiesOnly;
 
         IResourceCollector resourceCollector;
-        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, IResourceCollector resourceCollector)
+        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -39,6 +40,7 @@ namespace APIManagementTemplate
             this.exportGroups = exportGroups;
             this.exportProducts = exportProducts;
             this.exportPIManagementInstance = exportPIManagementInstance;
+            this.parametrizePropertiesOnly = parametrizePropertiesOnly;
             this.resourceCollector = resourceCollector;
         }
 
@@ -49,7 +51,7 @@ namespace APIManagementTemplate
 
         public async Task<JObject> GenerateTemplate()
         {
-            DeploymentTemplate template = new DeploymentTemplate();
+            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly);
             if (exportPIManagementInstance)
             {
                 var apim = await resourceCollector.GetResource(GetAPIMResourceIDString());
@@ -79,9 +81,17 @@ namespace APIManagementTemplate
                     foreach (JObject policy in (operationPolicies == null ? new JArray() : operationPolicies.Value<JArray>("value")))
                     {
                         var pol = template.CreatePolicy(policy);
-                        //Handle Azure Resources
-                        this.PolicyHandeAzureResources(pol, apiTemplateResource.Value<string>("name"), template);
+
+                        //add properties
                         this.PolicyHandleProperties(pol, apiTemplateResource.Value<string>("name"));
+
+                        //Handle Azure Resources
+                        if (!this.PolicyHandeAzureResources(pol, apiTemplateResource.Value<string>("name"), template))
+                        {
+                            var operationSuffix = apiInstance.Value<string>("name") + "_" + operationInstance.Value<string>("name");
+                            PolicyHandeBackendUrl(pol, operationSuffix, template);
+                        }
+                        
                         operationTemplateResource.Value<JArray>("resources").Add(pol);
                         //handle nextlink?
                     }
@@ -92,6 +102,7 @@ namespace APIManagementTemplate
                 foreach (JObject policy in (apiPolicies == null ? new JArray() : apiPolicies.Value<JArray>("value")))
                 {
                     var policyTemplateResource = template.CreatePolicy(policy);
+                    PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
                     this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"));
                     apiTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
 
@@ -102,7 +113,15 @@ namespace APIManagementTemplate
                     if (!string.IsNullOrEmpty(backendid))
                     {
                         var backendInstance = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/backends/" + backendid);
-                        template.AddBackend(backendInstance);
+                        var property = template.AddBackend(backendInstance);
+
+                        if(property != null)
+                        {
+                            var idp = this.identifiedProperties.Where(pp => pp.name.Contains(property.name + "_manual-invoke_")).FirstOrDefault();
+                            idp.extraInfo = property.extraInfo;
+                            idp.type = Property.PropertyType.LogicAppRevisionGa;
+                        }
+
 
                         if (apiTemplateResource.Value<JArray>("dependsOn") == null)
                             apiTemplateResource["dependsOn"] = new JArray();
@@ -116,7 +135,9 @@ namespace APIManagementTemplate
 
                 //handle nextlink?
             }
-            if (exportGroups)
+
+            // Export all groups if we don't export the products.
+            if (exportGroups && !exportProducts)
             {
                 var groups = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/groups");
                 foreach (JObject groupObject in (groups == null ? new JArray() : groups.Value<JArray>("value")))
@@ -133,10 +154,33 @@ namespace APIManagementTemplate
                 foreach (JObject productObject in (products == null ? new JArray() : products.Value<JArray>("value")))
                 {
                     var id = productObject.Value<string>("id");
-                    var instance = await resourceCollector.GetResource(id);
-                    //template.Add(operationInstance);
+                    var productInstance = await resourceCollector.GetResource(id);
 
-                    //TODO!!!!
+                    var productApis = await resourceCollector.GetResource(id + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
+
+                    // Skip product if not related to an API in the filter.
+                    if (productApis != null && productApis.Value<JArray>("value").Count > 0)
+                    {
+                        var productTemplateResource = template.AddProduct(productObject);
+
+                        foreach (JObject productApi in (productApis == null ? new JArray() : productApis.Value<JArray>("value")))
+                        {
+                            productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(productApi));
+                        }
+
+                        var groups = await resourceCollector.GetResource(id + "/groups");
+                        foreach (JObject group in (groups == null ? new JArray() : groups.Value<JArray>("value")))
+                        {
+                            if (group["properties"].Value<bool>("builtIn") == false)
+                            {
+                                // Add group resource
+                                var groupObject = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/groups/" + group.Value<string>("name"));
+                                template.AddGroup(groupObject);
+                                productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(group));
+                                productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_{servicename}_name'), '{group.Value<string>("name")}')]");
+                            }
+                        }
+                    }
                 }
             }
 
@@ -154,17 +198,22 @@ namespace APIManagementTemplate
                     {
                         propertyObject["properties"]["value"] = $"[concat('sv=',{identifiedProperty.extraInfo}.queries.sv,'&sig=',{identifiedProperty.extraInfo}.queries.sig)]";
                     }
-                    template.AddProperty(propertyObject);
-                    foreach (var apiName in identifiedProperty.apis)
+                    else if (identifiedProperty.type == Property.PropertyType.LogicAppRevisionGa)
                     {
-                        var apiTemplate = template.resources.Where(rr => rr.Value<string>("name") == apiName).FirstOrDefault();
-                        apiTemplate.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_{servicename}_name'),parameters('property_{propertyObject.Value<string>("name")}_name'))]");
+                        propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo}.queries.sig]";
+                    }
+                    template.AddProperty(propertyObject);
+
+                    if (!parametrizePropertiesOnly)
+                    {
+                        foreach (var apiName in identifiedProperty.apis)
+                        {
+                            var apiTemplate = template.resources.Where(rr => rr.Value<string>("name") == apiName).FirstOrDefault();
+                            apiTemplate.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_{servicename}_name'),parameters('property_{propertyObject.Value<string>("name")}_name'))]");
+                        }
                     }
                 }
             }
-
-
-
 
             return JObject.FromObject(template);
 
@@ -173,7 +222,8 @@ namespace APIManagementTemplate
         public void PolicyHandleProperties(JObject policy, string apiname)
         {
             var policyContent = policy["properties"].Value<string>("policyContent");
-            var match = Regex.Match(policyContent, "{{(?<name>[a-zA-Z0-9]*)}}");
+            var match = Regex.Match(policyContent, "{{(?<name>[-_.a-zA-Z0-9]*)}}");
+
             while (match.Success)
             {
                 string name = match.Groups["name"].Value;
@@ -193,14 +243,15 @@ namespace APIManagementTemplate
 
         public List<Property> identifiedProperties = new List<Property>();
 
-        public void PolicyHandeAzureResources(JObject policy, string apiname, DeploymentTemplate template)
+        public bool PolicyHandeAzureResources(JObject policy, string apiname, DeploymentTemplate template)
         {
             var policyContent = policy["properties"].Value<string>("policyContent");
+            var policyXMLDoc = XDocument.Parse(policyContent);
 
             var commentMatch = Regex.Match(policyContent, "<!--[ ]*(?<json>{+.*\"azureResource.*)-->");
             if (commentMatch.Success)
             {
-                var policyXMLDoc = XDocument.Parse(policyContent);
+
                 var json = commentMatch.Groups["json"].Value;
 
                 JObject azureResourceObject = JObject.Parse(json).Value<JObject>("azureResource");
@@ -211,31 +262,25 @@ namespace APIManagementTemplate
 
                     if (reourceType == "logicapp")
                     {
-                        var logicAppNameMatch = Regex.Match(id, "resourceGroups/(?<resourceGroupName>.*)/providers/Microsoft.Logic/workflows/(?<name>.*)/triggers/(?<triggerName>.*)");
+                        var logicAppNameMatch = Regex.Match(id, @"resourceGroups/(?<resourceGroupName>[\w-_d]*)/providers/Microsoft.Logic/workflows/(?<name>[\w-_d]*)/triggers/(?<triggerName>[\w-_d]*)");
                         string logicAppName = logicAppNameMatch.Groups["name"].Value;
                         string logicApptriggerName = logicAppNameMatch.Groups["triggerName"].Value;
                         string logicAppResourceGroup = logicAppNameMatch.Groups["resourceGroupName"].Value;
 
                         string listCallbackUrl = $"listCallbackUrl(resourceId(parameters('{template.AddParameter($"logicApp_{logicAppName}_resourcegroup", "string", logicAppResourceGroup)}'),'Microsoft.Logic/workflows/triggers', parameters('{template.AddParameter($"logicApp_{logicAppName}_name", "string", logicAppName)}'),parameters('{template.AddParameter($"logicApp_{logicAppName}_trigger", "string", logicApptriggerName)}')), providers('Microsoft.Logic', 'workflows').apiVersions[0])";
 
-                        //var resourceid = id.Substring(id.IndexOf("Microsoft.Logic"));
-
                         //Set the Base URL
                         var backendService = policyXMLDoc.Descendants().Where(dd => dd.Name == "set-backend-service" && dd.Attribute("id").Value == "apim-generated-policy").FirstOrDefault();
-                        var baseUrl = backendService.Attribute("base-url");
-                        if (baseUrl != null)
-                        {
-                            int index = policyContent.IndexOf(baseUrl.Value);
+                        policy["properties"]["policyContent"] = CreatePolicyContentReplaceBaseUrl(backendService, policyContent, $"{listCallbackUrl}.basePath");
 
-                            policy["properties"]["policyContent"] = "[Concat('" + policyContent.Substring(0, index) + "'," + $"{listCallbackUrl}.basePath" + ",'" + policyContent.Substring(index + baseUrl.Value.Length) + "')]";
-                        }
-                        //handle the property
-
-                        var rewriteElement = policyXMLDoc.Descendants().Where(dd => dd.Name == "rewrite-uri" && dd.Attribute("id").Value == "apim-generated-policy").FirstOrDefault();
+                        //Handle the sig property
+                        var rewriteElement = policyXMLDoc.Descendants().Where(dd => dd.Name == "rewrite-uri").LastOrDefault();
                         var rewritetemplate = rewriteElement.Attribute("template");
                         if (rewritetemplate != null)
                         {
-                            var match = Regex.Match(rewritetemplate.Value, "{{(?<name>[a-zA-Z0-9]*)}}");
+
+                            var match = Regex.Match(rewritetemplate.Value, "{{(?<name>[-_.a-zA-Z0-9]*)}}");
+
                             if (match.Success)
                             {
                                 string propname = match.Groups["name"].Value;
@@ -266,16 +311,55 @@ namespace APIManagementTemplate
                         </policies>
                         */
 
-                        //sv=1.0&sig=k3M13MzEcb-MpID5XdwL8C76YFXImxYEP8bnSPd046M
-                        //policyXMLDoc.Descendants().Where(dd => dd.HasAttributes && dd.Attribute("id") != null).ToList()
+                    }
+                    else if (reourceType == "funcapp")
+                    {
+                        /*
+                        var logicAppNameMatch = Regex.Match(id, "resourceGroups/(?<resourceGroupName>.*)/providers/Microsoft.Logic/workflows/(?<name>.*)/triggers/(?<triggerName>.*)");
+                        string functionAppName = logicAppNameMatch.Groups["name"].Value;
+                        string functionName = logicAppNameMatch.Groups["triggerName"].Value;
+                        string functionResourceGroup = logicAppNameMatch.Groups["resourceGroupName"].Value;*/
                     }
                 }
+
+            }
+            return commentMatch.Success;
+        }
+        public void PolicyHandeBackendUrl(JObject policy, string apiname, DeploymentTemplate template)
+        {
+            var policyContent = policy["properties"].Value<string>("policyContent");
+            var policyXMLDoc = XDocument.Parse(policyContent);
+            //find the last backend service and add as parameter
+            var backendService = policyXMLDoc.Descendants().Where(dd => dd.Name == "set-backend-service").LastOrDefault();
+            if (backendService != null)
+            {
+
+                if (backendService.Attribute("base-url") != null)
+                {
+                    var baseUrl = backendService.Attribute("base-url");
+                    var paramname = template.AddParameter($"api_{apiname}_backendurl", "string", backendService.Attribute("base-url").Value);
+                    policy["properties"]["policyContent"] = CreatePolicyContentReplaceBaseUrl(backendService, policyContent, $"parameters('{paramname}')");
+                }
+
             }
 
-
-            //find propertoes /named values
         }
 
 
+        private string CreatePolicyContentReplaceBaseUrl(XElement backendService, string policyContent, string replaceText)
+        {
+            var baseUrl = backendService.Attribute("base-url");
+            if (baseUrl != null)
+            {
+                int index = policyContent.IndexOf(baseUrl.Value);
+
+                return "[Concat('" + policyContent.Substring(0, index) + "'," + replaceText + ",'" + policyContent.Substring(index + baseUrl.Value.Length) + "')]";
+            }
+            return policyContent;
+        }
+
     }
+
+
+
 }

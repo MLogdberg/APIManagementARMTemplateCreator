@@ -1,0 +1,198 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "service_ibizmalo_name": {
+      "type": "string",
+      "defaultValue": "ibizmalo"
+    },
+    "api_order_name": {
+      "type": "string",
+      "defaultValue": "order"
+    },
+    "order_apiRevision": {
+      "type": "string",
+      "defaultValue": "1"
+    },
+    "order_serviceUrl": {
+      "type": "string",
+      "defaultValue": "https://prod-48.westeurope.logic.azure.com/workflows/bc406236bfff482a836ca4f6caabbb17/triggers"
+    },
+    "operations_59a6b4730d691205f068a8be_name": {
+      "type": "string",
+      "defaultValue": "59a6b4730d691205f068a8be"
+    },
+    "policy_policy_name": {
+      "type": "string",
+      "defaultValue": "policy"
+    },
+    "logicApp_INT001-GetOrderInfo_resourcegroup": {
+      "type": "string",
+      "defaultValue": "PreDemoTest"
+    },
+    "logicApp_INT001-GetOrderInfo_name": {
+      "type": "string",
+      "defaultValue": "INT001-GetOrderInfo"
+    },
+    "logicApp_INT001-GetOrderInfo_trigger": {
+      "type": "string",
+      "defaultValue": "request"
+    },
+    "group_5836deeb0647c01104435b5c_name": {
+      "type": "string",
+      "defaultValue": "5836deeb0647c01104435b5c"
+    },
+    "property_59a6b478285385ab3dfbb752_name": {
+      "type": "string",
+      "defaultValue": "59a6b478285385ab3dfbb752"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "comments": "Generated for resource /subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/order",
+      "type": "Microsoft.ApiManagement/service/apis",
+      "name": "[concat(parameters('service_ibizmalo_name'), '/' ,parameters('api_order_name'))]",
+      "apiVersion": "2017-03-01",
+      "properties": {
+        "displayName": "Order",
+        "apiRevision": "[parameters('order_apiRevision')]",
+        "description": "Azure Logic App.",
+        "serviceUrl": "[parameters('order_serviceUrl')]",
+        "path": "api/v1/order",
+        "protocols": [
+          "https"
+        ],
+        "authenticationSettings": {
+          "oAuth2": null,
+          "openid": null
+        },
+        "subscriptionKeyParameterNames": {
+          "header": "Ocp-Apim-Subscription-Key",
+          "query": "subscription-key"
+        },
+        "isCurrent": true
+      },
+      "resources": [
+        {
+          "comments": "Generated for resource /subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/order/operations/59a6b4730d691205f068a8be",
+          "type": "Microsoft.ApiManagement/service/apis/operations",
+          "name": "[concat(parameters('service_ibizmalo_name'), '/' ,parameters('api_order_name'), '/' ,parameters('operations_59a6b4730d691205f068a8be_name'))]",
+          "apiVersion": "2017-03-01",
+          "properties": {
+            "displayName": "request-invoke",
+            "method": "POST",
+            "urlTemplate": "/request/paths/invoke",
+            "templateParameters": [],
+            "description": "Utlös en körning av logikappen.",
+            "request": {
+              "description": "Begärantexten.",
+              "queryParameters": [],
+              "headers": [
+                {
+                  "name": "Content-Type",
+                  "description": "",
+                  "type": "string",
+                  "defaultValue": "application/json",
+                  "required": true,
+                  "values": [
+                    "application/json"
+                  ]
+                }
+              ],
+              "representations": [
+                {
+                  "contentType": "application/json",
+                  "sample": null,
+                  "typeName": "request-request",
+                  "schemaId": null
+                }
+              ]
+            },
+            "responses": [
+              {
+                "statusCode": 200,
+                "description": "Logikapp-reponsen.",
+                "representations": [
+                  {
+                    "contentType": "application/json",
+                    "sample": null,
+                    "typeName": "RequestPathsInvokePost200ApplicationJsonResponse",
+                    "schemaId": null
+                  }
+                ],
+                "headers": []
+              }
+            ],
+            "policies": null
+          },
+          "resources": [
+            {
+              "comments": "Generated for resource /subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/order/operations/59a6b4730d691205f068a8be/policies/policy",
+              "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+              "name": "[concat(parameters('service_ibizmalo_name'), '/' ,parameters('api_order_name'), '/' ,parameters('operations_59a6b4730d691205f068a8be_name'), '/' ,parameters('policy_policy_name'))]",
+              "apiVersion": "2017-03-01",
+              "properties": {
+                "policyContent": "[Concat('<policies>\r\n  <inbound>\r\n    <rewrite-uri id=\"apim-generated-policy\" template=\"?api-version=2016-06-01&amp;sp=/triggers/request/run&amp;{{orderrequest59a6b4783fb21a7984df42ae}}\" />\r\n    <set-backend-service id=\"apim-generated-policy\" base-url=\"',listCallbackUrl(resourceId(parameters('logicApp_INT001-GetOrderInfo_resourcegroup'),'Microsoft.Logic/workflows/triggers', parameters('logicApp_INT001-GetOrderInfo_name'),parameters('logicApp_INT001-GetOrderInfo_trigger')), providers('Microsoft.Logic', 'workflows').apiVersions[0]).basePath,'\" />\r\n    <base />\r\n    <set-header name=\"Ocp-Apim-Subscription-Key\" exists-action=\"delete\" />\r\n  </inbound>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n  <backend>\r\n    <base />\r\n    <!-- { \"azureResource\": { \"type\": \"logicapp\", \"id\": \"/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.Logic/workflows/INT001-GetOrderInfo/triggers/request\" } } -->\r\n  </backend>\r\n</policies>')]"
+              },
+              "resources": [],
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_ibizmalo_name') ,parameters('api_order_name'))]",
+                "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('service_ibizmalo_name'), parameters('api_order_name'), parameters('operations_59a6b4730d691205f068a8be_name'))]"
+              ]
+            }
+          ],
+          "dependsOn": [
+            "[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_ibizmalo_name'), parameters('api_order_name'))]"
+          ]
+        },
+        {
+          "comments": "Generated for resource /subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/order/policies/policy",
+          "type": "Microsoft.ApiManagement/service/apis/policies",
+          "name": "[concat(parameters('service_ibizmalo_name'), '/' ,parameters('api_order_name'), '/' ,parameters('policy_policy_name'))]",
+          "apiVersion": "2017-03-01",
+          "properties": {
+            "policyContent": "<policies>\r\n  <inbound>\r\n    <base />\r\n  </inbound>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n  <backend>\r\n    <base />\r\n    <!-- { \"azureResource\": { \"type\": \"logicapp\", \"id\": \"/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.Logic/workflows/INT001-GetOrderInfo\" } } -->\r\n  </backend>\r\n</policies>"
+          },
+          "resources": [],
+          "dependsOn": [
+            "[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_ibizmalo_name') ,parameters('api_order_name'))]"
+          ]
+        }
+      ],
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_ibizmalo_name'),parameters('property_59a6b478285385ab3dfbb752_name'))]"
+      ]
+    },
+    {
+      "comments": "Generated for resource /subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/groups/5836deeb0647c01104435b5c",
+      "type": "Microsoft.ApiManagement/service/groups",
+      "name": "[concat(parameters('service_ibizmalo_name'), '/' ,parameters('group_5836deeb0647c01104435b5c_name'))]",
+      "apiVersion": "2017-03-01",
+      "properties": {
+        "displayName": "TEST",
+        "description": null,
+        "builtIn": false,
+        "type": "custom",
+        "externalId": null
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "comments": "Generated for resource /subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/59a6b478285385ab3dfbb752",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "[concat(parameters('service_ibizmalo_name'), '/' ,parameters('property_59a6b478285385ab3dfbb752_name'))]",
+      "apiVersion": "2017-03-01",
+      "properties": {
+        "displayName": "orderrequest59a6b4783fb21a7984df42ae",
+        "value": "[concat('sv=',listCallbackUrl(resourceId(parameters('logicApp_INT001-GetOrderInfo_resourcegroup'),'Microsoft.Logic/workflows/triggers', parameters('logicApp_INT001-GetOrderInfo_name'),parameters('logicApp_INT001-GetOrderInfo_trigger')), providers('Microsoft.Logic', 'workflows').apiVersions[0]).queries.sv,'&sig=',listCallbackUrl(resourceId(parameters('logicApp_INT001-GetOrderInfo_resourcegroup'),'Microsoft.Logic/workflows/triggers', parameters('logicApp_INT001-GetOrderInfo_name'),parameters('logicApp_INT001-GetOrderInfo_trigger')), providers('Microsoft.Logic', 'workflows').apiVersions[0]).queries.sig)]",
+        "tags": [],
+        "secret": true
+      },
+      "resources": [],
+      "dependsOn": []
+    }
+  ],
+  "outputs": {}
+}

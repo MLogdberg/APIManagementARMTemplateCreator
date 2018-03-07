@@ -1,0 +1,13 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/order/operations/59a6b4730d691205f068a8be/policies/policy",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "name": "policy",
+      "properties": {
+        "policyContent": "<policies>\r\n  <inbound>\r\n    <rewrite-uri id=\"apim-generated-policy\" template=\"?api-version=2016-06-01&amp;sp=/triggers/request/run&amp;{{orderrequest59a6b4783fb21a7984df42ae}}\" />\r\n    <set-backend-service id=\"apim-generated-policy\" base-url=\"https://prod-48.westeurope.logic.azure.com/workflows/bc406236bfff482a836ca4f6caabbb17/triggers/request/paths/invoke\" />\r\n    <base />\r\n    <set-header name=\"Ocp-Apim-Subscription-Key\" exists-action=\"delete\" />\r\n  </inbound>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n  <backend>\r\n    <base />\r\n    <!-- { \"azureResource\": { \"type\": \"logicapp\", \"id\": \"/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.Logic/workflows/INT001-GetOrderInfo/triggers/request\" } } -->\r\n  </backend>\r\n</policies>"
+      }
+    }
+  ],
+  "nextLink": ""
+}

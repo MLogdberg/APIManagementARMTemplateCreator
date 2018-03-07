@@ -16,7 +16,8 @@ namespace APIManagementTemplate.Models
         public enum PropertyType
         {
             Standard,
-            LogicApp
+            LogicApp,
+            LogicAppRevisionGa
         }
     }
 

@@ -52,7 +52,8 @@ namespace APIManagementTemplate.Test
 
             var policy = (JObject)array[0];
 
-            TemplateGenerator generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest","",false,false,false,new MockResourceCollector());
+            TemplateGenerator generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest","",false,false,false,false,new MockResourceCollector("path"));
+
             var template = new DeploymentTemplate();
             template.CreatePolicy(policy);
 
@@ -197,6 +198,41 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual("countyNo", oparation["properties"]["templateParameters"][0].Value<string>("name"));
             Assert.AreEqual("other", oparation["properties"]["templateParameters"][1].Value<string>("name"));
         }
+
+        [TestMethod]
+        public void ScenarioTestLogicApps()
+        {
+            var collector = new MockResourceCollector("BasicLogicApp");
+            TemplateGenerator generator = new TemplateGenerator("ibizmalo", "subscr", "resourcegroup", "orders", true, false,false, false, collector);
+            JObject result = generator.GenerateTemplate().Result;
+        }
+
+
+        [TestMethod]
+        public void ScenarioTestLogicAppUpdated()
+        {
+            var collector = new MockResourceCollector("UpdatedeLogicApp");
+            TemplateGenerator generator = new TemplateGenerator("cramoapidev", "13ea6145-d7f4-4d0f-b406-7394a2b64fb4", "Api-Default-West-Europe", "api/pricelists/errorfile", false, false, false,false, collector);
+            JObject result = generator.GenerateTemplate().Result;
+        }
+
+        [TestMethod]
+        public void ScenarioTestLogicAppUpdatedBackend()
+        {
+            var collector = new MockResourceCollector("UpdatedeLogicApp");
+            var dtemplate = new DeploymentTemplate();
+
+            var document = JObject.Parse(Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.UpdatedeLogicApp.service-cramoapidev-backends-LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV.json"));
+            dtemplate.AddBackend(document);
+
+            Assert.AreEqual("[substring(listCallbackUrl(resourceId(parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_logicAppName'), 'manual'), providers('Microsoft.Logic', 'workflows').apiVersions[0]).basePath,0,add(10,indexOf(listCallbackUrl(resourceId(parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_logicAppName'), 'manual'), providers('Microsoft.Logic', 'workflows').apiVersions[0]).basePath,'/triggers/')))]", dtemplate.resources[0]["properties"].Value<string>("url"));
+            Assert.AreEqual("[concat('https://management.azure.com/','/subscriptions/',subscription().subscriptionId,'/resourceGroups/',parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_resourceGroup'),'/providers/Microsoft.Logic/workflows/',parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_logicAppName'))]", dtemplate.resources[0]["properties"].Value<string>("resourceId"));
+            var result = dtemplate.ToString();
+
+            //Assert.AreEqual("other", oparation["properties"]["templateParameters"][1].Value<string>("name"));
+
+        }
+
     }
 
 

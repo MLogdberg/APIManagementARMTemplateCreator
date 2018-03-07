@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<policies>
+  <inbound>
+    <base />
+  </inbound>
+  <outbound>
+    <base />
+  </outbound>
+  <backend>
+    <base />
+    <!-- { "azureResource": { "type": "logicapp", "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.Logic/workflows/INT001-GetOrderInfo" } } -->
+  </backend>
+</policies>

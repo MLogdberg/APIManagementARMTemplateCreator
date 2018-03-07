@@ -1,0 +1,23 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/order",
+      "type": "Microsoft.ApiManagement/service/apis",
+      "name": "order",
+      "properties": {
+        "displayName": "Order",
+        "apiRevision": "1",
+        "description": "Azure Logic App.",
+        "serviceUrl": "https://prod-48.westeurope.logic.azure.com/workflows/bc406236bfff482a836ca4f6caabbb17/triggers",
+        "path": "api/v1/order",
+        "protocols": [
+          "https"
+        ],
+        "authenticationSettings": null,
+        "subscriptionKeyParameterNames": null,
+        "isCurrent": true
+      }
+    }
+  ],
+  "nextLink": ""
+}

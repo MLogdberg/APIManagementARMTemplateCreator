@@ -1,0 +1,13 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/13ea6145-d7f4-4d0f-b406-7394a2b64fb4/resourceGroups/Api-Default-West-Europe/providers/Microsoft.ApiManagement/service/cramoapidev/apis/int3502-pricelisterrorfiletosharepoint-dev/policies/policy",
+      "type": "Microsoft.ApiManagement/service/apis/policies",
+      "name": "policy",
+      "properties": {
+        "policyContent": "<policies>\r\n  <inbound>\r\n    <base />\r\n    <set-backend-service id=\"apim-generated-policy\" backend-id=\"LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n  <on-error>\r\n    <base />\r\n  </on-error>\r\n</policies>"
+      }
+    }
+  ],
+  "nextLink": ""
+}

@@ -1,0 +1,13 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/13ea6145-d7f4-4d0f-b406-7394a2b64fb4/resourceGroups/Api-Default-West-Europe/providers/Microsoft.ApiManagement/service/cramoapidev/apis/int3502-pricelisterrorfiletosharepoint-dev/operations/5a58a593b7ba010f9c611816/policies/policy",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "name": "policy",
+      "properties": {
+        "policyContent": "<policies>\r\n  <inbound>\r\n    <base />\r\n    <set-method id=\"apim-generated-policy\">POST</set-method>\r\n    <rewrite-uri id=\"apim-generated-policy\" template=\"/manual/paths/invoke/?api-version=2016-06-01&amp;sp=/triggers/manual/run&amp;sv=1.0&amp;sig={{int3502-pricelisterrorfiletosharepoint-dev_manual-invoke_5a58a59a04b10b3ddf3e5658}}\" />\r\n    <set-header name=\"Ocp-Apim-Subscription-Key\" exists-action=\"delete\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n  <on-error>\r\n    <base />\r\n  </on-error>\r\n</policies>"
+      }
+    }
+  ],
+  "nextLink": ""
+}

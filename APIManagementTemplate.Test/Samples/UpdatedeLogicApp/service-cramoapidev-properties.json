@@ -1,0 +1,16 @@
+{
+  "value": [   
+    {
+      "id": "/subscriptions/13ea6145-d7f4-4d0f-b406-7394a2b64fb4/resourceGroups/Api-Default-West-Europe/providers/Microsoft.ApiManagement/service/cramoapidev/properties/5a58a59a18a51678db805c58",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "5a58a59a18a51678db805c58",
+      "properties": {
+        "displayName": "int3502-pricelisterrorfiletosharepoint-dev_manual-invoke_5a58a59a04b10b3ddf3e5658",
+        "value": "fakeone",
+        "tags": [],
+        "secret": true
+      }
+    }
+  ],
+  "nextLink": ""
+}

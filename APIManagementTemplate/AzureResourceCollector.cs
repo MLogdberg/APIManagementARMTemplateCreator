@@ -14,7 +14,7 @@ namespace APIManagementTemplate
     public class AzureResourceCollector : IResourceCollector
     {
 
-
+        public string DebugOutputFolder = "";
         public string token;
 
 
@@ -48,6 +48,10 @@ namespace APIManagementTemplate
                 return null;
             }
             var responseContent = await response.Content.ReadAsStringAsync();
+            if (!string.IsNullOrEmpty(DebugOutputFolder))
+            {
+                System.IO.File.WriteAllText(DebugOutputFolder + "\\" + resourceId.Split('/').SkipWhile( (a) => { return a != "service"; }).Aggregate<string>((b,c) => { return b +"-" +c; })  + ".json", responseContent);
+            }
             return JObject.Parse(responseContent);
 
         }
