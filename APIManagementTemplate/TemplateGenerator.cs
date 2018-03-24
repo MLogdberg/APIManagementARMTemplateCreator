@@ -351,7 +351,7 @@ namespace APIManagementTemplate
         private string CreatePolicyContentReplaceBaseUrl(XElement backendService, string policyContent, string replaceText)
         {
             var baseUrl = backendService.Attribute("base-url");
-            if (baseUrl != null)
+            if (baseUrl != null && policyContent.IndexOf(baseUrl.Value) > -1)
             {
                 int index = policyContent.IndexOf(baseUrl.Value);
 
