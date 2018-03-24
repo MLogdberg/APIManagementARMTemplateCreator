@@ -101,14 +101,16 @@ namespace APIManagementTemplate
                 var apiPolicies = await resourceCollector.GetResource(id + "/policies");
                 foreach (JObject policy in (apiPolicies == null ? new JArray() : apiPolicies.Value<JArray>("value")))
                 {
+                    //Handle SOAP Backend
+                    var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>("policyContent"));
+
+
                     var policyTemplateResource = template.CreatePolicy(policy);
                     PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
                     this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"));
                     apiTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
 
 
-                    //Handle SOAP Backend
-                    var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>("policyContent"));
 
                     if (!string.IsNullOrEmpty(backendid))
                     {
