@@ -6,7 +6,7 @@ $manifest = Test-ModuleManifest -Path $manifestPath
 
 Write-Host "Module version needs to be incremented before publishing. Current version is $($manifest.Version)"
 
-Update-ModuleManifest -Path $manifestPath -ModuleVersion (Read-Host "New module version: ")
+Update-ModuleManifest -Path $manifestPath -CmdletsToExport '*' -ModuleVersion (Read-Host "New module version: ")
 
 Write-Host "Preparing module"
 
