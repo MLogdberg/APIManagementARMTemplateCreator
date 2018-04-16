@@ -13,88 +13,44 @@ namespace APIManagementTemplate
     [Cmdlet(VerbsCommon.Get, "APIManagementTemplate", ConfirmImpact = ConfirmImpact.None)]
     public class GeneratorCmdlet : PSCmdlet
     {
-        [Parameter(
-            Mandatory = true,
-            HelpMessage = "Name of the API Management instance"
-            )]
+        [Parameter(Mandatory = true,HelpMessage = "Name of the API Management instance")]
         public string APIManagement;
 
-        [Parameter(
-            Mandatory = true,
-            HelpMessage = "The name of the Resource Group"
-            )]
+        [Parameter(Mandatory = true,HelpMessage = "The name of the Resource Group")]
         public string ResourceGroup;
 
-        [Parameter(
-            Mandatory = false,
-            HelpMessage = "The Subscription id (guid)"
-            )]
+        [Parameter(Mandatory = false,HelpMessage = "The Subscription id (guid)")]
         public string SubscriptionId;
 
-        [Parameter(
-            Mandatory = false,
-            HelpMessage = "Name of the Tenant i.e. contoso.onmicrosoft.com"
-        )]
+        [Parameter(Mandatory = false,HelpMessage = "Name of the Tenant i.e. contoso.onmicrosoft.com")]
         public string TenantName = "";
 
         //see filter in https://docs.microsoft.com/en-us/rest/api/apimanagement/api/listbyservice
-        [Parameter(
-            Mandatory = false,
-            HelpMessage = "Filter for what API's to exort i.e: path eq 'api/v1/currencyconverter' or endswith(path,'currencyconverter')",
-            ValueFromPipeline = true
-        )]
+        [Parameter(Mandatory = false,HelpMessage = "Filter for what API's to exort i.e: path eq 'api/v1/currencyconverter' or endswith(path,'currencyconverter')")]
         public string APIFilters = null;
 
-        [Parameter(
-            Mandatory = false,
-            HelpMessage = "Export AuthorizationServers",
-            ValueFromPipeline = true
-        )]
+        [Parameter(Mandatory = false,HelpMessage = "Export AuthorizationServers")]
         public bool ExportAuthorizationServers = true;
 
-        [Parameter(
-            Mandatory = false,
-            HelpMessage = "Export the API Management Instance",
-            ValueFromPipeline = true
-        )]
+        [Parameter(Mandatory = false,HelpMessage = "Export the API Management Instance")]
         public bool ExportPIManagementInstance = true;
 
-        [Parameter(
-            Mandatory = false,
-            HelpMessage = "Export the API Management Groups, not builtin",
-            ValueFromPipeline = true
-        )]
+        [Parameter(Mandatory = false,HelpMessage = "Export the API Management Groups, not builtin")]
         public bool ExportGroups = true;
 
-        [Parameter(
-            Mandatory = false,
-            HelpMessage = "Export the API Management Products",
-            ValueFromPipeline = true
-        )]
+        [Parameter(Mandatory = false,HelpMessage = "Export the API Management Products")]
         public bool ExportProducts = true;
 
-        [Parameter(
-            Mandatory = false,
-            HelpMessage = "Piped input from armclient",
-            ValueFromPipeline = true
-        )]
+        [Parameter(Mandatory = false,HelpMessage = "A Bearer token value")]
         public string Token = "";
 
-        [Parameter(
-            Mandatory = false,
-            HelpMessage = "Set to 'true' when all environment-specific parameters are defined as properties",
-            ValueFromPipeline = true
-        )]
+        [Parameter(Mandatory = false,HelpMessage = "Set to 'true' when all environment-specific parameters are defined as properties")]
         public bool ParametrizePropertiesOnly = false;
-
+        
+        [Parameter(Mandatory = false,HelpMessage = "If set, result from rest interface will be saved to this folder")]
         public string DebugOutPutFolder = "";
-        [Parameter(
-            Mandatory = false,
-            HelpMessage = "If set, result from rest interface will be saved to this folder",
-            ValueFromPipeline = true
-        )]
 
-
+        [Parameter(Mandatory = false, HelpMessage = "Piped input from armclient", ValueFromPipeline = true)]
         public string ClaimsDump;
 
         protected override void ProcessRecord()
