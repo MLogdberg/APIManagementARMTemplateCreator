@@ -149,6 +149,7 @@ namespace APIManagementTemplate
                         foreach (JObject productApi in (productApis == null ? new JArray() : productApis.Value<JArray>("value")))
                         {
                             productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(productApi));
+                            productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_{servicename}_name'), '{productApi.Value<string>("name")}')]");
                         }
 
                         var groups = await resourceCollector.GetResource(id + "/groups");
