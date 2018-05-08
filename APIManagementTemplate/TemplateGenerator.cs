@@ -184,11 +184,16 @@ namespace APIManagementTemplate
                     }
                     template.AddProperty(propertyObject);
 
-                    if (!parametrizePropertiesOnly)
+                    foreach (var apiName in identifiedProperty.apis)
                     {
-                        foreach (var apiName in identifiedProperty.apis)
+                        var apiTemplate = template.resources.Where(rr => rr.Value<string>("name") == apiName).FirstOrDefault();
+
+                        if (parametrizePropertiesOnly)
                         {
-                            var apiTemplate = template.resources.Where(rr => rr.Value<string>("name") == apiName).FirstOrDefault();
+                            apiTemplate.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_{servicename}_name'), '{name}'))]");
+                        }
+                        else
+                        {
                             apiTemplate.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_{servicename}_name'),parameters('property_{propertyObject.Value<string>("name")}_name'))]");
                         }
                     }
