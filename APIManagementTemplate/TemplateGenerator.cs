@@ -63,9 +63,27 @@ namespace APIManagementTemplate
             {
 
                 var id = apiObject.Value<string>("id");
-                var apiInstance = await resourceCollector.GetResource(id);
 
+
+                var apiInstance = await resourceCollector.GetResource(id);
                 var apiTemplateResource = template.AddApi(apiInstance);
+
+                //Api version set
+                string apiversionsetid = apiTemplateResource["properties"].Value<string>("apiVersionSetId");
+                if (!string.IsNullOrEmpty(apiversionsetid))
+                {
+                    AzureResourceId aiapiversion = new AzureResourceId(apiInstance["properties"].Value<string>("apiVersionSetId"));
+
+                    var versionsetResource = template.AddVersionSet(await resourceCollector.GetResource(apiversionsetid));
+                    if (versionsetResource != null)
+                    {
+                        string resourceid = $"[resourceId('Microsoft.ApiManagement/service/api-version-sets',{versionsetResource.Value<string>("name").Replace("[concat(", "").Replace(")]", "").Replace(", '/' ","")})]";
+                        apiTemplateResource["properties"]["apiVersionSetId"] = resourceid;
+                        apiTemplateResource.Value<JArray>("dependsOn").Add(resourceid);
+                    }
+                }
+
+                
 
                 var operations = await resourceCollector.GetResource(id + "/operations");
                 foreach (JObject operation in (operations == null ? new JArray() : operations.Value<JArray>("value")))

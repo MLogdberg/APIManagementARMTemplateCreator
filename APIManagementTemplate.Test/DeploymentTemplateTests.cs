@@ -42,6 +42,15 @@ namespace APIManagementTemplate.Test
             Assert.IsNotNull(actual);
         }
 
+        [TestMethod]
+        public void TestAddVersionSet()
+        {
+            var document = Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.VersionSet.VersionSetResource.json");
+            var template = new DeploymentTemplate();
+            var actual = template.AddVersionSet(JObject.Parse(document));            
+            Assert.IsNotNull(actual);
+        }
+
 
 
         [TestMethod]
