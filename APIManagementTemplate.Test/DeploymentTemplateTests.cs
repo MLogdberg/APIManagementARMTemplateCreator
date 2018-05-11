@@ -51,7 +51,14 @@ namespace APIManagementTemplate.Test
             Assert.IsNotNull(actual);
         }
 
-
+        [TestMethod]
+        public void TestSchema()
+        {
+            var document = Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.Schema.simpleschema.json");
+            var template = new DeploymentTemplate();
+            var actual = template.CreateAPISchema(JObject.Parse(document));
+            Assert.IsNotNull(actual);
+        }
 
         [TestMethod]
         public void TestPolicyAzureResourceLogicAppsUnmodified()

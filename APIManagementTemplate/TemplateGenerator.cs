@@ -152,6 +152,13 @@ namespace APIManagementTemplate
 
                     //handle nextlink?
                 }
+                //schemas
+                var apiSchemas = await resourceCollector.GetResource(id + "/schemas");
+                foreach (JObject schema in (apiSchemas == null ? new JArray() : apiSchemas.Value<JArray>("value")))
+                {
+                    var schemaTemplate = template.CreateAPISchema(schema);
+                    apiTemplateResource.Value<JArray>("resources").Add(JObject.FromObject(schemaTemplate));
+                }
 
                 //handle nextlink?
             }

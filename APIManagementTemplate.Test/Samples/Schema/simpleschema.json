@@ -1,0 +1,68 @@
+﻿{
+  "id": "/subscriptions/fake2439-770d-43f3-9e4a-8b910457a20c/resourceGroups/API/providers/Microsoft.ApiManagement/service/dev/apis/vita-gatan/schemas/5af038365b73730dd01453ad",
+  "type": "Microsoft.ApiManagement/service/apis/schemas",
+  "name": "5af038365b73730dd01453ad",
+  "properties": {
+    "contentType": "application/vnd.ms-azure-apim.swagger.definitions+json",
+    "document": {
+      "definitions": {
+        "Body": {
+          "type": "object",
+          "properties": {
+            "No": {
+              "type": "string"
+            },
+            "ReportedDate": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "BodyExists": {
+          "type": "object",
+          "properties": {
+            "No": {
+              "type": "string"
+            }
+          }
+        },
+        "SparadPost400ApplicationJsonResponse": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "hasErrors": {
+              "type": "boolean"
+            }
+          }
+        },
+        "ExistsPost200ApplicationJsonResponse": {
+          "type": "object",
+          "properties": {
+            "vitagatan": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

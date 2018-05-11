@@ -255,6 +255,45 @@ namespace APIManagementTemplate.Models
             return resource;
         }
 
+        public ResourceTemplate CreateAPISchema(JObject restObject)
+        {
+            if (restObject == null)
+                return null;
+
+            string name = restObject.Value<string>("name");
+            string type = restObject.Value<string>("type");
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
+            string servicename = apiid.ValueAfter("service");
+            string apiname = apiid.ValueAfter("apis");
+
+
+
+            var obj = new ResourceTemplate();
+            obj.AddName($"parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}')");
+            obj.AddName($"parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}')");
+            obj.AddName(name);
+
+            obj.comments = "Generated for resource " + restObject.Value<string>("id");
+            obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'),'/',parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}'), '/{name}')]";
+            obj.type = type;
+            obj.properties = restObject.Value<JObject>("properties");
+            
+            //var resource = JObject.FromObject(obj);
+            //resource["properties"] = restObject["properties"];
+            
+            if (APIMInstanceAdded)
+            {
+                obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]");
+                //resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]" });
+            }
+            /*else
+            {
+                resource["dependsOn"] = new JArray(); ;
+            }*/
+            
+            return obj;
+        }
+
         public JObject CreateOperation(JObject restObject)
         {
             if (restObject == null)
@@ -277,12 +316,13 @@ namespace APIManagementTemplate.Models
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
 
-            //schemaId is not handled well yet.. so Reseting it for now
+            //Schema list
+            var schemalist = new List<string>();
 
             var request = resource["properties"].Value<JObject>("request");
             if (request != null)
             {
-                FixRepresentations(request.Value<JArray>("representations"));
+                schemalist = schemalist.Union(FixRepresentations(request.Value<JArray>("representations"))).ToList();
             }
 
             var responses = resource["properties"].Value<JArray>("responses");
@@ -290,7 +330,7 @@ namespace APIManagementTemplate.Models
             {
                 foreach (var resp in responses)
                 {
-                    FixRepresentations(resp.Value<JArray>("representations"));
+                    schemalist = schemalist.Union(FixRepresentations(resp.Value<JArray>("representations"))).ToList();
                 }
             }
 
@@ -299,10 +339,13 @@ namespace APIManagementTemplate.Models
             if (APIMInstanceAdded)
             {
                 dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]");
-
+            }
+            foreach(var schema in schemalist)
+            {
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis/schemas', parameters('service_{servicename}_name'),{apiname},'{schema}')]");
             }
 
-            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_{servicename}_name'), {apiname})]");
+            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_{servicename}_name'),{apiname})]");
 
             resource["dependsOn"] = dependsOn;
 
@@ -310,10 +353,11 @@ namespace APIManagementTemplate.Models
             //this.resources.Add(resource);
         }
 
-        private void FixRepresentations(JArray reps)
+        private List<string> FixRepresentations(JArray reps)
         {
+            var ll = new List<string>();
             if (reps == null)
-                return;
+                return ll;
             foreach (JObject rep in reps)
             {
                 string sample = rep.Value<string>("sample") ?? "";
@@ -321,9 +365,11 @@ namespace APIManagementTemplate.Models
                 if (sample.StartsWith("["))
                     rep["sample"] = "[" + sample;
 
-                //temporary fix the schema until we have better solution TODO
-                rep["schemaId"] = null;
+                var schema = rep.Value<string>("schemaId");
+                if (!string.IsNullOrEmpty(schema))
+                    ll.Add(schema);
             }
+            return ll;
         }
 
         public Property AddBackend(JObject restObject)
@@ -385,7 +431,7 @@ namespace APIManagementTemplate.Models
             this.resources.Add(resource);
             return retval;
         }
-        public JObject AddVersionSet(JObject restObject)
+        public ResourceTemplate AddVersionSet(JObject restObject)
         {
             if (restObject == null)
                 return null;
@@ -399,8 +445,11 @@ namespace APIManagementTemplate.Models
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.name = parametrizePropertiesOnly ? $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/{name}')]" : $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/' ,parameters('{AddParameter($"versionset_{name}_name", "string", name)}'))]";
+            obj.AddName($"parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}')");            
+            obj.AddName(parametrizePropertiesOnly ? name : $"parameters('{AddParameter($"versionset_{name}_name", "string", name)}')" );
+
             obj.type = type;
+            obj.properties = restObject.Value<JObject>("properties");
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
 
@@ -412,7 +461,7 @@ namespace APIManagementTemplate.Models
             }
             resource["dependsOn"] = dependsOn;
             this.resources.Add(resource);
-            return resource;
+            return obj;
         }
 
         public void AddGroup(JObject restObject)
