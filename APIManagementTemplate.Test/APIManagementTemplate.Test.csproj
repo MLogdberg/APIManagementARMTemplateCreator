@@ -94,6 +94,8 @@
     <EmbeddedResource Include="Samples\UpdatedeLogicApp\service-cramoapidev-apis.json" />
     <EmbeddedResource Include="Samples\UpdatedeLogicApp\service-cramoapidev-backends-LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV.json" />
     <EmbeddedResource Include="Samples\UpdatedeLogicApp\service-cramoapidev-properties.json" />
+    <EmbeddedResource Include="Samples\VersionSet\VersionSetResource.json" />
+    <EmbeddedResource Include="Samples\Schema\simpleschema.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />

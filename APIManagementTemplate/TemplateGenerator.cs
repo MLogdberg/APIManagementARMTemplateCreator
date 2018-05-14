@@ -63,9 +63,27 @@ namespace APIManagementTemplate
             {
 
                 var id = apiObject.Value<string>("id");
-                var apiInstance = await resourceCollector.GetResource(id);
 
+
+                var apiInstance = await resourceCollector.GetResource(id);
                 var apiTemplateResource = template.AddApi(apiInstance);
+
+                //Api version set
+                string apiversionsetid = apiTemplateResource["properties"].Value<string>("apiVersionSetId");
+                if (!string.IsNullOrEmpty(apiversionsetid))
+                {
+                    AzureResourceId aiapiversion = new AzureResourceId(apiInstance["properties"].Value<string>("apiVersionSetId"));
+
+                    var versionsetResource = template.AddVersionSet(await resourceCollector.GetResource(apiversionsetid));
+                    if (versionsetResource != null)
+                    {
+                        string resourceid = $"[resourceId('Microsoft.ApiManagement/service/api-version-sets',{versionsetResource.GetResourceId()})]";
+                        apiTemplateResource["properties"]["apiVersionSetId"] = resourceid;
+                        apiTemplateResource.Value<JArray>("dependsOn").Add(resourceid);
+                    }
+                }
+
+                
 
                 var operations = await resourceCollector.GetResource(id + "/operations");
                 foreach (JObject operation in (operations == null ? new JArray() : operations.Value<JArray>("value")))
@@ -119,7 +137,7 @@ namespace APIManagementTemplate
 
                         if(property != null)
                         {
-                            var idp = this.identifiedProperties.Where(pp => pp.name.Contains(property.name + "_manual-invoke_")).FirstOrDefault();
+                            var idp = this.identifiedProperties.Where(pp => pp.name.Contains(apiObject.Value<string>("name") + "_manual-invoke_")).FirstOrDefault();
                             idp.extraInfo = property.extraInfo;
                             idp.type = Property.PropertyType.LogicAppRevisionGa;
                         }
@@ -133,6 +151,13 @@ namespace APIManagementTemplate
                     }
 
                     //handle nextlink?
+                }
+                //schemas
+                var apiSchemas = await resourceCollector.GetResource(id + "/schemas");
+                foreach (JObject schema in (apiSchemas == null ? new JArray() : apiSchemas.Value<JArray>("value")))
+                {
+                    var schemaTemplate = template.CreateAPISchema(schema);
+                    apiTemplateResource.Value<JArray>("resources").Add(JObject.FromObject(schemaTemplate));
                 }
 
                 //handle nextlink?
