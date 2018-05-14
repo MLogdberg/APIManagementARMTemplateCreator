@@ -77,7 +77,7 @@ namespace APIManagementTemplate
                     var versionsetResource = template.AddVersionSet(await resourceCollector.GetResource(apiversionsetid));
                     if (versionsetResource != null)
                     {
-                        string resourceid = $"[resourceId('Microsoft.ApiManagement/service/api-version-sets',{versionsetResource.Value<string>("name").Replace("[concat(", "").Replace(")]", "").Replace(", '/' ","")})]";
+                        string resourceid = $"[resourceId('Microsoft.ApiManagement/service/api-version-sets',{versionsetResource.GetResourceId()})]";
                         apiTemplateResource["properties"]["apiVersionSetId"] = resourceid;
                         apiTemplateResource.Value<JArray>("dependsOn").Add(resourceid);
                     }
