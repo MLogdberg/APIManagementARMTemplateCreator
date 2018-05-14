@@ -190,7 +190,7 @@ namespace APIManagementTemplate
 
                         if (parametrizePropertiesOnly)
                         {
-                            apiTemplate.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_{servicename}_name'), '{name}'))]");
+                            apiTemplate.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_{servicename}_name'), '{name}')]");
                         }
                         else
                         {
