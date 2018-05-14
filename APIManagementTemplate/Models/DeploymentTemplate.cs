@@ -540,7 +540,7 @@ namespace APIManagementTemplate.Models
             string servicename = apiid.ValueAfter("service");
             string productname = apiid.ValueAfter("products");
 
-            productname = parametrizePropertiesOnly ? $"'{productname}'" : $"parameters('{AddParameter($"api_{productname}_name", "string", productname)}')";
+            productname = parametrizePropertiesOnly ? $"'{productname}'" : $"parameters('{AddParameter($"product_{productname}_name", "string", productname)}')";
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
