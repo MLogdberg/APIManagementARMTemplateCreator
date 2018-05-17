@@ -278,19 +278,13 @@ namespace APIManagementTemplate.Models
             obj.type = type;
             obj.properties = restObject.Value<JObject>("properties");
             
-            //var resource = JObject.FromObject(obj);
-            //resource["properties"] = restObject["properties"];
-            
             if (APIMInstanceAdded)
             {
                 obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]");
                 //resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]" });
             }
-            /*else
-            {
-                resource["dependsOn"] = new JArray(); ;
-            }*/
-            
+            obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_{servicename}_name'),parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}'))]");
+
             return obj;
         }
 
