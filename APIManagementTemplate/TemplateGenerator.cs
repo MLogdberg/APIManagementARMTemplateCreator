@@ -101,7 +101,7 @@ namespace APIManagementTemplate
                         var pol = template.CreatePolicy(policy);
 
                         //add properties
-                        this.PolicyHandleProperties(pol, apiTemplateResource.Value<string>("name"));
+                        this.PolicyHandleProperties(pol, apiTemplateResource.Value<string>("name"), operationInstance.Value<string>("name"));
 
                         //Handle Azure Resources
                         if (!this.PolicyHandeAzureResources(pol, apiTemplateResource.Value<string>("name"), template))
@@ -125,7 +125,7 @@ namespace APIManagementTemplate
 
                     var policyTemplateResource = template.CreatePolicy(policy);
                     PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
-                    this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"));
+                    this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"),null);
                     apiTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
 
 
@@ -137,9 +137,19 @@ namespace APIManagementTemplate
 
                         if(property != null)
                         {
-                            var idp = this.identifiedProperties.Where(pp => pp.name.Contains(apiObject.Value<string>("name") + "_manual-invoke_")).FirstOrDefault();
-                            idp.extraInfo = property.extraInfo;
-                            idp.type = Property.PropertyType.LogicAppRevisionGa;
+                            if (property.type == Property.PropertyType.LogicAppRevisionGa)
+                            {
+                                var idp = this.identifiedProperties.Where(pp => pp.name.Contains(apiObject.Value<string>("name") + "_manual-invoke_")).FirstOrDefault();
+                                idp.extraInfo = property.extraInfo;
+                                idp.type = Property.PropertyType.LogicAppRevisionGa;
+                            }
+                            else if(property.type == Property.PropertyType.Function)
+                            {
+                                foreach (var idp in this.identifiedProperties.Where(pp => pp.name.ToLower().StartsWith(property.name))) {
+                                    idp.extraInfo = property.extraInfo;
+                                    idp.type = Property.PropertyType.Function;
+                                }                                
+                            }
                         }
 
 
@@ -221,6 +231,7 @@ namespace APIManagementTemplate
                 var identifiedProperty = this.identifiedProperties.Where(idp => name.EndsWith(idp.name)).FirstOrDefault();
                 if (identifiedProperty != null)
                 {
+                    
                     if (identifiedProperty.type == Property.PropertyType.LogicApp)
                     {
                         propertyObject["properties"]["value"] = $"[concat('sv=',{identifiedProperty.extraInfo}.queries.sv,'&sig=',{identifiedProperty.extraInfo}.queries.sig)]";
@@ -229,14 +240,20 @@ namespace APIManagementTemplate
                     {
                         propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo}.queries.sig]";
                     }
-                    template.AddProperty(propertyObject);
+                    else if (identifiedProperty.type == Property.PropertyType.Function)
+                    {
+                        //    "replacewithfunctionoperationname"
+                        propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo.Replace("replacewithfunctionoperationname",$"operations_{identifiedProperty.operationName}_name")}]";
+                    }
+                    var propertyTemplate = template.AddProperty(propertyObject);
 
                     if (!parametrizePropertiesOnly)
                     {
+                        string resourceid = $"[resourceId('Microsoft.ApiManagement/service/properties',{propertyTemplate.GetResourceId()})]";
                         foreach (var apiName in identifiedProperty.apis)
                         {
                             var apiTemplate = template.resources.Where(rr => rr.Value<string>("name") == apiName).FirstOrDefault();
-                            apiTemplate.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_{servicename}_name'),parameters('property_{propertyObject.Value<string>("name")}_name'))]");
+                            apiTemplate.Value<JArray>("dependsOn").Add(resourceid);
                         }
                     }
                 }
@@ -246,7 +263,7 @@ namespace APIManagementTemplate
 
         }
 
-        public void PolicyHandleProperties(JObject policy, string apiname)
+        public void PolicyHandleProperties(JObject policy, string apiname,string operationName)
         {
             var policyContent = policy["properties"].Value<string>("policyContent");
             var match = Regex.Match(policyContent, "{{(?<name>[-_.a-zA-Z0-9]*)}}");
@@ -257,7 +274,7 @@ namespace APIManagementTemplate
                 var idp = identifiedProperties.Where(pp => pp.name == name).FirstOrDefault();
                 if (idp == null)
                 {
-                    this.identifiedProperties.Add(new Property() { name = name, type = Property.PropertyType.Standard, apis = new List<string>(new string[] { apiname }) });
+                    this.identifiedProperties.Add(new Property() { name = name, type = Property.PropertyType.Standard, apis = new List<string>(new string[] { apiname }), operationName = operationName });
                 }
                 else if (!idp.apis.Contains(apiname))
                 {

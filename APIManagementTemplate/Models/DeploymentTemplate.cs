@@ -389,17 +389,16 @@ namespace APIManagementTemplate.Models
             if (restObject["properties"]["resourceId"] != null)
             {
                 string resourceid = restObject["properties"].Value<string>("resourceId");
+                var aid = new AzureResourceId(resourceid.Replace("https://management.azure.com", ""));
+                aid.SubscriptionId = "',subscription().subscriptionId,'";
+                var rgparamname = AddParameter(name + "_resourceGroup", "string", aid.ResourceGroupName);
+                aid.ResourceGroupName = "',parameters('" + rgparamname + "'),'";
                 if (resourceid.Contains("providers/Microsoft.Logic/workflows")) //Logic App
-                {
-                    var aid = new AzureResourceId(resourceid.Replace("https://management.azure.com/", ""));
-                    aid.SubscriptionId = "',subscription().subscriptionId,'";
-                    var rgparamname = AddParameter(name + "_resourceGroup", "string", aid.ResourceGroupName);
+                {    
                     var laname = aid.ValueAfter("workflows");
                     var logicappname = AddParameter(name + "_logicAppName", "string", laname);
-                    aid.ResourceGroupName = "',parameters('" + rgparamname + "'),'";
                     aid.ReplaceValueAfter("workflows", "',parameters('" + logicappname + "')");
 
-                    resource["properties"]["resourceId"] = "[concat('https://management.azure.com/','" + aid.ToString() + ")]";
                     string listcallbackref = $"listCallbackUrl(resourceId(parameters('{rgparamname}'), 'Microsoft.Logic/workflows/triggers', parameters('{logicappname}'), 'manual'), providers('Microsoft.Logic', 'workflows').apiVersions[0])";
 
                     resource["properties"]["url"] = $"[substring({listcallbackref}.basePath,0,add(10,indexOf({listcallbackref}.basePath,'/triggers/')))]";
@@ -409,8 +408,23 @@ namespace APIManagementTemplate.Models
                         name = laname.ToLower(),
                         extraInfo = listcallbackref
                     };
-
                 }
+                else if (resourceid.Contains("providers/Microsoft.Web/sites")) //Web App/Function
+                {
+                    var sitename = aid.ValueAfter("sites");
+                    var paramsitename = AddParameter(name + "_siteName", "string", sitename);
+                    aid.ReplaceValueAfter("sites", "',parameters('" + paramsitename + "')");
+                    resource["properties"]["description"] = $"[parameters('{paramsitename}')]";
+                    resource["properties"]["url"] = $"[concat('https://',toLower(parameters('{paramsitename}')),'.azurewebsites.net/')]";
+                    retval = new Property()
+                    {
+                        type = Property.PropertyType.Function,
+                        name = sitename.ToLower(),
+                        extraInfo = $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), parameters('replacewithfunctionoperationname')),'2015-08-01').key"
+                    };
+                }
+                resource["properties"]["resourceId"] = "[concat('https://management.azure.com/','" + aid.ToString() + ")]";
+
             }
             else
             {
@@ -440,7 +454,7 @@ namespace APIManagementTemplate.Models
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
             obj.AddName($"parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}')");            
-            obj.AddName(parametrizePropertiesOnly ? name : $"parameters('{AddParameter($"versionset_{name}_name", "string", name)}')" );
+            obj.AddName($"'name'");
 
             obj.type = type;
             obj.properties = restObject.Value<JObject>("properties");
@@ -550,12 +564,12 @@ namespace APIManagementTemplate.Models
             return resource;
         }
 
-        public void AddProperty(JObject restObject)
+        public ResourceTemplate AddProperty(JObject restObject)
         {
             if (restObject == null)
-                return;
+                return null;
 
-            string name = restObject["properties"].Value<string>("displayName");
+            string name = restObject.Value<string>("name");
             string type = restObject.Value<string>("type");
             bool secret = restObject["properties"].Value<bool>("secret");
 
@@ -564,10 +578,13 @@ namespace APIManagementTemplate.Models
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.name = parametrizePropertiesOnly ? $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/{name}')]"  : $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/' ,parameters('{AddParameter($"property_{name}_name", "string", name)}'))]";
+            obj.AddName($"parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}')");
+            //obj.AddName(parametrizePropertiesOnly ? name : $"parameters('{AddParameter($"property_{name}_name", "string", name)}')");            
+            obj.AddName($"'{name}'");
+
             obj.type = type;
+            obj.properties = restObject.Value<JObject>("properties");
             var resource = JObject.FromObject(obj);
-            resource["properties"] = restObject["properties"];
 
             AddParameterFromObject((JObject)resource["properties"], "value", secret ? "securestring" : "string", name);
 
@@ -580,6 +597,7 @@ namespace APIManagementTemplate.Models
             resource["dependsOn"] = dependsOn;
 
             this.resources.Add(resource);
+            return obj;
         }
 
         //need to return an object with property list and so on

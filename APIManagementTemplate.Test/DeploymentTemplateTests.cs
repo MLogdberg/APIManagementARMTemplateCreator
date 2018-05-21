@@ -74,7 +74,7 @@ namespace APIManagementTemplate.Test
             template.CreatePolicy(policy);
 
             generator.PolicyHandeAzureResources(policy,"123",template);
-            generator.PolicyHandleProperties(policy,"123");
+            generator.PolicyHandleProperties(policy,"123",null);
 
             Assert.AreEqual(1, generator.identifiedProperties.Count);
 
