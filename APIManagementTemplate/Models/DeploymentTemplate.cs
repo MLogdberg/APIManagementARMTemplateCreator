@@ -586,7 +586,7 @@ namespace APIManagementTemplate.Models
             obj.properties = restObject.Value<JObject>("properties");
             var resource = JObject.FromObject(obj);
 
-            AddParameterFromObject((JObject)resource["properties"], "value", secret ? "securestring" : "string", name);
+            AddParameterFromObject((JObject)resource["properties"], "value", secret ? "securestring" : "string", restObject["properties"].Value<string>("displayName"));
 
             var dependsOn = new JArray();
             if (APIMInstanceAdded)
