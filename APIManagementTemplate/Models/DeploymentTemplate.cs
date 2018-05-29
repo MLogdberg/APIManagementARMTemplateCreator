@@ -454,7 +454,7 @@ namespace APIManagementTemplate.Models
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
             obj.AddName($"parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}')");            
-            obj.AddName($"'name'");
+            obj.AddName($"'{name}'");
 
             obj.type = type;
             obj.properties = restObject.Value<JObject>("properties");
