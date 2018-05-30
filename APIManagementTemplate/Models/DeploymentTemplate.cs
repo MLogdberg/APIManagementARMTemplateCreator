@@ -271,7 +271,7 @@ namespace APIManagementTemplate.Models
             var obj = new ResourceTemplate();
             obj.AddName($"parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}')");
             obj.AddName($"parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}')");
-            obj.AddName(name);
+            obj.AddName($"'{name}'");
 
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
             obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'),'/',parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}'), '/{name}')]";
@@ -300,7 +300,7 @@ namespace APIManagementTemplate.Models
             string servicename = apiid.ValueAfter("service");
             string apiname = apiid.ValueAfter("apis");
 
-            name = parametrizePropertiesOnly ? $"'{name}'" : $"parameters('{AddParameter($"operations_{name}_name", "string", name)}')";
+            name = $"'{name}'";
             apiname = parametrizePropertiesOnly ? $"'{apiname}'" : $"parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}')";
 
             var obj = new ResourceTemplate();
@@ -380,7 +380,7 @@ namespace APIManagementTemplate.Models
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/' ,parameters('{AddParameter($"backend_{name}_name", "string", name)}'))]";
+            obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/' ,'{name}')]";
             obj.type = type;
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
@@ -389,7 +389,7 @@ namespace APIManagementTemplate.Models
             if (restObject["properties"]["resourceId"] != null)
             {
                 string resourceid = restObject["properties"].Value<string>("resourceId");
-                var aid = new AzureResourceId(resourceid.Replace("https://management.azure.com", ""));
+                var aid = new AzureResourceId(resourceid.Replace("https://management.azure.com/", ""));
                 aid.SubscriptionId = "',subscription().subscriptionId,'";
                 var rgparamname = AddParameter(name + "_resourceGroup", "string", aid.ResourceGroupName);
                 aid.ResourceGroupName = "',parameters('" + rgparamname + "'),'";
@@ -578,8 +578,7 @@ namespace APIManagementTemplate.Models
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.AddName($"parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}')");
-            //obj.AddName(parametrizePropertiesOnly ? name : $"parameters('{AddParameter($"property_{name}_name", "string", name)}')");            
+            obj.AddName($"parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}')"); 
             obj.AddName($"'{name}'");
 
             obj.type = type;
@@ -612,7 +611,7 @@ namespace APIManagementTemplate.Models
             string apiname = "";
             string operationname = "";
             
-            name = parametrizePropertiesOnly ? $"'{name}'" : $"parameters('{AddParameter($"operations_{name}_name", "string", name)}')";
+            name = $"'{name}'";
 
 
             var rid = new AzureResourceId(restObject.Value<string>("id"));
@@ -632,7 +631,7 @@ namespace APIManagementTemplate.Models
                 apiname = rid.ValueAfter("apis");
                 operationname = rid.ValueAfter("operations");
                 apiname = parametrizePropertiesOnly ? $"'{apiname}'" : $"parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}')";
-                operationname = parametrizePropertiesOnly ? $"'{operationname}'" : $"parameters('{AddParameter($"operations_{operationname}_name", "string", operationname)}')";
+                operationname = $"'{operationname}'";
                 obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/', {apiname}, '/', {operationname}, '/', {name})]";
             }
 
