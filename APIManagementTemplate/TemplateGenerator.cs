@@ -120,7 +120,7 @@ namespace APIManagementTemplate
                                 apiTemplateResource["dependsOn"] = new JArray();
 
                             //add dependeOn
-                            apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('service_{servicename}_name'), parameters('backend_{backendInstance.Value<string>("name")}_name'))]");
+                            apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('service_{servicename}_name'), '{backendInstance.Value<string>("name")}')]");
                         }
 
                         operationTemplateResource.Value<JArray>("resources").Add(pol);
@@ -151,7 +151,7 @@ namespace APIManagementTemplate
                             apiTemplateResource["dependsOn"] = new JArray();
 
                         //add dependeOn
-                        apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('service_{servicename}_name'), parameters('backend_{backendInstance.Value<string>("name")}_name'))]");
+                        apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('service_{servicename}_name'), '{backendInstance.Value<string>("name")}')]");
                     }
 
                     //handle nextlink?
