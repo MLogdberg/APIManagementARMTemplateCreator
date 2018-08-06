@@ -193,6 +193,7 @@ namespace APIManagementTemplate
                         foreach (JObject productApi in (productApis == null ? new JArray() : productApis.Value<JArray>("value")))
                         {
                             productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(productApi));
+                            productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_{servicename}_name'), '{productApi.Value<string>("name")}')]");
                         }
 
                         var groups = await resourceCollector.GetResource(id + "/groups");
@@ -231,13 +232,10 @@ namespace APIManagementTemplate
                     }
                     template.AddProperty(propertyObject);
 
-                    if (!parametrizePropertiesOnly)
+                    foreach (var apiName in identifiedProperty.apis)
                     {
-                        foreach (var apiName in identifiedProperty.apis)
-                        {
-                            var apiTemplate = template.resources.Where(rr => rr.Value<string>("name") == apiName).FirstOrDefault();
-                            apiTemplate.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_{servicename}_name'),parameters('property_{propertyObject.Value<string>("name")}_name'))]");
-                        }
+                        var apiTemplate = template.resources.Where(rr => rr.Value<string>("name") == apiName).FirstOrDefault();
+                        apiTemplate.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_{servicename}_name'), '{name}')]");
                     }
                 }
             }

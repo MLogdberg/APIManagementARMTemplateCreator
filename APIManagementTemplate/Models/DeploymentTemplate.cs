@@ -486,7 +486,7 @@ namespace APIManagementTemplate.Models
             resource["dependsOn"] = dependsOn;
 
             // Avoid duplicates.
-            if (this.resources.Count(rr => rr.Value<string>("name") == obj.name) == 0)
+            if (this.resources.Count(rr => rr.Value<string>("name") == obj.name && rr.Value<string>("type") == obj.type) == 0)
             {
                 this.resources.Add(resource);
             }
