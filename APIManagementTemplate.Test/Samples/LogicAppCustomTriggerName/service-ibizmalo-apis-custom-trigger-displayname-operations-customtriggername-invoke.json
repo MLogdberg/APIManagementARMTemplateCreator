@@ -1,0 +1,52 @@
+{
+  "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/custom-trigger-displayname/operations/customtriggername-invoke",
+  "type": "Microsoft.ApiManagement/service/apis/operations",
+  "name": "customtriggername-invoke",
+  "properties": {
+    "displayName": "Changed Displayname",
+    "method": "POST",
+    "urlTemplate": "/customtriggername/paths/invoke",
+    "templateParameters": [],
+    "description": "Utlös en körning av logikappen.",
+    "request": {
+      "description": "Begärantexten.",
+      "queryParameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "description": "",
+          "type": "string",
+          "defaultValue": "application/json",
+          "required": true,
+          "values": [
+            "application/json"
+          ]
+        }
+      ],
+      "representations": [
+        {
+          "contentType": "application/json",
+          "sample": null,
+          "schemaId": "5b699d80b352472764c52474",
+          "typeName": "request-customtriggername"
+        }
+      ]
+    },
+    "responses": [
+      {
+        "statusCode": 200,
+        "description": "Logikapp-reponsen.",
+        "representations": [
+          {
+            "contentType": "application/json",
+            "sample": null,
+            "schemaId": "5b699d80b352472764c52474",
+            "typeName": "CustomtriggernamePathsInvokePost200ApplicationJsonResponse"
+          }
+        ],
+        "headers": []
+      }
+    ],
+    "policies": null
+  }
+}

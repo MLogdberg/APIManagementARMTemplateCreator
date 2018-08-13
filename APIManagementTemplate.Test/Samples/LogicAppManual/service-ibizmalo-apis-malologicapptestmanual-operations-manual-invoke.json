@@ -1,0 +1,65 @@
+{
+  "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/malologicapptestmanual/operations/manual-invoke",
+  "type": "Microsoft.ApiManagement/service/apis/operations",
+  "name": "manual-invoke",
+  "properties": {
+    "displayName": "Create Ticket",
+    "method": "POST",
+    "urlTemplate": "/ticket",
+    "templateParameters": [],
+    "description": "Utlös en körning av logikappen.",
+    "request": {
+      "description": "Begärantexten.",
+      "queryParameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "description": "",
+          "type": "string",
+          "defaultValue": "application/json",
+          "required": true,
+          "values": [
+            "application/json"
+          ]
+        }
+      ],
+      "representations": [
+        {
+          "contentType": "application/json",
+          "sample": null,
+          "schemaId": "5b418fa2b352470e807f407a",
+          "typeName": "request-manual"
+        }
+      ]
+    },
+    "responses": [
+      {
+        "statusCode": 200,
+        "description": "Åtgärdens logikappssvar med statuskoden 200.",
+        "representations": [
+          {
+            "contentType": "application/json",
+            "sample": null,
+            "schemaId": "5b418fa2b352470e807f407a",
+            "typeName": "response-200"
+          }
+        ],
+        "headers": []
+      },
+      {
+        "statusCode": 500,
+        "description": "Logikapp-reponsen.",
+        "representations": [
+          {
+            "contentType": "application/json",
+            "sample": null,
+            "schemaId": "5b418fa2b352470e807f407a",
+            "typeName": "ManualPathsInvokePost500ApplicationJsonResponse"
+          }
+        ],
+        "headers": []
+      }
+    ],
+    "policies": null
+  }
+}

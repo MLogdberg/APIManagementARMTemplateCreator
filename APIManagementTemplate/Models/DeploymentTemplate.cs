@@ -366,7 +366,7 @@ namespace APIManagementTemplate.Models
             return ll;
         }
 
-        public Property AddBackend(JObject restObject)
+        public Property AddBackend(JObject restObject,JObject azureResource )
         {
             Property retval = null;
             if (restObject == null)
@@ -385,7 +385,6 @@ namespace APIManagementTemplate.Models
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
 
-
             if (restObject["properties"]["resourceId"] != null)
             {
                 string resourceid = restObject["properties"].Value<string>("resourceId");
@@ -399,7 +398,19 @@ namespace APIManagementTemplate.Models
                     var logicappname = AddParameter(name + "_logicAppName", "string", laname);
                     aid.ReplaceValueAfter("workflows", "',parameters('" + logicappname + "')");
 
-                    string listcallbackref = $"listCallbackUrl(resourceId(parameters('{rgparamname}'), 'Microsoft.Logic/workflows/triggers', parameters('{logicappname}'), 'manual'), providers('Microsoft.Logic', 'workflows').apiVersions[0])";
+
+                    var triggerObject = azureResource["properties"]["definition"].Value<JObject>("triggers");
+                    string triggername = "manual";
+                    foreach (var trigger in triggerObject)
+                    {
+                        if(trigger.Value.Value<string>("type") == "Request" && trigger.Value.Value<string>("kind") == "Http")
+                        {
+                            triggername = trigger.Key;
+                        }
+                    }
+                        //need to get the Logic App triggers and find the HTTP one....
+
+                    string listcallbackref = $"listCallbackUrl(resourceId(parameters('{rgparamname}'), 'Microsoft.Logic/workflows/triggers', parameters('{logicappname}'), '{triggername}'), '2017-07-01')";                    
 
                     resource["properties"]["url"] = $"[substring({listcallbackref}.basePath,0,add(10,indexOf({listcallbackref}.basePath,'/triggers/')))]";
                     retval = new Property()
@@ -423,7 +434,7 @@ namespace APIManagementTemplate.Models
                         extraInfo = $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), parameters('replacewithfunctionoperationname')),'2015-08-01').key"
                     };
                 }
-                resource["properties"]["resourceId"] = "[concat('https://management.azure.com/','" + aid.ToString() + ")]";
+                resource["properties"]["resourceId"] = "[concat('https://management.azure.com/','" + aid.ToString().Substring(1) + ")]";
 
             }
             else
@@ -436,7 +447,9 @@ namespace APIManagementTemplate.Models
                 resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]" });
             }
 
-            this.resources.Add(resource);
+            if (this.resources.Where(rr => rr.Value<string>("name") == obj.name).Count() == 0)
+                this.resources.Add(resource);
+
             return retval;
         }
         public ResourceTemplate AddVersionSet(JObject restObject)

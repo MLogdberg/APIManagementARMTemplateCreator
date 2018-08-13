@@ -37,9 +37,9 @@ namespace APIManagementTemplate
         }
         private static HttpClient client = new HttpClient() { BaseAddress = new Uri("https://management.azure.com") };
 
-        public async Task<JObject> GetResource(string resourceId, string suffix = "")
+        public async Task<JObject> GetResource(string resourceId, string suffix = "",string apiversion = "2017-03-01")
         {
-            string url = resourceId + "?api-version=2017-03-01" + (string.IsNullOrEmpty(suffix) ? "" : $"&{suffix}");
+            string url = resourceId + $"?api-version={apiversion}" + (string.IsNullOrEmpty(suffix) ? "" : $"&{suffix}");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var response = await client.GetAsync(url);
 
@@ -50,7 +50,7 @@ namespace APIManagementTemplate
             var responseContent = await response.Content.ReadAsStringAsync();
             if (!string.IsNullOrEmpty(DebugOutputFolder))
             {
-                System.IO.File.WriteAllText(DebugOutputFolder + "\\" + resourceId.Split('/').SkipWhile( (a) => { return a != "service"; }).Aggregate<string>((b,c) => { return b +"-" +c; })  + ".json", responseContent);
+                System.IO.File.WriteAllText(DebugOutputFolder + "\\" + resourceId.Split('/').SkipWhile( (a) => { return a != "service" && a != "workflows" && a != "sites"; }).Aggregate<string>((b,c) => { return b +"-" +c; })  + ".json", responseContent);
             }
             return JObject.Parse(responseContent);
 

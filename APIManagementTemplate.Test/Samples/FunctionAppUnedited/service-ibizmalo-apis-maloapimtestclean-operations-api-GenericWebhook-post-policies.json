@@ -1,0 +1,13 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/maloapimtestclean/operations/api-GenericWebhook-post/policies/policy",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "name": "policy",
+      "properties": {
+        "policyContent": "<policies>\r\n  <inbound>\r\n    <base />\r\n    <set-method>POST</set-method>\r\n    <rewrite-uri id=\"apim-generated-policy\" template=\"/api/GenericWebhook?code={{maloapimtest_GenericWebhook_query_5b41934ca550d9de49391585}}\" />\r\n    <set-header id=\"apim-generated-policy\" name=\"Ocp-Apim-Subscription-Key\" exists-action=\"delete\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n  <on-error>\r\n    <base />\r\n  </on-error>\r\n</policies>"
+      }
+    }
+  ],
+  "nextLink": ""
+}

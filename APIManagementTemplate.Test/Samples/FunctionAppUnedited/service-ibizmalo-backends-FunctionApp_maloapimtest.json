@@ -1,0 +1,12 @@
+{
+  "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/backends/FunctionApp_maloapimtest",
+  "type": "Microsoft.ApiManagement/service/backends",
+  "name": "FunctionApp_maloapimtest",
+  "properties": {
+    "title": null,
+    "description": "maloapimtest",
+    "url": "https://maloapimtest.azurewebsites.net/",
+    "protocol": "http",
+    "resourceId": "https://management.azure.com/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/maloapimtest/providers/Microsoft.Web/sites/maloapimtest"
+  }
+}

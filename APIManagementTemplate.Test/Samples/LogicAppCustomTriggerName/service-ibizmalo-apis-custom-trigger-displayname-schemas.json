@@ -1,0 +1,21 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/custom-trigger-displayname/schemas/5b699d80b352472764c52474",
+      "type": "Microsoft.ApiManagement/service/apis/schemas",
+      "name": "5b699d80b352472764c52474",
+      "properties": {
+        "contentType": "application/vnd.ms-azure-apim.swagger.definitions+json",
+        "document": {
+          "definitions": {
+            "request-customtriggername": {},
+            "CustomtriggernamePathsInvokePost200ApplicationJsonResponse": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "nextLink": ""
+}

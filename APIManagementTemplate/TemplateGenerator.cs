@@ -260,13 +260,19 @@ namespace APIManagementTemplate
         private async Task<JObject> HandleBackend(DeploymentTemplate template, string startname, string backendid)
         {
             var backendInstance = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/backends/" + backendid);
-            var property = template.AddBackend(backendInstance);
+            JObject azureResource = null;
+            if (backendInstance["properties"]["resourceId"] != null)
+            {
+                azureResource = await resourceCollector.GetResource(backendInstance["properties"].Value<string>("resourceId"),"","2017-07-01");
+            }
+
+            var property = template.AddBackend(backendInstance,azureResource);
 
             if (property != null)
             {
                 if (property.type == Property.PropertyType.LogicApp)
                 {
-                    var idp = this.identifiedProperties.Where(pp => pp.name.Contains(startname + "_manual-invoke_")).FirstOrDefault();
+                    var idp = this.identifiedProperties.Where(pp => pp.name.StartsWith(startname) && pp.name.Contains("-invoke")).FirstOrDefault();
                     if (idp != null)
                     {
                         idp.extraInfo = property.extraInfo;
@@ -275,7 +281,7 @@ namespace APIManagementTemplate
                 }
                 else if (property.type == Property.PropertyType.Function)
                 {
-                    foreach (var idp in this.identifiedProperties.Where(pp => pp.name.ToLower().StartsWith(property.name)))
+                    foreach (var idp in this.identifiedProperties.Where(pp => pp.name.ToLower().StartsWith(property.name) && !pp.name.Contains("-invoke")))
                     {
                         idp.extraInfo = property.extraInfo;
                         idp.type = Property.PropertyType.Function;

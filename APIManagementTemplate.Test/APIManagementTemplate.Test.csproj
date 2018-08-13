@@ -49,16 +49,23 @@
     </When>
     <Otherwise>
       <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
+        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework">
+          <Private>False</Private>
+        </Reference>
       </ItemGroup>
     </Otherwise>
   </Choose>
   <ItemGroup>
     <Compile Include="AzureResourceIdTests.cs" />
     <Compile Include="DeploymentTemplateTests.cs" />
+    <Compile Include="FunctionAppMixedWithLogicAppTests.cs" />
+    <Compile Include="FunctionAppUneditedTests.cs" />
+    <Compile Include="LogicAppCustomTriggerNameTest.cs" />
+    <Compile Include="LogicAppRequestTests.cs" />
     <Compile Include="MockResourceCollector.cs" />
     <Compile Include="TemplateHelperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="LogicAppManualTests.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -96,6 +103,103 @@
     <EmbeddedResource Include="Samples\UpdatedeLogicApp\service-cramoapidev-properties.json" />
     <EmbeddedResource Include="Samples\VersionSet\VersionSetResource.json" />
     <EmbeddedResource Include="Samples\Schema\simpleschema.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-apis-malologicapptestmanual-operations-manual-invoke-policies.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-apis-malologicapptestmanual-operations-manual-invoke.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-apis-malologicapptestmanual-operations.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-apis-malologicapptestmanual-policies.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-apis-malologicapptestmanual-schemas.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-apis-malologicapptestmanual.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-apis.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-backends-LogicApp_malologicapptestManual.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-products-57cd81afe568130059060001-apis.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-products-57cd81afe568130059060001-groups.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-products-57cd81afe568130059060001.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-products-57cd81b0e568130059060002-apis.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-products-57cd81b0e568130059060002.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-products.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-properties.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-api-version-sets-5b418fc9694aa7424cb6a516.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-apis-malologicapptestrequest-operations-request-invoke-policies.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-apis-malologicapptestrequest-operations-request-invoke.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-apis-malologicapptestrequest-operations.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-apis-malologicapptestrequest-policies.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-apis-malologicapptestrequest-schemas.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-apis-malologicapptestrequest.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-apis.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-backends-LogicApp_malologicapptestRequest.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-products-57cd81afe568130059060001-apis.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-products-57cd81afe568130059060001-groups.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-products-57cd81afe568130059060001.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-products-57cd81b0e568130059060002-apis.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-products-57cd81b0e568130059060002.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-products.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-properties.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-apis-custom-trigger-displayname-operations-customtriggername-invoke-policies.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-apis-custom-trigger-displayname-operations-customtriggername-invoke.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-apis-custom-trigger-displayname-operations.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-apis-custom-trigger-displayname-policies.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-apis-custom-trigger-displayname-schemas.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-apis-custom-trigger-displayname.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-apis.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-backends-LogicApp_customtrigger.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-products-57cd81afe568130059060001-apis.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-products-57cd81afe568130059060001-groups.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-products-57cd81afe568130059060001.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-products-57cd81b0e568130059060002-apis.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-products-57cd81b0e568130059060002.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-products.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-properties.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\workflows-malologicapptestManual.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\workflows-customtrigger.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-api-version-sets-5b419345805ee415de572191.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-apis-maloapimtestclean-operations-api-GenericWebhook-post-policies.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-apis-maloapimtestclean-operations-api-GenericWebhook-post.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-apis-maloapimtestclean-operations-api-HTTPTrigger-get-policies.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-apis-maloapimtestclean-operations-api-HTTPTrigger-get.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-apis-maloapimtestclean-operations-api-HttpTriggerAdminKey-post-policies.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-apis-maloapimtestclean-operations-api-HttpTriggerAdminKey-post.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-apis-maloapimtestclean-operations.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-apis-maloapimtestclean-policies.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-apis-maloapimtestclean-schemas.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-apis-maloapimtestclean.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-apis.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-backends-FunctionApp_maloapimtest.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-products-57cd81afe568130059060001-apis.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-products-57cd81afe568130059060001-groups.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-products-57cd81afe568130059060001.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-products-57cd81b0e568130059060002-apis.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-products-57cd81b0e568130059060002.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-products.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-properties.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-api-version-sets-5b418f3269163148ccd0e264.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis-maloapimtest-operations-api-GenericWebhook-post-policies.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis-maloapimtest-operations-api-GenericWebhook-post.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis-maloapimtest-operations-api-HTTPTrigger-get-policies.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis-maloapimtest-operations-api-HTTPTrigger-get.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis-maloapimtest-operations-api-HttpTriggerAdminKey-post-policies.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis-maloapimtest-operations-api-HttpTriggerAdminKey-post.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis-maloapimtest-operations-request-invoke-1-policies.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis-maloapimtest-operations-request-invoke-1.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis-maloapimtest-operations-request-invoke-policies.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis-maloapimtest-operations-request-invoke.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis-maloapimtest-operations.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis-maloapimtest-policies.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis-maloapimtest-schemas.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis-maloapimtest.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-backends-FunctionApp_maloapimtest.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-backends-LogicApp_malologicapptestRequest.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-products-57cd81afe568130059060001-apis.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-products-57cd81afe568130059060001-groups.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-products-57cd81afe568130059060001.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-products-57cd81b0e568130059060002-apis.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-products-57cd81b0e568130059060002.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-products.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-properties.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\sites-maloapimtest.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\workflows-malologicapptestRequest.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\sites-maloapimtest.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\workflows-malologicapptestRequest.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />

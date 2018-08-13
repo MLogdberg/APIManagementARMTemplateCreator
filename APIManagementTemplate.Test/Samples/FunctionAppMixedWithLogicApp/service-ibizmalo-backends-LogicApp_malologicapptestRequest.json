@@ -1,0 +1,12 @@
+{
+  "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/backends/LogicApp_malologicapptestRequest",
+  "type": "Microsoft.ApiManagement/service/backends",
+  "name": "LogicApp_malologicapptestRequest",
+  "properties": {
+    "title": null,
+    "description": "malologicapptestRequest",
+    "url": "https://prod-17.westeurope.logic.azure.com/workflows/b4ed5ace841d4c8da1378fa65572ff84/triggers",
+    "protocol": "http",
+    "resourceId": "https://management.azure.com/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/maloapimtest/providers/Microsoft.Logic/workflows/malologicapptestRequest"
+  }
+}

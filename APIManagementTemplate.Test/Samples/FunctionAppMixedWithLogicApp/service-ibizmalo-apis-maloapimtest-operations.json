@@ -1,0 +1,156 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/maloapimtest/operations/api-HttpTriggerAdminKey-post",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "api-HttpTriggerAdminKey-post",
+      "properties": {
+        "displayName": "HTTP Trigger Adm Key",
+        "method": "POST",
+        "urlTemplate": "/adminkey",
+        "templateParameters": [],
+        "description": "Replace with Operation Object #http://swagger.io/specification/#operationObject",
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Success operation",
+            "representations": [],
+            "headers": []
+          }
+        ],
+        "policies": null
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/maloapimtest/operations/api-GenericWebhook-post",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "api-GenericWebhook-post",
+      "properties": {
+        "displayName": "Order",
+        "method": "POST",
+        "urlTemplate": "/createorder",
+        "templateParameters": [],
+        "description": "Replace with Operation Object #http://swagger.io/specification/#operationObject",
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Success operation",
+            "representations": [],
+            "headers": []
+          }
+        ],
+        "policies": null
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/maloapimtest/operations/api-HTTPTrigger-get",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "api-HTTPTrigger-get",
+      "properties": {
+        "displayName": "Orders",
+        "method": "GET",
+        "urlTemplate": "/orders",
+        "templateParameters": [],
+        "description": "Replace with Operation Object #http://swagger.io/specification/#operationObject",
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Success operation",
+            "representations": [],
+            "headers": []
+          }
+        ],
+        "policies": null
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/maloapimtest/operations/request-invoke",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "request-invoke",
+      "properties": {
+        "displayName": "Send Order",
+        "method": "POST",
+        "urlTemplate": "/order",
+        "templateParameters": [],
+        "description": "Utlös en körning av logikappen.",
+        "request": {
+          "description": null,
+          "queryParameters": [],
+          "headers": [
+            {
+              "name": "Content-Type",
+              "description": "",
+              "type": "string",
+              "defaultValue": "application/json",
+              "required": true,
+              "values": [
+                "application/json"
+              ]
+            }
+          ],
+          "representations": []
+        },
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Åtgärdens logikappssvar med statuskoden 200.",
+            "representations": [],
+            "headers": []
+          },
+          {
+            "statusCode": 400,
+            "description": "Logikapp-reponsen.",
+            "representations": [],
+            "headers": []
+          }
+        ],
+        "policies": null
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/maloapimtest/operations/request-invoke-1",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "request-invoke-1",
+      "properties": {
+        "displayName": "Send Ticket",
+        "method": "POST",
+        "urlTemplate": "/ticket",
+        "templateParameters": [],
+        "description": "Utlös en körning av logikappen.",
+        "request": {
+          "description": null,
+          "queryParameters": [],
+          "headers": [
+            {
+              "name": "Content-Type",
+              "description": "",
+              "type": "string",
+              "defaultValue": "application/json",
+              "required": true,
+              "values": [
+                "application/json"
+              ]
+            }
+          ],
+          "representations": []
+        },
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Åtgärdens logikappssvar med statuskoden 200.",
+            "representations": [],
+            "headers": []
+          },
+          {
+            "statusCode": 400,
+            "description": "Logikapp-reponsen.",
+            "representations": [],
+            "headers": []
+          }
+        ],
+        "policies": null
+      }
+    }
+  ],
+  "nextLink": ""
+}
