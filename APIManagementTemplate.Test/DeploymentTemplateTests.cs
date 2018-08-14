@@ -216,33 +216,16 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
-        public void ScenarioTestLogicApps()
-        {
-            var collector = new MockResourceCollector("BasicLogicApp");
-            TemplateGenerator generator = new TemplateGenerator("ibizmalo", "subscr", "resourcegroup", "orders", true, false,false, false, collector);
-            JObject result = generator.GenerateTemplate().Result;
-        }
-
-
-        [TestMethod]
-        public void ScenarioTestLogicAppUpdated()
-        {
-            var collector = new MockResourceCollector("UpdatedeLogicApp");
-            TemplateGenerator generator = new TemplateGenerator("cramoapidev", "13ea6145-d7f4-4d0f-b406-7394a2b64fb4", "Api-Default-West-Europe", "api/pricelists/errorfile", false, false, false,false, collector);
-            JObject result = generator.GenerateTemplate().Result;
-        }
-
-        [TestMethod]
         public void ScenarioTestLogicAppUpdatedBackend()
         {
             var collector = new MockResourceCollector("UpdatedeLogicApp");
             var dtemplate = new DeploymentTemplate();
 
             var document = JObject.Parse(Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.UpdatedeLogicApp.service-cramoapidev-backends-LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV.json"));
-            dtemplate.AddBackend(document);
+            dtemplate.AddBackend(document,JObject.Parse("{\"properties\":{\"definition\": {\"triggers\": {\"manual\": {\"type\": \"Request\",\"kind\": \"Http\"}}}}}"));
 
-            Assert.AreEqual("[substring(listCallbackUrl(resourceId(parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_logicAppName'), 'manual'), providers('Microsoft.Logic', 'workflows').apiVersions[0]).basePath,0,add(10,indexOf(listCallbackUrl(resourceId(parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_logicAppName'), 'manual'), providers('Microsoft.Logic', 'workflows').apiVersions[0]).basePath,'/triggers/')))]", dtemplate.resources[0]["properties"].Value<string>("url"));
-            Assert.AreEqual("[concat('https://management.azure.com/','/subscriptions/',subscription().subscriptionId,'/resourceGroups/',parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_resourceGroup'),'/providers/Microsoft.Logic/workflows/',parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_logicAppName'))]", dtemplate.resources[0]["properties"].Value<string>("resourceId"));
+            Assert.AreEqual("[substring(listCallbackUrl(resourceId(parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_logicAppName'), 'manual'), '2017-07-01').basePath,0,add(10,indexOf(listCallbackUrl(resourceId(parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_logicAppName'), 'manual'), '2017-07-01').basePath,'/triggers/')))]", dtemplate.resources[0]["properties"].Value<string>("url"));
+            Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',subscription().subscriptionId,'/resourceGroups/',parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_resourceGroup'),'/providers/Microsoft.Logic/workflows/',parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_logicAppName'))]", dtemplate.resources[0]["properties"].Value<string>("resourceId"));
             var result = dtemplate.ToString();
 
             //Assert.AreEqual("other", oparation["properties"]["templateParameters"][1].Value<string>("name"));
@@ -250,6 +233,5 @@ namespace APIManagementTemplate.Test
         }
 
     }
-
 
 }

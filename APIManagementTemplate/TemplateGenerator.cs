@@ -103,13 +103,26 @@ namespace APIManagementTemplate
                         //add properties
                         this.PolicyHandleProperties(pol, apiTemplateResource.Value<string>("name"), operationInstance.Value<string>("name"));
 
+                        var operationSuffix = apiInstance.Value<string>("name") + "_" + operationInstance.Value<string>("name");
                         //Handle Azure Resources
                         if (!this.PolicyHandeAzureResources(pol, apiTemplateResource.Value<string>("name"), template))
-                        {
-                            var operationSuffix = apiInstance.Value<string>("name") + "_" + operationInstance.Value<string>("name");
+                        {           
                             PolicyHandeBackendUrl(pol, operationSuffix, template);
                         }
-                        
+
+                        var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>("policyContent"));
+
+                        if (!string.IsNullOrEmpty(backendid))
+                        {
+                            JObject backendInstance = await HandleBackend(template, operationSuffix, backendid);
+
+                            if (apiTemplateResource.Value<JArray>("dependsOn") == null)
+                                apiTemplateResource["dependsOn"] = new JArray();
+
+                            //add dependeOn
+                            apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('service_{servicename}_name'), '{backendInstance.Value<string>("name")}')]");
+                        }
+
                         operationTemplateResource.Value<JArray>("resources").Add(pol);
                         //handle nextlink?
                     }
@@ -132,32 +145,13 @@ namespace APIManagementTemplate
 
                     if (!string.IsNullOrEmpty(backendid))
                     {
-                        var backendInstance = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/backends/" + backendid);
-                        var property = template.AddBackend(backendInstance);
-
-                        if(property != null)
-                        {
-                            if (property.type == Property.PropertyType.LogicAppRevisionGa)
-                            {
-                                var idp = this.identifiedProperties.Where(pp => pp.name.Contains(apiObject.Value<string>("name") + "_manual-invoke_")).FirstOrDefault();
-                                idp.extraInfo = property.extraInfo;
-                                idp.type = Property.PropertyType.LogicAppRevisionGa;
-                            }
-                            else if(property.type == Property.PropertyType.Function)
-                            {
-                                foreach (var idp in this.identifiedProperties.Where(pp => pp.name.ToLower().StartsWith(property.name))) {
-                                    idp.extraInfo = property.extraInfo;
-                                    idp.type = Property.PropertyType.Function;
-                                }                                
-                            }
-                        }
-
+                        JObject backendInstance = await HandleBackend(template, apiObject.Value<string>("name"), backendid);
 
                         if (apiTemplateResource.Value<JArray>("dependsOn") == null)
                             apiTemplateResource["dependsOn"] = new JArray();
 
                         //add dependeOn
-                        apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('service_{servicename}_name'), parameters('backend_{backendInstance.Value<string>("name")}_name'))]");
+                        apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('service_{servicename}_name'), '{backendInstance.Value<string>("name")}')]");
                     }
 
                     //handle nextlink?
@@ -262,6 +256,42 @@ namespace APIManagementTemplate
             return JObject.FromObject(template);
 
         }
+
+        private async Task<JObject> HandleBackend(DeploymentTemplate template, string startname, string backendid)
+        {
+            var backendInstance = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/backends/" + backendid);
+            JObject azureResource = null;
+            if (backendInstance["properties"]["resourceId"] != null)
+            {
+                azureResource = await resourceCollector.GetResource(backendInstance["properties"].Value<string>("resourceId"),"","2017-07-01");
+            }
+
+            var property = template.AddBackend(backendInstance,azureResource);
+
+            if (property != null)
+            {
+                if (property.type == Property.PropertyType.LogicApp)
+                {
+                    var idp = this.identifiedProperties.Where(pp => pp.name.StartsWith(startname) && pp.name.Contains("-invoke")).FirstOrDefault();
+                    if (idp != null)
+                    {
+                        idp.extraInfo = property.extraInfo;
+                        idp.type = Property.PropertyType.LogicAppRevisionGa;
+                    }
+                }
+                else if (property.type == Property.PropertyType.Function)
+                {
+                    foreach (var idp in this.identifiedProperties.Where(pp => pp.name.ToLower().StartsWith(property.name) && !pp.name.Contains("-invoke")))
+                    {
+                        idp.extraInfo = property.extraInfo;
+                        idp.type = Property.PropertyType.Function;
+                    }
+                }
+            }
+
+            return backendInstance;
+        }
+
 
         public void PolicyHandleProperties(JObject policy, string apiname,string operationName)
         {

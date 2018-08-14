@@ -1,0 +1,68 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/maloapimtestclean/operations/api-HTTPTrigger-get",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "api-HTTPTrigger-get",
+      "properties": {
+        "displayName": "HTTP Trigger",
+        "method": "GET",
+        "urlTemplate": "/orders",
+        "templateParameters": [],
+        "description": "Replace with Operation Object #http://swagger.io/specification/#operationObject",
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Success operation",
+            "representations": [],
+            "headers": []
+          }
+        ],
+        "policies": null
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/maloapimtestclean/operations/api-HttpTriggerAdminKey-post",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "api-HttpTriggerAdminKey-post",
+      "properties": {
+        "displayName": "HTTP Trigger Admin Key",
+        "method": "POST",
+        "urlTemplate": "/adminkey",
+        "templateParameters": [],
+        "description": "Replace with Operation Object #http://swagger.io/specification/#operationObject",
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Success operation",
+            "representations": [],
+            "headers": []
+          }
+        ],
+        "policies": null
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/maloapimtestclean/operations/api-GenericWebhook-post",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "api-GenericWebhook-post",
+      "properties": {
+        "displayName": "WebHook",
+        "method": "POST",
+        "urlTemplate": "/order",
+        "templateParameters": [],
+        "description": "Replace with Operation Object #http://swagger.io/specification/#operationObject",
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Success operation",
+            "representations": [],
+            "headers": []
+          }
+        ],
+        "policies": null
+      }
+    }
+  ],
+  "nextLink": ""
+}

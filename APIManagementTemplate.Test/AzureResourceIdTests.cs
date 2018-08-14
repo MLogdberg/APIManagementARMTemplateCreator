@@ -73,8 +73,19 @@ namespace APIManagementTemplate.Test
             var ari = new AzureResourceId(reourceid);
             ari.ReplaceValueAfter("locations", "',parameters('logicapplocation'),'");
 
-            Assert.AreEqual("subscriptions/fakeecb73-d0ff-455d-a2bf-eae0b300696d/providers/Microsoft.Web/locations/',parameters('logicapplocation'),'/managedApis/filesystem", ari.ToString());
+            Assert.AreEqual("/subscriptions/fakeecb73-d0ff-455d-a2bf-eae0b300696d/providers/Microsoft.Web/locations/',parameters('logicapplocation'),'/managedApis/filesystem", ari.ToString());
         }
+        [TestMethod()]
+        public void AzureResourceIdComplex()
+        {
+            string reourceid = "https://management.azure.com/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/maloapimtest/providers/Microsoft.Logic/workflows/malologicapptestManual";
+            var ari = new AzureResourceId(reourceid);
+            
+            Assert.AreEqual("c107df29-a4af-4bc9-a733-f88f0eaa4296", ari.SubscriptionId);
+            Assert.AreEqual("maloapimtest", ari.ResourceGroupName);
+            Assert.AreEqual("malologicapptestManual", ari.ResourceName);
 
+            Assert.AreEqual("/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/maloapimtest/providers/Microsoft.Logic/workflows/malologicapptestManual", ari.ToString());
+        }
     }
 }

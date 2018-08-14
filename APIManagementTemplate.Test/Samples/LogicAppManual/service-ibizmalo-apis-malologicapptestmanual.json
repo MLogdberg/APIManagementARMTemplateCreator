@@ -1,0 +1,24 @@
+{
+  "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/malologicapptestmanual",
+  "type": "Microsoft.ApiManagement/service/apis",
+  "name": "malologicapptestmanual",
+  "properties": {
+    "displayName": "malologicapptestManual",
+    "apiRevision": "1",
+    "description": "Azure Logic App.",
+    "serviceUrl": "https://prod-27.westeurope.logic.azure.com/workflows/a8beb87660a44d1f90d427be186160c7/triggers",
+    "path": "maloapimtestmanual",
+    "protocols": [
+      "https"
+    ],
+    "authenticationSettings": {
+      "oAuth2": null,
+      "openid": null
+    },
+    "subscriptionKeyParameterNames": {
+      "header": "Ocp-Apim-Subscription-Key",
+      "query": "subscription-key"
+    },
+    "isCurrent": true
+  }
+}

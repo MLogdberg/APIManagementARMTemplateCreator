@@ -1,0 +1,25 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/malologicapptestrequest",
+      "type": "Microsoft.ApiManagement/service/apis",
+      "name": "malologicapptestrequest",
+      "properties": {
+        "displayName": "malologicapptestRequest",
+        "apiRevision": "1",
+        "description": "Azure Logic App.",
+        "serviceUrl": "https://prod-17.westeurope.logic.azure.com/workflows/b4ed5ace841d4c8da1378fa65572ff84/triggers",
+        "path": "maloapimrequest",
+        "protocols": [
+          "https"
+        ],
+        "authenticationSettings": null,
+        "subscriptionKeyParameterNames": null,
+        "isCurrent": true,
+        "apiVersion": "v1",
+        "apiVersionSetId": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/api-version-sets/5b418fc9694aa7424cb6a516"
+      }
+    }
+  ],
+  "nextLink": ""
+}

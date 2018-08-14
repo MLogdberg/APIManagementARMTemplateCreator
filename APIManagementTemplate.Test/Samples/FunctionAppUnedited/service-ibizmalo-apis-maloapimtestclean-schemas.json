@@ -1,0 +1,16 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/maloapimtestclean/schemas/5b419348b352470e807f4097",
+      "type": "Microsoft.ApiManagement/service/apis/schemas",
+      "name": "5b419348b352470e807f4097",
+      "properties": {
+        "contentType": "application/vnd.ms-azure-apim.swagger.definitions+json",
+        "document": {
+          "definitions": {}
+        }
+      }
+    }
+  ],
+  "nextLink": ""
+}

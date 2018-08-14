@@ -1,0 +1,41 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/products/57cd81afe568130059060001/groups/57cd81afe568130059020001",
+      "type": "Microsoft.ApiManagement/service/products/groups",
+      "name": "57cd81afe568130059020001",
+      "properties": {
+        "displayName": "Administrators",
+        "description": "Administrators is a built-in group. Its membership is managed by the system. Microsoft Azure subscription administrators fall into this group.",
+        "builtIn": true,
+        "type": "system",
+        "externalId": null
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/products/57cd81afe568130059060001/groups/57cd81afe568130059020002",
+      "type": "Microsoft.ApiManagement/service/products/groups",
+      "name": "57cd81afe568130059020002",
+      "properties": {
+        "displayName": "Developers",
+        "description": "Developers is a built-in group. Its membership is managed by the system. Signed-in users fall into this group.",
+        "builtIn": true,
+        "type": "system",
+        "externalId": null
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/products/57cd81afe568130059060001/groups/57cd81afe568130059020003",
+      "type": "Microsoft.ApiManagement/service/products/groups",
+      "name": "57cd81afe568130059020003",
+      "properties": {
+        "displayName": "Guests",
+        "description": "Guests is a built-in group. Its membership is managed by the system. Unauthenticated users visiting the developer portal fall into this group.",
+        "builtIn": true,
+        "type": "system",
+        "externalId": null
+      }
+    }
+  ],
+  "nextLink": ""
+}

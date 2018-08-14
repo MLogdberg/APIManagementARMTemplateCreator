@@ -1,0 +1,63 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/malologicapptestrequest/schemas/5b418fd6b352470e807f4083",
+      "type": "Microsoft.ApiManagement/service/apis/schemas",
+      "name": "5b418fd6b352470e807f4083",
+      "properties": {
+        "contentType": "application/vnd.ms-azure-apim.swagger.definitions+json",
+        "document": {
+          "definitions": {
+            "response-200": {
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "orderid": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "request-request": {
+              "properties": {
+                "atticles": {
+                  "items": {
+                    "properties": {
+                      "articlenumber": {
+                        "type": "string"
+                      },
+                      "count": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "articlenumber",
+                      "count"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "customer": {
+                  "type": "string"
+                },
+                "orderid": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "RequestPathsInvokePost500ApplicationJsonResponse": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "nextLink": ""
+}
