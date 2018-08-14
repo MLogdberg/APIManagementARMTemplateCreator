@@ -119,16 +119,16 @@ namespace APIManagementTemplate.Test
                 var prop = obj["properties"];
                 if (prop.Value<string>("displayName") == "maloapimtest_GenericWebhook_query_5b418f4619afb685dc8de379")
                 {
-                    Assert.AreEqual("[listsecrets(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),'Microsoft.Web/sites/functions', parameters('FunctionApp_maloapimtest_siteName'), parameters('operations_api-GenericWebhook-post_name')),'2015-08-01').key]", prop.Value<string>("value"));
+                    Assert.AreEqual("[listsecrets(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),'Microsoft.Web/sites/functions', parameters('FunctionApp_maloapimtest_siteName'), 'GenericWebhook'),'2015-08-01').key]", prop.Value<string>("value"));
                 }
                 else if (prop.Value<string>("displayName") == "maloapimtest_HTTPTrigger_query_5b418f463f37b79bfde7eebe")
                 {
-                    Assert.AreEqual("[listsecrets(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),'Microsoft.Web/sites/functions', parameters('FunctionApp_maloapimtest_siteName'), parameters('operations_api-HTTPTrigger-get_name')),'2015-08-01').key]", prop.Value<string>("value"));
+                    Assert.AreEqual("[listsecrets(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),'Microsoft.Web/sites/functions', parameters('FunctionApp_maloapimtest_siteName'), 'HTTPTrigger'),'2015-08-01').key]", prop.Value<string>("value"));
                 }
                 else if (prop.Value<string>("displayName") == "maloapimtest_HttpTriggerAdminKey_query_5b418f46b3882daea0919d26")
                 {
                     //hwo to fix the admin key?????
-                    Assert.AreEqual("[listsecrets(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),'Microsoft.Web/sites/functions', parameters('FunctionApp_maloapimtest_siteName'), parameters('operations_api-HttpTriggerAdminKey-post_name')),'2015-08-01').key]", prop.Value<string>("value"));
+                    Assert.AreEqual("[listsecrets(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),'Microsoft.Web/sites/functions', parameters('FunctionApp_maloapimtest_siteName'), 'HttpTriggerAdminKey'),'2015-08-01').key]", prop.Value<string>("value"));
                 }
                 else if (prop.Value<string>("displayName") == "maloapimtest_request-invoke_5b4192e76a19ef3c6dbf2466")
                 {

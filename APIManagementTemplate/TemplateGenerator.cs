@@ -101,7 +101,7 @@ namespace APIManagementTemplate
                         var pol = template.CreatePolicy(policy);
 
                         //add properties
-                        this.PolicyHandleProperties(pol, apiTemplateResource.Value<string>("name"), operationInstance.Value<string>("name"));
+                        this.PolicyHandleProperties(pol, apiTemplateResource.Value<string>("name"), (operationInstance.Value<string>("name").StartsWith("api-") ? operationInstance.Value<string>("name").Substring(4, (operationInstance.Value<string>("name").LastIndexOf("-" + operationInstance["properties"].Value<string>("method").ToLower()))-4): operationInstance.Value<string>("name")));
 
                         var operationSuffix = apiInstance.Value<string>("name") + "_" + operationInstance.Value<string>("name");
                         //Handle Azure Resources
@@ -237,7 +237,7 @@ namespace APIManagementTemplate
                     else if (identifiedProperty.type == Property.PropertyType.Function)
                     {
                         //    "replacewithfunctionoperationname"
-                        propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo.Replace("replacewithfunctionoperationname",$"operations_{identifiedProperty.operationName}_name")}]";
+                        propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo.Replace("replacewithfunctionoperationname",$"{identifiedProperty.operationName}")}]";
                     }
                     var propertyTemplate = template.AddProperty(propertyObject);
 

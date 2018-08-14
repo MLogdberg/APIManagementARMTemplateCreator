@@ -431,7 +431,7 @@ namespace APIManagementTemplate.Models
                     {
                         type = Property.PropertyType.Function,
                         name = sitename.ToLower(),
-                        extraInfo = $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), parameters('replacewithfunctionoperationname')),'2015-08-01').key"
+                        extraInfo = $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key"
                     };
                 }
                 resource["properties"]["resourceId"] = "[concat('https://management.azure.com/','" + aid.ToString().Substring(1) + ")]";
