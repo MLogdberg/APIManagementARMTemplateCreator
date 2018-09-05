@@ -1,0 +1,26 @@
+{
+  "id": "/subscriptions/1fake145-d7fa-4d0f-b406-7394a2b64fb4/resourceGroups/Api-Default-West-Europe/providers/Microsoft.ApiManagement/service/apidev/apis/invoice-retrieval-api",
+  "type": "Microsoft.ApiManagement/service/apis",
+  "name": "invoice-retrieval-api",
+  "properties": {
+    "displayName": "Invoices",
+    "apiRevision": "1",
+    "description": "Retrieves invoices depending on market and invoice id",
+    "serviceUrl": "https://apidev.azure-api.net/",
+    "path": "api/documents/invoices",
+    "protocols": [
+      "https"
+    ],
+    "authenticationSettings": {
+      "oAuth2": null,
+      "openid": null
+    },
+    "subscriptionKeyParameterNames": {
+      "header": "Ocp-Apim-Subscription-Key",
+      "query": "subscription-key"
+    },
+    "isCurrent": true,
+    "apiVersion": "v1",
+    "apiVersionSetId": "/subscriptions/1fake145-d7fa-4d0f-b406-7394a2b64fb4/resourceGroups/Api-Default-West-Europe/providers/Microsoft.ApiManagement/service/apidev/api-version-sets/5b1fb4607e5c66b5cb2fe2e8"
+  }
+}

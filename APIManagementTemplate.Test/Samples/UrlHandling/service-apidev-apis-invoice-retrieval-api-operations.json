@@ -1,0 +1,65 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/1fake145-d7fa-4d0f-b406-7394a2b64fb4/resourceGroups/Api-Default-West-Europe/providers/Microsoft.ApiManagement/service/apidev/apis/invoice-retrieval-api/operations/get-invoice",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "get-invoice",
+      "properties": {
+        "displayName": "Get Invoice as pdf",
+        "method": "GET",
+        "urlTemplate": "/marketId/{marketId}/invoiceId/{invoiceId}",
+        "templateParameters": [
+          {
+            "name": "marketId",
+            "description": "The market to retrieve invoice from e.g. DE, SE, NO, FI etc etc",
+            "type": "string",
+            "required": true,
+            "values": []
+          },
+          {
+            "name": "invoiceId",
+            "description": "The invoice identifier e.g. 550791",
+            "type": "string",
+            "required": true,
+            "values": []
+          }
+        ],
+        "description": "Retrieves an invoice with the specified invoice id from the specified market (market id)",
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Success operation. Returns a pdf as a base64 encoded string, so the subscriber must handle the transformation to pdf. Content-Type is set to application/pdf and file name is set in Content-Disposition.",
+            "representations": [
+              {
+                "contentType": "application/pdf",
+                "schemaId": "5b210f52b7ba011b5834ec78",
+                "typeName": "pdfResponse"
+              }
+            ],
+            "headers": []
+          },
+          {
+            "statusCode": 204,
+            "description": "Success operation with no content",
+            "representations": [],
+            "headers": []
+          },
+          {
+            "statusCode": 400,
+            "description": "Bad request. Failed operation",
+            "representations": [
+              {
+                "contentType": "application/json",
+                "schemaId": "5b210f52b7ba011b5834ec78",
+                "typeName": "error"
+              }
+            ],
+            "headers": []
+          }
+        ],
+        "policies": null
+      }
+    }
+  ],
+  "nextLink": ""
+}

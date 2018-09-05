@@ -61,6 +61,7 @@
     <Compile Include="FunctionAppMixedWithLogicAppTests.cs" />
     <Compile Include="FunctionAppUneditedTests.cs" />
     <Compile Include="LogicAppCustomTriggerNameTest.cs" />
+    <Compile Include="URLHandlingTests.cs" />
     <Compile Include="LogicAppRequestTests.cs" />
     <Compile Include="MockResourceCollector.cs" />
     <Compile Include="TemplateHelperTests.cs" />
@@ -200,6 +201,15 @@
     <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\workflows-malologicapptestRequest.json" />
     <EmbeddedResource Include="Samples\FunctionAppUnedited\sites-maloapimtest.json" />
     <EmbeddedResource Include="Samples\LogicAppRequest\workflows-malologicapptestRequest.json" />
+    <EmbeddedResource Include="Samples\UrlHandling\service-apidev-api-version-sets-5b1fb4607e5c66b5cb2fe2e8.json" />
+    <EmbeddedResource Include="Samples\UrlHandling\service-apidev-apis-invoice-retrieval-api-operations-get-invoice-policies.json" />
+    <EmbeddedResource Include="Samples\UrlHandling\service-apidev-apis-invoice-retrieval-api-operations-get-invoice.json" />
+    <EmbeddedResource Include="Samples\UrlHandling\service-apidev-apis-invoice-retrieval-api-operations.json" />
+    <EmbeddedResource Include="Samples\UrlHandling\service-apidev-apis-invoice-retrieval-api-policies.json" />
+    <EmbeddedResource Include="Samples\UrlHandling\service-apidev-apis-invoice-retrieval-api-schemas.json" />
+    <EmbeddedResource Include="Samples\UrlHandling\service-apidev-apis-invoice-retrieval-api.json" />
+    <EmbeddedResource Include="Samples\UrlHandling\service-apidev-apis.json" />
+    <EmbeddedResource Include="Samples\UrlHandling\service-apidev-properties.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />

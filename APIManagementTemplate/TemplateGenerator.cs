@@ -425,9 +425,8 @@ namespace APIManagementTemplate
             var baseUrl = backendService.Attribute("base-url");
             if (baseUrl != null && policyContent.IndexOf(baseUrl.Value) > -1)
             {
-                int index = policyContent.IndexOf(baseUrl.Value);
-
-                return "[Concat('" + policyContent.Substring(0, index) + "'," + replaceText + ",'" + policyContent.Substring(index + baseUrl.Value.Length) + "')]";
+                int index = policyContent.IndexOf(baseUrl.Value);                
+                return "[Concat('" + policyContent.Substring(0, index).Replace("'","''") + "'," + replaceText + ",'" + policyContent.Substring(index + baseUrl.Value.Length).Replace("'", "''") + "')]";
             }
             return policyContent;
         }
