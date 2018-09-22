@@ -196,6 +196,8 @@ namespace APIManagementTemplate
 
                         foreach (JObject productApi in (productApis == null ? new JArray() : productApis.Value<JArray>("value")))
                         {
+                            var apiVersionSetId = new AzureResourceId(productApi["properties"]["apiVersionSetId"].ToString()).ValueAfter("api-version-sets");
+                            productApi["properties"]["apiVersionSetId"] = $"[resourceId('Microsoft.ApiManagement/service/api-version-sets', parameters('service_{servicename}_name'), '{apiVersionSetId}')]";
                             productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(productApi));
                         }
 

@@ -17,11 +17,11 @@ namespace APIManagementTemplate.Test
 
         }
         private JObject _template = null;
-        private JObject GetTemplate()
+        private JObject GetTemplate(bool exportProducts = false)
         {
             if (this._template != null)
                 return this._template;
-            var generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest", "maloapimtestclean", false, false, false, false, this.collector);
+            var generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest", "maloapimtestclean", false, exportProducts, false, false, this.collector);
             this._template = generator.GenerateTemplate().GetAwaiter().GetResult();
             return this._template;
         }
@@ -119,6 +119,15 @@ namespace APIManagementTemplate.Test
             }
         }
 
+        [TestMethod]
+        public void TestApiVersionSetIdForProductApiIsSetWithResourceId()
+        {
+            var template = GetTemplate(true);
+            var products = ((JArray)template["resources"]).Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/products");
+            var productApis = products.First()["resources"].Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/products/apis");
+            var apiVersionSet = productApis.First()["properties"]["apiVersionSetId"];
+            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service/api-version-sets', parameters('service_ibizmalo_name'), '5b419345805ee415de572191')]", apiVersionSet);
+        }
 
         [TestCleanup()]
         public void Cleanup()
