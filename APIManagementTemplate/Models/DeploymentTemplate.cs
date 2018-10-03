@@ -598,7 +598,15 @@ namespace APIManagementTemplate.Models
             obj.properties = restObject.Value<JObject>("properties");
             var resource = JObject.FromObject(obj);
 
-            AddParameterFromObject((JObject)resource["properties"], "value", secret ? "securestring" : "string", restObject["properties"].Value<string>("displayName"));
+            var propValue = resource["properties"].Value<string>("value");
+            if (!(propValue == null || (propValue.StartsWith("[") && propValue.EndsWith("]"))))
+            {
+                resource["properties"]["value"] = WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "value", secret ? "securestring" : "string", secret ? "secretvalue" : resource["properties"]["value"]));
+            }
+                
+
+            
+            //AddParameterFromObject((JObject)resource["properties"], "value", secret ? "securestring" : "string", restObject["properties"].Value<string>("displayName"));
 
             var dependsOn = new JArray();
             if (APIMInstanceAdded)
