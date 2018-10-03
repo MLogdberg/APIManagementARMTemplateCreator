@@ -46,7 +46,7 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual("v1", obj["invoice-retrieval-api_apiVersion"].Value<string>("defaultValue"));
             Assert.AreEqual(true, obj["invoice-retrieval-api_isCurrent"].Value<bool>("defaultValue"));
             Assert.AreEqual("https://i-dev.azurewebsites.net/api/Base64ToStream", obj["api_invoice-retrieval-api_get-invoice_backendurl"].Value<string>("defaultValue"));
-            Assert.AreEqual("bXljdXN0b21rZXk=", obj["int0001functionkey_value"].Value<string>("defaultValue"));            
+            Assert.AreEqual("secretvalue", obj["int0001functionkey_value"].Value<string>("defaultValue"));            
         }
         [TestMethod]
         public void TestResourcesCount()
