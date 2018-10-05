@@ -129,6 +129,16 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service/api-version-sets', parameters('service_ibizmalo_name'), '5b419345805ee415de572191')]", apiVersionSet);
         }
 
+        [TestMethod]
+        public void TestProductApiNameHasParameterizedApiName()
+        {
+            var template = GetTemplate(true);
+            var products = ((JArray)template["resources"]).Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/products");
+            var productApis = products.First()["resources"].Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/products/apis");
+            var productApiName = productApis.First()["name"];
+            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', parameters('product_57cd81afe568130059060001_name'), '/', parameters('api_maloapimtestclean_name'))]", productApiName);
+        }
+
         [TestCleanup()]
         public void Cleanup()
         {
