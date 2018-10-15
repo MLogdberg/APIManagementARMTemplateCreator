@@ -59,6 +59,7 @@
     <Compile Include="AzureResourceIdTests.cs" />
     <Compile Include="DeploymentTemplateTests.cs" />
     <Compile Include="FunctionAppMixedWithLogicAppTests.cs" />
+    <Compile Include="WithoutApiVersionSetIdTests.cs" />
     <Compile Include="FunctionAppUneditedTests.cs" />
     <Compile Include="LogicAppCustomTriggerNameTest.cs" />
     <Compile Include="URLHandlingTests.cs" />
@@ -210,6 +211,16 @@
     <EmbeddedResource Include="Samples\UrlHandling\service-apidev-apis-invoice-retrieval-api.json" />
     <EmbeddedResource Include="Samples\UrlHandling\service-apidev-apis.json" />
     <EmbeddedResource Include="Samples\UrlHandling\service-apidev-properties.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-properties.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-operations.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-policies.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-schemas.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-products.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-products-unlimited.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-products-unlimited-apis.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-products-unlimited-groups.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />

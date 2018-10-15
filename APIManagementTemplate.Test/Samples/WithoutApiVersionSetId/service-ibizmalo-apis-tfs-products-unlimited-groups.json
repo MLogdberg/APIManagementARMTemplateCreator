@@ -1,0 +1,17 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/tfs/products/unlimited/groups/administrators",
+      "type": "Microsoft.ApiManagement/service/products/groups",
+      "name": "administrators",
+      "properties": {
+        "displayName": "Administrators",
+        "description": "Administrators is a built-in group. Its membership is managed by the system. Microsoft Azure subscription administrators fall into this group.",
+        "builtIn": true,
+        "type": "system",
+        "externalId": null
+      }
+    }
+  ],
+  "nextLink": ""
+}
