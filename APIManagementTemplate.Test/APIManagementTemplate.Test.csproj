@@ -59,6 +59,7 @@
     <Compile Include="AzureResourceIdTests.cs" />
     <Compile Include="DeploymentTemplateTests.cs" />
     <Compile Include="FunctionAppMixedWithLogicAppTests.cs" />
+    <Compile Include="TemplatesGeneratorTests.cs" />
     <Compile Include="WithoutApiVersionSetIdTests.cs" />
     <Compile Include="FunctionAppUneditedTests.cs" />
     <Compile Include="LogicAppCustomTriggerNameTest.cs" />
@@ -221,6 +222,7 @@
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-products-unlimited.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-products-unlimited-apis.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-products-unlimited-groups.json" />
+    <EmbeddedResource Include="SamplesTemplate\template.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />

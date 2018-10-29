@@ -58,6 +58,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constants\Constants.cs" />
+    <Compile Include="TemplatesGenerator.cs" />
+    <Compile Include="WriteApiManagementTemplatesCmdlet.cs" />
     <Compile Include="GeneratorCmdlet.cs" />
     <Compile Include="Models\DeploymentTemplate.cs" />
     <Compile Include="Models\Property.cs" />
