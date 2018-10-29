@@ -45,15 +45,29 @@ namespace APIManagementTemplate
 
         private GeneratedTemplate GenerateAPI(JToken api, JObject parsedTemplate)
         {
+            GeneratedTemplate generatedTemplate = new GeneratedTemplate();
+            DeploymentTemplate template = new DeploymentTemplate(true);
+            template.resources.Add(JObject.FromObject(api));
+            generatedTemplate.Content= JObject.FromObject(template);
+            SetFilenameAndDirectory(api, parsedTemplate, generatedTemplate);
+            return generatedTemplate;
+        }
+
+        private static void SetFilenameAndDirectory(JToken api, JObject parsedTemplate, GeneratedTemplate generatedTemplate)
+        {
             if (api["properties"]["apiVersionSetId"] != null)
             {
-                string formattedVersionSetName = GetVersionSetName(api, parsedTemplate);
+                string versionSetName = GetVersionSetName(api, parsedTemplate);
                 string version = GetApiVersion(api, parsedTemplate);
-                var fileName = $"api-{formattedVersionSetName}.{version}.template.json";
-                var directory = $@"api-{formattedVersionSetName}\{version}";
-                return new GeneratedTemplate { FileName = fileName, Directory = directory };
+                generatedTemplate.FileName = $"api-{versionSetName}.{version}.template.json";
+                generatedTemplate.Directory = $@"api-{versionSetName}\{version}";
             }
-            return new GeneratedTemplate{FileName = GetFileName(api, parsedTemplate), Directory = "api"};
+            else
+            {
+                string name = api["properties"].Value<string>("displayName").Replace(' ', '-');
+                generatedTemplate.FileName = $"api-{name}.template.json";
+                generatedTemplate.Directory = $"api-{name}";
+            }
         }
 
         private static string GetApiVersion(JToken api, JObject parsedTemplate)

@@ -20,24 +20,10 @@ namespace APIManagementTemplate
 
         protected override void ProcessRecord()
         {
-            JObject parsedTemplate = JObject.Parse(ARMTemplate);
-
-            var apis = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == "Microsoft.ApiManagement/service/apis");
-            var apivs = parsedTemplate.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/api-version-sets')]");
-            var parameters = parsedTemplate["parameters"];
-            foreach (JToken api in apis)
+            var templates= new TemplatesGenerator().Generate(ARMTemplate);
+            foreach (GeneratedTemplate template in templates)
             {
-                DeploymentTemplate template = new DeploymentTemplate(true);
-                JObject item = RemoveDependencyToService(api);
-                template.resources.Add(item);
-                var apiVersionSetId = api["properties"]["apiVersionSetId"];
-                if (apiVersionSetId != null)
-                {
-                    template.resources.Add(GetApiVersionSet(parsedTemplate, apiVersionSetId));
-                }
-                template.parameters = GetParameters(parameters, api);
-                var filename = GetFileName(api);
-                System.IO.File.WriteAllText(filename, JObject.FromObject(template).ToString());
+                System.IO.File.WriteAllText(template.FileName, JObject.FromObject(template.Content).ToString());
             }
         }
 
