@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -25,7 +26,28 @@ namespace APIManagementTemplate
                 .Distinct(new ApiVersionSetIdComparer())
                 .Select(api => GenerateVersionSet(api, parsedTemplate, apiStandalone)).ToList();
             templates.AddRange(versionSets);
+            templates.Add(GenerateService(parsedTemplate));
             return templates;
+        }
+
+        private static GeneratedTemplate GenerateService(JObject parsedTemplate)
+        {
+            var generatedTemplate = new GeneratedTemplate{Directory = String.Empty, FileName = "service.template.json" };
+            DeploymentTemplate template = new DeploymentTemplate(true);
+            var wantedResources = new[]
+            {
+                "Microsoft.ApiManagement/service", "Microsoft.OperationalInsights/workspaces",
+                "Microsoft.Insights/components", "Microsoft.Storage/storageAccounts"
+            };
+            var resources = parsedTemplate.SelectTokens("$.resources[*]")
+                .Where(r => wantedResources.Any(w => w == r.Value<string>("type")));
+            foreach (JToken resource in resources)
+            {
+                template.parameters = GetParameters(parsedTemplate["parameters"], resource);
+                template.resources.Add(JObject.FromObject(resource));
+            }
+            generatedTemplate.Content = JObject.FromObject(template);
+            return generatedTemplate;
         }
 
         private GeneratedTemplate GenerateVersionSet(JToken api, JObject parsedTemplate, bool apiStandalone)
@@ -33,7 +55,15 @@ namespace APIManagementTemplate
             GeneratedTemplate generatedTemplate = new GeneratedTemplate();
             DeploymentTemplate template = new DeploymentTemplate(true);
             SetFilenameAndDirectoryForVersionSet(api, generatedTemplate, parsedTemplate);
-            template.resources.Add(apiStandalone ? RemoveServiceDependencies(api) : JObject.FromObject(api));
+            var versionSetId = GetParameterPart(api["properties"], "apiVersionSetId", -1);
+            var versionSet = parsedTemplate
+                .SelectTokens("$.resources[?(@.type==\'Microsoft.ApiManagement/service/api-version-sets\')]")
+                .FirstOrDefault(x => x.Value<string>("name").Contains(versionSetId));
+            if (versionSet != null)
+            {
+                template.parameters = GetParameters(parsedTemplate["parameters"], versionSet);
+                template.resources.Add(apiStandalone ? RemoveServiceDependencies(versionSet) : JObject.FromObject(versionSet));
+            }
             generatedTemplate.Content = JObject.FromObject(template);
             return generatedTemplate;
         }
@@ -105,31 +135,6 @@ namespace APIManagementTemplate
                 .SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/api-version-sets')]")
                 .FirstOrDefault(x => x.Value<string>("name").Contains(versionSetId));
             return apivs;
-        }
-
-        private string GetFileName(JToken api, JObject parsedTemplate)
-        {
-            string filename;
-            var nameValue = api["name"].Value<string>();
-            string[] split = nameValue.Split('\'');
-            var name = split[split.Length - 2].Substring(1);
-            //return $"{name}.json";
-
-
-            if (api["properties"]["apiVersionSetId"] != null)
-            {
-                var apiVersion = GetParameterPart(api["properties"], "apiVersion", -1);
-                var versionSetId = GetParameterPart(api["properties"], "apiVersionSetId", -1);
-                var apivs = parsedTemplate
-                    .SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/api-version-sets')]")
-                    .FirstOrDefault(x => x.Value<string>("name").Contains(versionSetId));
-                var versionSetName = apivs["properties"].Value<string>("displayName");
-                var formattedVersionSetName = versionSetName.Replace(' ', '-');
-                var jpath = $"$.parameters.{apiVersion}.defaultValue";
-                var version = parsedTemplate.SelectToken(jpath).Value<string>();
-                return $"api-{formattedVersionSetName}.{version}.template.json";
-            }
-            return $"api-{name}.template.json";
         }
 
         private static string GetParameterPart(JToken jToken, string name, int index, char separator = '\'')
