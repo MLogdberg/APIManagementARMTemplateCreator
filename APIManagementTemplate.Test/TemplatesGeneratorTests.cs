@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json.Linq;
 
 namespace APIManagementTemplate.Test
 {
@@ -14,6 +15,8 @@ namespace APIManagementTemplate.Test
         private const string HttpBinV2Filename = "api-Versioned-HTTP-bin-API.v2.template.json";
         private const string EchoFilename = "api-Echo-API.template.json";
         private const string JPathAPI = "$.resources[?(@.type=='Microsoft.ApiManagement/service/apis')]";
+        private const string JPathParameters = "$.parameters.*";
+        private const string HttpBinVersionSetFilename = "api-Versioned-HTTP-bin-API.version-set.template.json";
         private TemplatesGenerator _templatesGenerator;
         private string _sourceTemplate;
         private IList<GeneratedTemplate> _generatedTemplates;
@@ -23,7 +26,7 @@ namespace APIManagementTemplate.Test
         {
             _templatesGenerator = new TemplatesGenerator();
             _sourceTemplate = Utils.GetEmbededFileContent("APIManagementTemplate.Test.SamplesTemplate.template.json");
-            _generatedTemplates = _templatesGenerator.Generate(_sourceTemplate);
+            _generatedTemplates = _templatesGenerator.Generate(_sourceTemplate, true);
         }
 
         [TestMethod]
@@ -35,7 +38,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestResultContains3Items()
         {
-            Assert.AreEqual(3, _generatedTemplates.Count);
+            Assert.AreEqual(4, _generatedTemplates.Count);
         }
         [TestMethod]
         public void TestResultContains_httpbinv1()
@@ -59,7 +62,7 @@ namespace APIManagementTemplate.Test
             var noApis = api.Content.SelectTokens(JPathAPI)
                 .Count(x => x.Value<string>("name").Contains("httpBinAPI"));
             Assert.AreEqual(1, noApis);
-        }
+        }        
 
         [TestMethod]
         public void TestResultContainsAPIFor_httpbinv2()
@@ -85,5 +88,39 @@ namespace APIManagementTemplate.Test
             Assert.IsTrue(_generatedTemplates.Any(x => x.FileName == EchoFilename && x.Directory == @"api-Echo-API"));
         }
 
+        [TestMethod]
+        public void TestResultContainsParametersFor_httpbinv1()
+        {
+            var api = _generatedTemplates.Single(x => x.FileName == HttpBinV1Filename);
+            var parameters = api.Content.SelectTokens(JPathParameters);
+
+            Assert.AreEqual(5, parameters.Count());
+        }
+
+        [TestMethod]
+        public void TestResultDoesNotDependOnServiceFor_httpbinv1()
+        {
+            var api = _generatedTemplates.Single(x => x.FileName == HttpBinV1Filename);
+            var dependsOnService = api.Content.SelectTokens("$..dependsOn.[*]").Values<string>()
+                .Where(x => x.StartsWith("[resourceId('Microsoft.ApiManagement/service',"));
+            Assert.AreEqual(0, dependsOnService.Count());
+        }
+
+        [TestMethod]
+        public void TestResultDoesNotDependOnServiceFor_httpbinVersionSet()
+        {
+            var api = _generatedTemplates.Single(x => x.FileName == HttpBinVersionSetFilename);
+            var dependsOnService = api.Content.SelectTokens("$..dependsOn.[*]").Values<string>()
+                .Where(x => x.StartsWith("[resourceId('Microsoft.ApiManagement/service',"));
+            Assert.AreEqual(0, dependsOnService.Count());
+        }
+
+        [TestMethod]
+        public void TestResultContainsVersionSetFor_httpbin()
+        {
+            Assert.AreEqual(1, _generatedTemplates.Count(x =>
+                x.FileName == HttpBinVersionSetFilename &&
+                x.Directory == @"api-Versioned-HTTP-bin-API"));
+        }
     }
 }

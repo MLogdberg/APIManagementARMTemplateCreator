@@ -18,9 +18,11 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false, HelpMessage = "Piped input from armclient", ValueFromPipeline = true)]
         public string ARMTemplate;
 
+        [Parameter(Mandatory = false, HelpMessage = "Generate templates for APIs that can be deployed standalone (without the rest of the resources)")]
+        public bool ApiStandalone = true;
         protected override void ProcessRecord()
         {
-            var templates= new TemplatesGenerator().Generate(ARMTemplate);
+            var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone);
             foreach (GeneratedTemplate template in templates)
             {
                 System.IO.File.WriteAllText(template.FileName, JObject.FromObject(template.Content).ToString());

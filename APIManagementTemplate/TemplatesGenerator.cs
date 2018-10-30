@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using APIManagementTemplate.Models;
 using Newtonsoft.Json.Linq;
@@ -16,41 +16,47 @@ namespace APIManagementTemplate
 
     public class TemplatesGenerator
     {
-        public IList<GeneratedTemplate> Generate(string sourceTemplate)
+        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone)
         {
             JObject parsedTemplate = JObject.Parse(sourceTemplate);
-
             var apis = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == "Microsoft.ApiManagement/service/apis");
-            return apis.Select(api => GenerateAPI(api, parsedTemplate)).ToList();
-
-            //var apivs = parsedTemplate.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/api-version-sets')]");
-            //var parameters = parsedTemplate["parameters"];
-            //foreach (JToken api in apis)
-            //{
-            //    DeploymentTemplate template = new DeploymentTemplate(true);
-            //    JObject item = RemoveDependencyToService(api);
-            //    template.resources.Add(item);
-            //    var apiVersionSetId = api["properties"]["apiVersionSetId"];
-            //    if (apiVersionSetId != null)
-            //    {
-            //        template.resources.Add(GetApiVersionSet(parsedTemplate, apiVersionSetId));
-            //    }
-            //    template.parameters = GetParameters(parameters, api);
-            //    var filename = GetFileName(api);
-            //    System.IO.File.WriteAllText(filename, JObject.FromObject(template).ToString());
-            //}
-
-            //return new List<GeneratedTemplate>();
+            List<GeneratedTemplate> templates = apis.Select(api => GenerateAPI(api, parsedTemplate, apiStandalone)).ToList();
+            var versionSets = apis.Where(api => api["properties"]["apiVersionSetId"] != null)
+                .Distinct(new ApiVersionSetIdComparer())
+                .Select(api => GenerateVersionSet(api, parsedTemplate, apiStandalone)).ToList();
+            templates.AddRange(versionSets);
+            return templates;
         }
 
-        private GeneratedTemplate GenerateAPI(JToken api, JObject parsedTemplate)
+        private GeneratedTemplate GenerateVersionSet(JToken api, JObject parsedTemplate, bool apiStandalone)
         {
             GeneratedTemplate generatedTemplate = new GeneratedTemplate();
             DeploymentTemplate template = new DeploymentTemplate(true);
-            template.resources.Add(JObject.FromObject(api));
-            generatedTemplate.Content= JObject.FromObject(template);
-            SetFilenameAndDirectory(api, parsedTemplate, generatedTemplate);
+            SetFilenameAndDirectoryForVersionSet(api, generatedTemplate, parsedTemplate);
+            template.resources.Add(apiStandalone ? RemoveServiceDependencies(api) : JObject.FromObject(api));
+            generatedTemplate.Content = JObject.FromObject(template);
             return generatedTemplate;
+        }
+
+        private GeneratedTemplate GenerateAPI(JToken api, JObject parsedTemplate, bool apiStandalone)
+        {
+            GeneratedTemplate generatedTemplate = new GeneratedTemplate();
+            DeploymentTemplate template = new DeploymentTemplate(true);
+            template.parameters = GetParameters(parsedTemplate["parameters"], api);
+
+            SetFilenameAndDirectory(api, parsedTemplate, generatedTemplate);
+            template.resources.Add(apiStandalone ? RemoveServiceDependencies(api) : JObject.FromObject(api));
+            generatedTemplate.Content = JObject.FromObject(template);
+            return generatedTemplate;
+        }
+
+        private static JObject RemoveServiceDependencies(JToken api)
+        {
+            JObject item = JObject.FromObject(api);
+            var dependsOn = item.SelectTokens("$..dependsOn[*]").Where(token =>
+                token.Value<string>().StartsWith("[resourceId('Microsoft.ApiManagement/service'")).ToList();
+            dependsOn.ForEach(token => token.Remove());
+            return item;
         }
 
         private static void SetFilenameAndDirectory(JToken api, JObject parsedTemplate, GeneratedTemplate generatedTemplate)
@@ -69,6 +75,12 @@ namespace APIManagementTemplate
                 generatedTemplate.Directory = $"api-{name}";
             }
         }
+        private static void SetFilenameAndDirectoryForVersionSet(JToken api, GeneratedTemplate generatedTemplate, JObject parsedTemplate)
+        {
+            string versionSetName = GetVersionSetName(api, parsedTemplate);
+            generatedTemplate.FileName = $"api-{versionSetName}.version-set.template.json";
+            generatedTemplate.Directory = $@"api-{versionSetName}";
+        }
 
         private static string GetApiVersion(JToken api, JObject parsedTemplate)
         {
@@ -80,13 +92,19 @@ namespace APIManagementTemplate
 
         private static string GetVersionSetName(JToken api, JObject parsedTemplate)
         {
+            JToken apivs = GetVersionSet(api, parsedTemplate);
+            var versionSetName = apivs["properties"].Value<string>("displayName");
+            var formattedVersionSetName = versionSetName.Replace(' ', '-');
+            return formattedVersionSetName;
+        }
+
+        private static JToken GetVersionSet(JToken api, JObject parsedTemplate)
+        {
             var versionSetId = GetParameterPart(api["properties"], "apiVersionSetId", -1);
             var apivs = parsedTemplate
                 .SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/api-version-sets')]")
                 .FirstOrDefault(x => x.Value<string>("name").Contains(versionSetId));
-            var versionSetName = apivs["properties"].Value<string>("displayName");
-            var formattedVersionSetName = versionSetName.Replace(' ', '-');
-            return formattedVersionSetName;
+            return apivs;
         }
 
         private string GetFileName(JToken api, JObject parsedTemplate)
@@ -94,9 +112,9 @@ namespace APIManagementTemplate
             string filename;
             var nameValue = api["name"].Value<string>();
             string[] split = nameValue.Split('\'');
-            var name = split[split.Length-2].Substring(1);
+            var name = split[split.Length - 2].Substring(1);
             //return $"{name}.json";
-            
+
 
             if (api["properties"]["apiVersionSetId"] != null)
             {
@@ -114,13 +132,23 @@ namespace APIManagementTemplate
             return $"api-{name}.template.json";
         }
 
-        private static string GetParameterPart(JToken jToken, string name, int index, char separator= '\'')
+        private static string GetParameterPart(JToken jToken, string name, int index, char separator = '\'')
         {
             string[] split = jToken.Value<string>(name).Split(separator);
-            if(index >= 0)
+            if (index >= 0)
                 return split[index];
             var length = split.Length;
-            return split[length -1 + index];
+            return split[length - 1 + index];
         }
+
+        private static JObject GetParameters(JToken parameters, JToken api)
+        {
+            var regExp = new Regex("parameters\\('(?<parameter>.+?)'\\)");
+            MatchCollection matches = regExp.Matches(api.ToString());
+            IEnumerable<string> usedParameters = matches.Cast<Match>().Select(x => x.Groups["parameter"].Value).Distinct();
+            IEnumerable<JProperty> filteredParameters = parameters.Cast<JProperty>().Where(x => usedParameters.Contains(x.Name));
+            return new JObject(filteredParameters);
+        }
+
     }
 }

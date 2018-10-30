@@ -57,6 +57,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ApiVersionSetIdComparer.cs" />
     <Compile Include="Constants\Constants.cs" />
     <Compile Include="TemplatesGenerator.cs" />
     <Compile Include="WriteApiManagementTemplatesCmdlet.cs" />
