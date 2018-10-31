@@ -17,21 +17,52 @@ namespace APIManagementTemplate
 
     public class TemplatesGenerator
     {
+        private string OperationalInsightsWorkspaceResourceType;
+        private string AppInsightsResourceType;
+        private const string ProductResourceType = "Microsoft.ApiManagement/service/products";
+        private const string ApiResourceType = "Microsoft.ApiManagement/service/apis";
+        private const string ServiceResourceType = "Microsoft.ApiManagement/service";
+        private const string StorageAccountResourceType = "Microsoft.Storage/storageAccounts";
+        private const string SubscriptionResourceType = "Microsoft.ApiManagement/service/subscriptions";
+        private const string UserResourceType = "Microsoft.ApiManagement/service/users";
+        private const string GroupResourceType = "Microsoft.ApiManagement/service/groups";
+        private const string UserGroupResourceType = "Microsoft.ApiManagement/service/groups/users";
+
         public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone)
         {
             JObject parsedTemplate = JObject.Parse(sourceTemplate);
-            var apis = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == "Microsoft.ApiManagement/service/apis");
+            var apis = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == ApiResourceType);
             List<GeneratedTemplate> templates = apis.Select(api => GenerateAPI(api, parsedTemplate, apiStandalone)).ToList();
             var versionSets = apis.Where(api => api["properties"]["apiVersionSetId"] != null)
                 .Distinct(new ApiVersionSetIdComparer())
                 .Select(api => GenerateVersionSet(api, parsedTemplate, apiStandalone)).ToList();
             templates.AddRange(versionSets);
-            templates.Add(GenerateTemplate(parsedTemplate, "service.template.json", String.Empty, "Microsoft.ApiManagement/service", "Microsoft.OperationalInsights/workspaces", "Microsoft.Insights/components", "Microsoft.Storage/storageAccounts"));
-            templates.Add(GenerateTemplate(parsedTemplate, "subscriptions.template.json", String.Empty, "Microsoft.ApiManagement/service/subscriptions"));
-            templates.Add(GenerateTemplate(parsedTemplate, "users.template.json", String.Empty, "Microsoft.ApiManagement/service/users"));
-            templates.Add(GenerateTemplate(parsedTemplate, "groups.template.json", String.Empty, "Microsoft.ApiManagement/service/groups"));
-            templates.Add(GenerateTemplate(parsedTemplate, "groupsUsers.template.json", String.Empty, "Microsoft.ApiManagement/service/groups/users"));
+            templates.AddRange(GenerateProducts(parsedTemplate));
+            OperationalInsightsWorkspaceResourceType = "Microsoft.OperationalInsights/workspaces";
+            AppInsightsResourceType = "Microsoft.Insights/components";
+            templates.Add(GenerateTemplate(parsedTemplate, "service.template.json", String.Empty, ServiceResourceType, OperationalInsightsWorkspaceResourceType, AppInsightsResourceType, StorageAccountResourceType));
+            templates.Add(GenerateTemplate(parsedTemplate, "subscriptions.template.json", String.Empty, SubscriptionResourceType));
+            templates.Add(GenerateTemplate(parsedTemplate, "users.template.json", String.Empty, UserResourceType));
+            templates.Add(GenerateTemplate(parsedTemplate, "groups.template.json", String.Empty, GroupResourceType));
+            templates.Add(GenerateTemplate(parsedTemplate, "groupsUsers.template.json", String.Empty, UserGroupResourceType));
             return templates;
+        }
+
+        private IEnumerable<GeneratedTemplate> GenerateProducts(JObject parsedTemplate)
+        {
+            var products = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == ProductResourceType);
+            return products.Select(product => GenerateProduct(product, parsedTemplate)).ToList();
+        }
+
+        private GeneratedTemplate GenerateProduct(JToken product, JObject parsedTemplate)
+        {
+            var productId = GetParameterPart(product, "name", -1).Substring(1);
+            GeneratedTemplate generatedTemplate = new GeneratedTemplate{Directory = $"product-{productId}", FileName = $"product-{productId}.template.json" };
+            DeploymentTemplate template = new DeploymentTemplate(true);
+            template.parameters = GetParameters(parsedTemplate["parameters"], product);
+            template.resources.Add(JObject.FromObject(product));
+            generatedTemplate.Content = JObject.FromObject(template);
+            return generatedTemplate;
         }
 
         private static GeneratedTemplate GenerateTemplate(JObject parsedTemplate, string filename, string directory, params string[] wantedResources)

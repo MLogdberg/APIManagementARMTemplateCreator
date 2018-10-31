@@ -37,9 +37,9 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
-        public void TestResultContains9Items()
+        public void TestResultContainsCorrectNumberOfItems()
         {
-            Assert.AreEqual(9, _generatedTemplates.Count);
+            Assert.AreEqual(11, _generatedTemplates.Count);
         }
         [TestMethod]
         public void TestResultContains_httpbinv1()
@@ -56,6 +56,23 @@ namespace APIManagementTemplate.Test
                 x.FileName == HttpBinV2Filename &&
                 x.Directory == @"api-Versioned-HTTP-bin-API\v2"));
         }
+
+        [TestMethod]
+        public void TestResultContains_ProductStarter()
+        {
+            Assert.IsTrue(_generatedTemplates.Any(x =>
+                x.FileName == "product-starter.template.json" &&
+                x.Directory == @"product-starter"));
+        }
+
+        [TestMethod]
+        public void TestResultContains_ProductUnlimited()
+        {
+            Assert.IsTrue(_generatedTemplates.Any(x =>
+                x.FileName == "product-unlimited.template.json" &&
+                x.Directory == @"product-unlimited"));
+        }
+
         [TestMethod]
         public void TestResultContainsAPIFor_httpbinv1()
         {

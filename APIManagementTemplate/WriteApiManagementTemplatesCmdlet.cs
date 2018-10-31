@@ -18,16 +18,21 @@ namespace APIManagementTemplate
 
         [Parameter(Mandatory = false, HelpMessage = "Generate templates for APIs that can be deployed standalone (without the rest of the resources)")]
         public bool ApiStandalone = true;
+
+        [Parameter(Mandatory = false, HelpMessage = "The output directory")]
+        public string OutputDirectory = ".";
+
         protected override void ProcessRecord()
         {
             var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone);
             foreach (GeneratedTemplate template in templates)
             {
-                string filename = template.FileName;
+                string filename = $@"{OutputDirectory}\{template.FileName}";
                 if (!String.IsNullOrWhiteSpace(template.Directory))
                 {
-                    System.IO.Directory.CreateDirectory(template.Directory);
-                    filename = $@"{template.Directory}\{template.FileName}";
+                    var directory = $@"{OutputDirectory}\{template.Directory}";
+                    System.IO.Directory.CreateDirectory(directory);
+                    filename = $@"{directory}\{template.FileName}";
                 }
                 System.IO.File.WriteAllText(filename, JObject.FromObject(template.Content).ToString());
             }
