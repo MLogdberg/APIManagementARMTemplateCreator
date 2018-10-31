@@ -37,9 +37,9 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
-        public void TestResultContains5Items()
+        public void TestResultContains9Items()
         {
-            Assert.AreEqual(5, _generatedTemplates.Count);
+            Assert.AreEqual(9, _generatedTemplates.Count);
         }
         [TestMethod]
         public void TestResultContains_httpbinv1()
@@ -87,6 +87,30 @@ namespace APIManagementTemplate.Test
         public void TestResultContains_Service()
         {
             Assert.IsTrue(_generatedTemplates.Any(x => x.FileName == ServiceFilename && x.Directory == String.Empty));
+        }
+
+        [TestMethod]
+        public void TestResultContains_Subscriptions()
+        {
+            Assert.IsTrue(_generatedTemplates.Any(x => x.FileName == "subscriptions.template.json" && x.Directory == String.Empty));
+        }
+
+        [TestMethod]
+        public void TestResultContains_Users()
+        {
+            Assert.IsTrue(_generatedTemplates.Any(x => x.FileName == "users.template.json" && x.Directory == String.Empty));
+        }
+
+        [TestMethod]
+        public void TestResultContains_Groups()
+        {
+            Assert.IsTrue(_generatedTemplates.Any(x => x.FileName == "groups.template.json" && x.Directory == String.Empty));
+        }
+
+        [TestMethod]
+        public void TestResultContains_GroupsUsers()
+        {
+            Assert.IsTrue(_generatedTemplates.Any(x => x.FileName == "groupsUsers.template.json" && x.Directory == String.Empty));
         }
 
         [TestMethod]

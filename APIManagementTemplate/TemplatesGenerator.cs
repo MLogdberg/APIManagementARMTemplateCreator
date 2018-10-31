@@ -26,19 +26,18 @@ namespace APIManagementTemplate
                 .Distinct(new ApiVersionSetIdComparer())
                 .Select(api => GenerateVersionSet(api, parsedTemplate, apiStandalone)).ToList();
             templates.AddRange(versionSets);
-            templates.Add(GenerateService(parsedTemplate));
+            templates.Add(GenerateTemplate(parsedTemplate, "service.template.json", String.Empty, "Microsoft.ApiManagement/service", "Microsoft.OperationalInsights/workspaces", "Microsoft.Insights/components", "Microsoft.Storage/storageAccounts"));
+            templates.Add(GenerateTemplate(parsedTemplate, "subscriptions.template.json", String.Empty, "Microsoft.ApiManagement/service/subscriptions"));
+            templates.Add(GenerateTemplate(parsedTemplate, "users.template.json", String.Empty, "Microsoft.ApiManagement/service/users"));
+            templates.Add(GenerateTemplate(parsedTemplate, "groups.template.json", String.Empty, "Microsoft.ApiManagement/service/groups"));
+            templates.Add(GenerateTemplate(parsedTemplate, "groupsUsers.template.json", String.Empty, "Microsoft.ApiManagement/service/groups/users"));
             return templates;
         }
 
-        private static GeneratedTemplate GenerateService(JObject parsedTemplate)
+        private static GeneratedTemplate GenerateTemplate(JObject parsedTemplate, string filename, string directory, params string[] wantedResources)
         {
-            var generatedTemplate = new GeneratedTemplate{Directory = String.Empty, FileName = "service.template.json" };
+            var generatedTemplate = new GeneratedTemplate{Directory = directory, FileName = filename };
             DeploymentTemplate template = new DeploymentTemplate(true);
-            var wantedResources = new[]
-            {
-                "Microsoft.ApiManagement/service", "Microsoft.OperationalInsights/workspaces",
-                "Microsoft.Insights/components", "Microsoft.Storage/storageAccounts"
-            };
             var resources = parsedTemplate.SelectTokens("$.resources[*]")
                 .Where(r => wantedResources.Any(w => w == r.Value<string>("type")));
             foreach (JToken resource in resources)
