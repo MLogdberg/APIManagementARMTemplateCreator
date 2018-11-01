@@ -13,12 +13,18 @@ namespace APIManagementTemplate
         public string FileName { get; set; }
         public string Directory { get; set; }
         public JObject Content { get; set; }
+        public string XmlContent { get; set; }
+        public ContentType Type { get; set; } = ContentType.Json;
+    }
+
+    public enum ContentType
+    {
+        Json,
+        Xml
     }
 
     public class TemplatesGenerator
     {
-        private string OperationalInsightsWorkspaceResourceType;
-        private string AppInsightsResourceType;
         private const string ProductResourceType = "Microsoft.ApiManagement/service/products";
         private const string ApiResourceType = "Microsoft.ApiManagement/service/apis";
         private const string ServiceResourceType = "Microsoft.ApiManagement/service";
@@ -27,19 +33,14 @@ namespace APIManagementTemplate
         private const string UserResourceType = "Microsoft.ApiManagement/service/users";
         private const string GroupResourceType = "Microsoft.ApiManagement/service/groups";
         private const string UserGroupResourceType = "Microsoft.ApiManagement/service/groups/users";
+        private const string OperationalInsightsWorkspaceResourceType = "Microsoft.OperationalInsights/workspaces";
+        private const string AppInsightsResourceType = "Microsoft.Insights/components";
 
-        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone)
+        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile=false)
         {
             JObject parsedTemplate = JObject.Parse(sourceTemplate);
-            var apis = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == ApiResourceType);
-            List<GeneratedTemplate> templates = apis.Select(api => GenerateAPI(api, parsedTemplate, apiStandalone)).ToList();
-            var versionSets = apis.Where(api => api["properties"]["apiVersionSetId"] != null)
-                .Distinct(new ApiVersionSetIdComparer())
-                .Select(api => GenerateVersionSet(api, parsedTemplate, apiStandalone)).ToList();
-            templates.AddRange(versionSets);
-            templates.AddRange(GenerateProducts(parsedTemplate));
-            OperationalInsightsWorkspaceResourceType = "Microsoft.OperationalInsights/workspaces";
-            AppInsightsResourceType = "Microsoft.Insights/components";
+            List<GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate);
+            templates.AddRange(GenerateProducts(parsedTemplate, separatePolicyFile));
             templates.Add(GenerateTemplate(parsedTemplate, "service.template.json", String.Empty, ServiceResourceType, OperationalInsightsWorkspaceResourceType, AppInsightsResourceType, StorageAccountResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "subscriptions.template.json", String.Empty, SubscriptionResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "users.template.json", String.Empty, UserResourceType));
@@ -48,10 +49,33 @@ namespace APIManagementTemplate
             return templates;
         }
 
-        private IEnumerable<GeneratedTemplate> GenerateProducts(JObject parsedTemplate)
+        private List<GeneratedTemplate> GenerateAPIsAndVersionSets(bool apiStandalone, JObject parsedTemplate)
+        {
+            var apis = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == ApiResourceType);
+            List<GeneratedTemplate> templates = apis.Select(api => GenerateAPI(api, parsedTemplate, apiStandalone)).ToList();
+            var versionSets = apis.Where(api => api["properties"]["apiVersionSetId"] != null)
+                .Distinct(new ApiVersionSetIdComparer())
+                .Select(api => GenerateVersionSet(api, parsedTemplate, apiStandalone)).ToList();
+            templates.AddRange(versionSets);
+            return templates;
+        }
+
+        private IEnumerable<GeneratedTemplate> GenerateProducts(JObject parsedTemplate, bool separatePolicyFile)
         {
             var products = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == ProductResourceType);
-            return products.Select(product => GenerateProduct(product, parsedTemplate)).ToList();
+            List<GeneratedTemplate> templates = products.Select(product => GenerateProduct(product, parsedTemplate)).ToList();
+            if (separatePolicyFile)
+            {
+                templates.AddRange(products.Select(p => GenerateProductPolicy(p)));
+            }
+            return templates;
+        }
+
+        private GeneratedTemplate GenerateProductPolicy(JToken product)
+        {
+            var productId = GetParameterPart(product, "name", -1).Substring(1);
+            GeneratedTemplate generatedTemplate = new GeneratedTemplate { Directory = $"product-{productId}", FileName = $"product-{productId}.policy.xml", Type = ContentType.Xml, XmlContent = ""};
+            return generatedTemplate;
         }
 
         private GeneratedTemplate GenerateProduct(JToken product, JObject parsedTemplate)

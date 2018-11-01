@@ -22,9 +22,12 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false, HelpMessage = "The output directory")]
         public string OutputDirectory = ".";
 
+        [Parameter(Mandatory = false, HelpMessage = "Policies are written to a separate file")]
+        public bool SeparatePolicyFile = false;
+
         protected override void ProcessRecord()
         {
-            var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone);
+            var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone, SeparatePolicyFile);
             foreach (GeneratedTemplate template in templates)
             {
                 string filename = $@"{OutputDirectory}\{template.FileName}";
@@ -34,7 +37,7 @@ namespace APIManagementTemplate
                     System.IO.Directory.CreateDirectory(directory);
                     filename = $@"{directory}\{template.FileName}";
                 }
-                System.IO.File.WriteAllText(filename, JObject.FromObject(template.Content).ToString());
+                System.IO.File.WriteAllText(filename, template.Type == ContentType.Json ? template.Content.ToString() : template.XmlContent);
             }
         }
     }

@@ -27,7 +27,7 @@ namespace APIManagementTemplate.Test
         {
             _templatesGenerator = new TemplatesGenerator();
             _sourceTemplate = Utils.GetEmbededFileContent("APIManagementTemplate.Test.SamplesTemplate.template.json");
-            _generatedTemplates = _templatesGenerator.Generate(_sourceTemplate, true);
+            _generatedTemplates = _templatesGenerator.Generate(_sourceTemplate, true, true);
         }
 
         [TestMethod]
@@ -39,7 +39,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestResultContainsCorrectNumberOfItems()
         {
-            Assert.AreEqual(11, _generatedTemplates.Count);
+            Assert.AreEqual(13, _generatedTemplates.Count);
         }
         [TestMethod]
         public void TestResultContains_httpbinv1()
@@ -63,6 +63,14 @@ namespace APIManagementTemplate.Test
             Assert.IsTrue(_generatedTemplates.Any(x =>
                 x.FileName == "product-starter.template.json" &&
                 x.Directory == @"product-starter"));
+        }
+
+        [TestMethod]
+        public void TestResultContains_ProductStarterPolicy()
+        {
+            Assert.IsTrue(_generatedTemplates.Any(x =>
+                x.FileName == "product-starter.policy.xml" &&
+                x.Directory == @"product-starter" && x.Type == ContentType.Xml));
         }
 
         [TestMethod]
