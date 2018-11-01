@@ -223,6 +223,8 @@
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-products-unlimited-apis.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-products-unlimited-groups.json" />
     <EmbeddedResource Include="SamplesTemplate\template.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-products-unlimited-policies.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-products-57cd81afe568130059060001-policies.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />

@@ -217,6 +217,11 @@ namespace APIManagementTemplate
                                 productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_{servicename}_name'), '{group.Value<string>("name")}')]");
                             }
                         }
+                        var policies = await resourceCollector.GetResource(id + "/policies");
+                        foreach (JObject policy in (policies == null ? new JArray() : policies.Value<JArray>("value")))
+                        {
+                            template.resources.Add(template.AddProductSubObject(policy));
+                        }
                     }
                 }
             }
