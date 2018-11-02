@@ -18,6 +18,7 @@ namespace APIManagementTemplate.Test
         private const string JPathParameters = "$.parameters.*";
         private const string HttpBinVersionSetFilename = "api-Versioned-HTTP-bin-API.version-set.template.json";
         private const string ServiceFilename = "service.template.json";
+        private const string ProductStarterFilename = "product-starter.template.json";
         private TemplatesGenerator _templatesGenerator;
         private string _sourceTemplate;
         private IList<GeneratedTemplate> _generatedTemplates;
@@ -39,7 +40,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestResultContainsCorrectNumberOfItems()
         {
-            Assert.AreEqual(13, _generatedTemplates.Count);
+            Assert.AreEqual(12, _generatedTemplates.Count);
         }
         [TestMethod]
         public void TestResultContains_httpbinv1()
@@ -61,12 +62,59 @@ namespace APIManagementTemplate.Test
         public void TestResultContains_ProductStarter()
         {
             Assert.IsTrue(_generatedTemplates.Any(x =>
-                x.FileName == "product-starter.template.json" &&
+                x.FileName == ProductStarterFilename &&
                 x.Directory == @"product-starter"));
         }
 
         [TestMethod]
-        public void TestResultContains_ProductStarterPolicy()
+        public void TestResultContainsPolicyFor_Starter()
+        {
+            IEnumerable<JToken> policies = GetPoliciesForProduct(ProductStarterFilename);
+            Assert.AreEqual(1, policies.Count());
+        }
+
+        private IEnumerable<JToken> GetPoliciesForProduct(string productFileName)
+        {
+            var product = _generatedTemplates.Single(x => x.FileName == productFileName);
+            var policies = product.Content
+                .SelectTokens("$.resources[*].resources[?(@.type==\'Microsoft.ApiManagement/service/products/policies\')]");
+            return policies;
+        }
+
+        [TestMethod]
+        public void TestResultContainsPolicyWithFileLinkFor_Starter()
+        {
+            var policy = GetPoliciesForProduct(ProductStarterFilename).First();
+
+            JToken properties = policy["properties"];
+            Assert.AreEqual("rawxml-link", properties.Value<string>("contentFormat"));
+            Assert.AreEqual("[concat(parameters('repoBaseUrl'), '/product-starter/product-starter.policy.xml', parameters('TemplatesStorageAccountSASToken'))]", properties.Value<string>("policyContent"));
+        }
+
+        [TestMethod]
+        public void TestResultContainsRepoBaseUrlParameterForProduct()
+        {
+            var template = _generatedTemplates.Single(x => x.FileName == ProductStarterFilename);
+            var parameter = template.Content["parameters"]["repoBaseUrl"];
+            Assert.IsNotNull(parameter);
+            Assert.AreEqual("string", parameter.Value<string>("type"));
+            Assert.IsNotNull(parameter["metadata"]);
+            Assert.IsNotNull(parameter["metadata"]["description"]);
+            Assert.AreEqual("Base URL of the repository", parameter["metadata"]["description"]);
+        }
+
+        [TestMethod]
+        public void TestResultContainsTemplatesStorageAccountSASTokenParameterForProduct()
+        {
+            var template = _generatedTemplates.Single(x => x.FileName == ProductStarterFilename);
+            var parameter = template.Content["parameters"]["TemplatesStorageAccountSASToken"];
+            Assert.IsNotNull(parameter);
+            Assert.AreEqual("string", parameter.Value<string>("type"));
+            Assert.AreEqual(String.Empty, parameter.Value<string>("defaultValue"));
+        }
+
+        [TestMethod]
+        public void TestResultContains_ProductStarterPolicyFile()
         {
             Assert.IsTrue(_generatedTemplates.Any(x =>
                 x.FileName == "product-starter.policy.xml" &&
