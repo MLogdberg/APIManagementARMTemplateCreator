@@ -562,7 +562,7 @@ namespace APIManagementTemplate.Models
             string productname = apiid.ValueAfter("products");
 
             productname = parametrizePropertiesOnly ? $"'{productname}'" : $"parameters('{AddParameter($"product_{productname}_name", "string", productname)}')";
-            bool nonApi = type != "Microsoft.ApiManagement/service/apis";
+            bool nonApi = type != "Microsoft.ApiManagement/service/products/apis";
             var objectname = parametrizePropertiesOnly || nonApi ? $"'{name}'" : $"parameters('{AddParameter($"api_{name}_name", "string", name)}')";
 
             var obj = new ResourceTemplate();
