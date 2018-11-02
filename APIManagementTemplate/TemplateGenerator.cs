@@ -220,7 +220,7 @@ namespace APIManagementTemplate
                         var policies = await resourceCollector.GetResource(id + "/policies");
                         foreach (JObject policy in (policies == null ? new JArray() : policies.Value<JArray>("value")))
                         {
-                            template.resources.Add(template.AddProductSubObject(policy));
+                            productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(policy));
                         }
                     }
                 }
