@@ -1,0 +1,55 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo",
+      "name": "ibizmalo",
+      "type": "Microsoft.ApiManagement/service",
+      "tags": {},
+      "location": "West Europe",
+      "etag": "AAAAAAEpzNo=",
+        "properties": {
+            "publisherEmail": "mattias.logdberg@ibiz-solutions.se",
+            "publisherName": "ibiz",
+            "notificationSenderEmail": "apimgmt-noreply@mail.windowsazure.com",
+            "provisioningState": "Succeeded",
+            "targetProvisioningState": "",
+            "createdAtUtc": "2018-06-12T07:51:59.6021491Z",
+            "gatewayUrl": "https://ibizmalo.azure-api.net",
+            "gatewayRegionalUrl": "https://ibizmalo-westeurope-01.regional.azure-api.net",
+            "portalUrl": "https://ibizmalo.portal.azure-api.net",
+            "managementApiUrl": "https://ibizmalo.management.azure-api.net",
+            "scmUrl": "https://ibizmalo.scm.azure-api.net",
+            "hostnameConfigurations": [],
+            "staticIps": [
+                "52.174.17.245"
+            ],
+            "additionalLocations": null,
+            "virtualNetworkConfiguration": {
+                "subnetResourceId": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.Network/virtualNetworks/Network/subnets/default",
+                "vnetid": "00000000-0000-0000-0000-000000000000",
+                "subnetname": null
+            },
+            "customProperties": {
+                "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10": "false",
+                "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11": "false",
+                "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Ssl30": "false",
+                "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10": "false",
+                "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11": "false",
+                "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30": "false",
+                "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TripleDes168": "false"
+            },
+            "virtualNetworkType": "External",
+            "certificates": []
+        },
+      "sku": {
+        "name": "Developer",
+        "capacity": 1
+      },
+      "identity": {
+        "type": "SystemAssigned",
+        "principalId": "2571a880-6198-4735-8d8d-da2ebe8c95b7",
+        "tenantId":    "0b753dc4-ffe6-4720-a671-2a8f965c57f4"
+      }
+    }],
+  "nextLink": ""
+}

@@ -1,0 +1,27 @@
+{
+  "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/maloapimtest/operations/api-GenericWebhook-post",
+  "type": "Microsoft.ApiManagement/service/apis/operations",
+  "name": "api-GenericWebhook-post",
+  "properties": {
+    "displayName": "Order",
+    "method": "POST",
+    "urlTemplate": "/createorder",
+    "templateParameters": [],
+    "description": "Replace with Operation Object #http://swagger.io/specification/#operationObject",
+    "request": {
+      "description": null,
+      "queryParameters": [],
+      "headers": [],
+      "representations": []
+    },
+    "responses": [
+      {
+        "statusCode": 200,
+        "description": "Success operation",
+        "representations": [],
+        "headers": []
+      }
+    ],
+    "policies": null
+  }
+}

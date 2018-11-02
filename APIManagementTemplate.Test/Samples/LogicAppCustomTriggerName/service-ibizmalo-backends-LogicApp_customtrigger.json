@@ -1,0 +1,12 @@
+{
+  "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/backends/LogicApp_customtrigger",
+  "type": "Microsoft.ApiManagement/service/backends",
+  "name": "LogicApp_customtrigger",
+  "properties": {
+    "title": null,
+    "description": "customtrigger",
+    "url": "https://prod-26.westeurope.logic.azure.com/workflows/18edd660cbae4a8da712a2f3fc1a1122/triggers",
+    "protocol": "http",
+    "resourceId": "https://management.azure.com/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/maloapimtest/providers/Microsoft.Logic/workflows/customtrigger"
+  }
+}

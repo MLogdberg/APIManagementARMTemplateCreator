@@ -1,0 +1,23 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/custom-trigger-displayname",
+      "type": "Microsoft.ApiManagement/service/apis",
+      "name": "custom-trigger-displayname",
+      "properties": {
+        "displayName": "Custom Trigger displayname",
+        "apiRevision": "1",
+        "description": "Azure Logic App.",
+        "serviceUrl": "https://prod-26.westeurope.logic.azure.com/workflows/18edd660cbae4a8da712a2f3fc1a1122/triggers",
+        "path": "customtrigger",
+        "protocols": [
+          "https"
+        ],
+        "authenticationSettings": null,
+        "subscriptionKeyParameterNames": null,
+        "isCurrent": true
+      }
+    }
+  ],
+  "nextLink": ""
+}

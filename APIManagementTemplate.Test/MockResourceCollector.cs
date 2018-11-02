@@ -14,9 +14,9 @@ namespace APIManagementTemplate.Test
         {
             this.basepath = basepath;
         }
-        public Task<JObject> GetResource(string resourceId, string suffix = "")
+        public Task<JObject> GetResource(string resourceId, string suffix = "", string apiversion = "2017-03-01")
         {
-            var t = new Task<JObject>(() => { return JObject.Parse(Utils.GetEmbededFileContent($"APIManagementTemplate.Test.Samples.{basepath}.{resourceId.Split('/').SkipWhile((a) => { return a != "service"; }).Aggregate<string>((b, c) => { return b + "-" + c; })}.json")); });
+            var t = new Task<JObject>(() => { return JObject.Parse(Utils.GetEmbededFileContent($"APIManagementTemplate.Test.Samples.{basepath}.{resourceId.Split('/').SkipWhile((a) => { return a != "service" && a != "workflows" && a != "sites"; }).Aggregate<string>((b, c) => { return b + "-" + c; })}.json")); });
             t.Start();
             return t;
         }

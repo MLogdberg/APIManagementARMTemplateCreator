@@ -101,15 +101,28 @@ namespace APIManagementTemplate
                         var pol = template.CreatePolicy(policy);
 
                         //add properties
-                        this.PolicyHandleProperties(pol, apiTemplateResource.Value<string>("name"));
+                        this.PolicyHandleProperties(pol, apiTemplateResource.Value<string>("name"), (operationInstance.Value<string>("name").StartsWith("api-") ? operationInstance.Value<string>("name").Substring(4, (operationInstance.Value<string>("name").LastIndexOf("-" + operationInstance["properties"].Value<string>("method").ToLower()))-4): operationInstance.Value<string>("name")));
 
+                        var operationSuffix = apiInstance.Value<string>("name") + "_" + operationInstance.Value<string>("name");
                         //Handle Azure Resources
                         if (!this.PolicyHandeAzureResources(pol, apiTemplateResource.Value<string>("name"), template))
-                        {
-                            var operationSuffix = apiInstance.Value<string>("name") + "_" + operationInstance.Value<string>("name");
+                        {           
                             PolicyHandeBackendUrl(pol, operationSuffix, template);
                         }
-                        
+
+                        var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>("policyContent"));
+
+                        if (!string.IsNullOrEmpty(backendid))
+                        {
+                            JObject backendInstance = await HandleBackend(template, operationSuffix, backendid);
+
+                            if (apiTemplateResource.Value<JArray>("dependsOn") == null)
+                                apiTemplateResource["dependsOn"] = new JArray();
+
+                            //add dependeOn
+                            apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('service_{servicename}_name'), '{backendInstance.Value<string>("name")}')]");
+                        }
+
                         operationTemplateResource.Value<JArray>("resources").Add(pol);
                         //handle nextlink?
                     }
@@ -125,29 +138,20 @@ namespace APIManagementTemplate
 
                     var policyTemplateResource = template.CreatePolicy(policy);
                     PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
-                    this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"));
+                    this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"),null);
                     apiTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
 
 
 
                     if (!string.IsNullOrEmpty(backendid))
                     {
-                        var backendInstance = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/backends/" + backendid);
-                        var property = template.AddBackend(backendInstance);
-
-                        if(property != null)
-                        {
-                            var idp = this.identifiedProperties.Where(pp => pp.name.Contains(apiObject.Value<string>("name") + "_manual-invoke_")).FirstOrDefault();
-                            idp.extraInfo = property.extraInfo;
-                            idp.type = Property.PropertyType.LogicAppRevisionGa;
-                        }
-
+                        JObject backendInstance = await HandleBackend(template, apiObject.Value<string>("name"), backendid);
 
                         if (apiTemplateResource.Value<JArray>("dependsOn") == null)
                             apiTemplateResource["dependsOn"] = new JArray();
 
                         //add dependeOn
-                        apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('service_{servicename}_name'), parameters('backend_{backendInstance.Value<string>("name")}_name'))]");
+                        apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('service_{servicename}_name'), '{backendInstance.Value<string>("name")}')]");
                     }
 
                     //handle nextlink?
@@ -192,6 +196,12 @@ namespace APIManagementTemplate
 
                         foreach (JObject productApi in (productApis == null ? new JArray() : productApis.Value<JArray>("value")))
                         {
+                            var productProperties = productApi["properties"];
+                            if (productProperties["apiVersionSetId"] != null)
+                            {
+                                var apiVersionSetId = new AzureResourceId(productProperties["apiVersionSetId"].ToString()).ValueAfter("api-version-sets");
+                                productProperties["apiVersionSetId"] = $"[resourceId('Microsoft.ApiManagement/service/api-version-sets', parameters('service_{servicename}_name'), '{apiVersionSetId}')]";
+                            }
                             productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(productApi));
                         }
 
@@ -221,6 +231,7 @@ namespace APIManagementTemplate
                 var identifiedProperty = this.identifiedProperties.Where(idp => name.EndsWith(idp.name)).FirstOrDefault();
                 if (identifiedProperty != null)
                 {
+                    
                     if (identifiedProperty.type == Property.PropertyType.LogicApp)
                     {
                         propertyObject["properties"]["value"] = $"[concat('sv=',{identifiedProperty.extraInfo}.queries.sv,'&sig=',{identifiedProperty.extraInfo}.queries.sig)]";
@@ -229,14 +240,20 @@ namespace APIManagementTemplate
                     {
                         propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo}.queries.sig]";
                     }
-                    template.AddProperty(propertyObject);
+                    else if (identifiedProperty.type == Property.PropertyType.Function)
+                    {
+                        //    "replacewithfunctionoperationname"
+                        propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo.Replace("replacewithfunctionoperationname",$"{identifiedProperty.operationName}")}]";
+                    }
+                    var propertyTemplate = template.AddProperty(propertyObject);
 
                     if (!parametrizePropertiesOnly)
                     {
+                        string resourceid = $"[resourceId('Microsoft.ApiManagement/service/properties',{propertyTemplate.GetResourceId()})]";
                         foreach (var apiName in identifiedProperty.apis)
                         {
                             var apiTemplate = template.resources.Where(rr => rr.Value<string>("name") == apiName).FirstOrDefault();
-                            apiTemplate.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_{servicename}_name'),parameters('property_{propertyObject.Value<string>("name")}_name'))]");
+                            apiTemplate.Value<JArray>("dependsOn").Add(resourceid);
                         }
                     }
                 }
@@ -246,7 +263,43 @@ namespace APIManagementTemplate
 
         }
 
-        public void PolicyHandleProperties(JObject policy, string apiname)
+        private async Task<JObject> HandleBackend(DeploymentTemplate template, string startname, string backendid)
+        {
+            var backendInstance = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/backends/" + backendid);
+            JObject azureResource = null;
+            if (backendInstance["properties"]["resourceId"] != null)
+            {
+                azureResource = await resourceCollector.GetResource(backendInstance["properties"].Value<string>("resourceId"),"","2017-07-01");
+            }
+
+            var property = template.AddBackend(backendInstance,azureResource);
+
+            if (property != null)
+            {
+                if (property.type == Property.PropertyType.LogicApp)
+                {
+                    var idp = this.identifiedProperties.Where(pp => pp.name.StartsWith(startname) && pp.name.Contains("-invoke")).FirstOrDefault();
+                    if (idp != null)
+                    {
+                        idp.extraInfo = property.extraInfo;
+                        idp.type = Property.PropertyType.LogicAppRevisionGa;
+                    }
+                }
+                else if (property.type == Property.PropertyType.Function)
+                {
+                    foreach (var idp in this.identifiedProperties.Where(pp => pp.name.ToLower().StartsWith(property.name) && !pp.name.Contains("-invoke")))
+                    {
+                        idp.extraInfo = property.extraInfo;
+                        idp.type = Property.PropertyType.Function;
+                    }
+                }
+            }
+
+            return backendInstance;
+        }
+
+
+        public void PolicyHandleProperties(JObject policy, string apiname,string operationName)
         {
             var policyContent = policy["properties"].Value<string>("policyContent");
             var match = Regex.Match(policyContent, "{{(?<name>[-_.a-zA-Z0-9]*)}}");
@@ -257,7 +310,7 @@ namespace APIManagementTemplate
                 var idp = identifiedProperties.Where(pp => pp.name == name).FirstOrDefault();
                 if (idp == null)
                 {
-                    this.identifiedProperties.Add(new Property() { name = name, type = Property.PropertyType.Standard, apis = new List<string>(new string[] { apiname }) });
+                    this.identifiedProperties.Add(new Property() { name = name, type = Property.PropertyType.Standard, apis = new List<string>(new string[] { apiname }), operationName = operationName });
                 }
                 else if (!idp.apis.Contains(apiname))
                 {
@@ -378,9 +431,8 @@ namespace APIManagementTemplate
             var baseUrl = backendService.Attribute("base-url");
             if (baseUrl != null && policyContent.IndexOf(baseUrl.Value) > -1)
             {
-                int index = policyContent.IndexOf(baseUrl.Value);
-
-                return "[Concat('" + policyContent.Substring(0, index) + "'," + replaceText + ",'" + policyContent.Substring(index + baseUrl.Value.Length) + "')]";
+                int index = policyContent.IndexOf(baseUrl.Value);                
+                return "[Concat('" + policyContent.Substring(0, index).Replace("'","''") + "'," + replaceText + ",'" + policyContent.Substring(index + baseUrl.Value.Length).Replace("'", "''") + "')]";
             }
             return policyContent;
         }

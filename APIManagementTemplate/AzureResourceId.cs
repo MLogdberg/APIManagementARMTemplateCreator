@@ -73,7 +73,8 @@ namespace APIManagementTemplate
         private string[] splittedId;
         public AzureResourceId(string resourceid)
         {
-            this.splittedId = resourceid.Split('/');
+            string replaced = "/" + resourceid.Substring(resourceid.IndexOf("subscriptions/"));
+            this.splittedId = replaced.Split('/');
         }
 
         public override string ToString()

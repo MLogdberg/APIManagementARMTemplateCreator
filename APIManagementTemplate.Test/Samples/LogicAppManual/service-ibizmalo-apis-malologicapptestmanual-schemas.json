@@ -1,0 +1,45 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/malologicapptestmanual/schemas/5b418fa2b352470e807f407a",
+      "type": "Microsoft.ApiManagement/service/apis/schemas",
+      "name": "5b418fa2b352470e807f407a",
+      "properties": {
+        "contentType": "application/vnd.ms-azure-apim.swagger.definitions+json",
+        "document": {
+          "definitions": {
+            "response-200": {
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "success": {
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            },
+            "request-manual": {
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "topic": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "ManualPathsInvokePost500ApplicationJsonResponse": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "nextLink": ""
+}

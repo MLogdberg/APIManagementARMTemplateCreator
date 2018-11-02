@@ -1,0 +1,42 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/1fake145-d7fa-4d0f-b406-7394a2b64fb4/resourceGroups/Api-Default-West-Europe/providers/Microsoft.ApiManagement/service/apidev/apis/invoice-retrieval-api/schemas/5b210f52b7ba011b5834ec78",
+      "type": "Microsoft.ApiManagement/service/apis/schemas",
+      "name": "5b210f52b7ba011b5834ec78",
+      "properties": {
+        "contentType": "application/vnd.ms-azure-apim.swagger.definitions+json",
+        "document": {
+          "definitions": {
+            "error": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "format": "string"
+                },
+                "code": {
+                  "type": "string",
+                  "format": "string"
+                },
+                "detail": {
+                  "type": "string",
+                  "format": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "format": "string"
+                }
+              }
+            },
+            "pdfResponse": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "nextLink": ""
+}
