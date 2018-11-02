@@ -562,10 +562,11 @@ namespace APIManagementTemplate.Models
             string productname = apiid.ValueAfter("products");
 
             productname = parametrizePropertiesOnly ? $"'{productname}'" : $"parameters('{AddParameter($"product_{productname}_name", "string", productname)}')";
+            var objectname = parametrizePropertiesOnly ? $"'{name}'" : $"parameters('{AddParameter($"api_{name}_name", "string", name)}')";
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/', {productname}, '/', parameters('{AddParameter($"api_{name}_name", "string", name)}'))]";
+            obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/', {productname}, '/', {objectname})]";
             obj.type = type;
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];

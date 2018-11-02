@@ -69,7 +69,7 @@ namespace APIManagementTemplate.Test
             var policy = GetSubResourceFromTemplate(ProductResourceType, ProductPolicyType).First();
 
             var name = policy.Value<string>("name");
-            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', 'unlimited', '/policy')]", name);
+            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', 'unlimited', '/', 'policy')]", name);
         }
 
         [TestMethod]
