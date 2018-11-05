@@ -40,7 +40,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestResultContainsCorrectNumberOfItems()
         {
-            Assert.AreEqual(16, _generatedTemplates.Count);
+            Assert.AreEqual(18, _generatedTemplates.Count);
         }
         [TestMethod]
         public void TestResultContains_httpbinv1()
@@ -76,16 +76,22 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestResultContainsPolicyFor_EchoApiCreateResource()
         {
-            AssertApiOperationPolicyFile("api-Echo-API.create-resource.policy.xml", "api-Echo-API");
+            AssertPolicyFile("api-Echo-API.create-resource.policy.xml", "api-Echo-API");
         }
 
         [TestMethod]
         public void TestResultContainsPolicyFor_HttpBinPutCreateResource()
         {
-            AssertApiOperationPolicyFile("api-Versioned-HTTP-bin-API.v2.put.policy.xml", "api-Versioned-HTTP-bin-API\\v2");
+            AssertPolicyFile("api-Versioned-HTTP-bin-API.v2.put.policy.xml", "api-Versioned-HTTP-bin-API\\v2");
         }
 
-        private void AssertApiOperationPolicyFile(string policyFile, string directory)
+        [TestMethod]
+        public void TestResultContainsPolicyFor_HttpBin()
+        {
+            AssertPolicyFile("api-Versioned-HTTP-bin-API.v2.policy.xml", "api-Versioned-HTTP-bin-API\\v2");
+        }
+
+        private void AssertPolicyFile(string policyFile, string directory)
         {
             var policies = _generatedTemplates.Where(x =>
                 x.FileName == policyFile
@@ -98,7 +104,7 @@ namespace APIManagementTemplate.Test
 
 
         [TestMethod]
-        public void TestResultContainsOperationWithFileLinkFor_HttbBinV2_bin()
+        public void TestResultContainsOperationWithFileLinkFor_HttbBinV2Put()
         {
             var template = _generatedTemplates.Single(x => x.FileName == HttpBinV2Filename);
             var policies = template.Content.SelectTokens(
@@ -112,8 +118,21 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual("[concat(parameters('repoBaseUrl'), '/api-Versioned-HTTP-bin-API/v2/api-Versioned-HTTP-bin-API.v2.put.policy.xml', parameters('TemplatesStorageAccountSASToken'))]", properties.Value<string>("policyContent"));
         }
 
-        //TODO: Check that api operation is linked to policy file
-        //TODO: Generate files for api-level-policies
+        [TestMethod]
+        public void TestResultContainsOperationWithFileLinkFor_HttbBinV2()
+        {
+            var template = _generatedTemplates.Single(x => x.FileName == HttpBinV2Filename);
+            var policies = template.Content.SelectTokens(
+                    "$..resources[?(@.type==\'Microsoft.ApiManagement/service/apis/policies\')]")
+                    .Where(x => x.Value<string>("name").Contains("'httpBinAPI-v2', '/', 'policy'"));
+            Assert.AreEqual(1, policies.Count());
+
+            var policy = policies.First();
+            JToken properties = policy["properties"];
+            Assert.AreEqual("rawxml-link", properties.Value<string>("contentFormat"));
+            Assert.AreEqual("[concat(parameters('repoBaseUrl'), '/api-Versioned-HTTP-bin-API/v2/api-Versioned-HTTP-bin-API.v2.policy.xml', parameters('TemplatesStorageAccountSASToken'))]", properties.Value<string>("policyContent"));
+        }
+
         //TODO: Generate service-level-policies in GenerateTemplate
         //TODO: Generate files for service-level-policies
 
@@ -242,7 +261,7 @@ namespace APIManagementTemplate.Test
             var api = _generatedTemplates.Single(x => x.FileName == HttpBinV1Filename);
             var parameters = api.Content.SelectTokens(JPathParameters);
 
-            Assert.AreEqual(5, parameters.Count());
+            Assert.AreEqual(7, parameters.Count());
         }
 
         [TestMethod]

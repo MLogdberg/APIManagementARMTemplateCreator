@@ -17,6 +17,18 @@ namespace APIManagementTemplate
         public ContentType Type { get; set; } = ContentType.Json;
     }
 
+    public class FileInfo
+    {
+        public FileInfo(string fileName, string directory)
+        {
+            FileName = fileName;
+            Directory = directory;
+        }
+
+        public string FileName { get; set; }
+        public string Directory { get; set; }
+    }
+
     public enum ContentType
     {
         Json,
@@ -38,6 +50,7 @@ namespace APIManagementTemplate
         private const string ProductPolicyResourceType = "Microsoft.ApiManagement/service/products/policies";
         private const string ApiOperationResourceType = "Microsoft.ApiManagement/service/apis/operations";
         private const string ApiOperationPolicyResourceType = "Microsoft.ApiManagement/service/apis/operations/policies";
+        private const string ApiPolicyResourceType = "Microsoft.ApiManagement/service/apis/policies";
 
         public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false)
         {
@@ -73,6 +86,11 @@ namespace APIManagementTemplate
             var policyFiles = new List<GeneratedTemplate>();
             foreach (JToken api in apis)
             {
+                var apiPolicy = api["resources"].FirstOrDefault(x => x.Value<string>("type") == ApiPolicyResourceType);
+                if (apiPolicy != null)
+                {
+                    policyFiles.Add(GeneratePolicyFile(parsedTemplate, apiPolicy, api, String.Empty));
+                }
                 var operations = api["resources"].Where(x => x.Value<string>("type") == ApiOperationResourceType);
                 foreach (var operation in operations)
                 {
@@ -80,20 +98,26 @@ namespace APIManagementTemplate
                     if (policy != null)
                     {
                         var operationId = GetParameterPart(operation, "name", -2);
-                        var content = policy["properties"].Value<string>("policyContent");
-                        var template = new GeneratedTemplate
-                        {
-                            Type = ContentType.Xml,
-                            XmlContent = content
-                        };
-                        var filenameAndDirectory = GetFilenameAndDirectoryForOperationPolicy(api, parsedTemplate, operationId);
-                        template.FileName = filenameAndDirectory.Item1;
-                        template.Directory = filenameAndDirectory.Item2;
-                        policyFiles.Add(template);
+                        policyFiles.Add(GeneratePolicyFile(parsedTemplate, policy, api, operationId));
                     }
                 }
             }
             return policyFiles;
+        }
+
+        private static GeneratedTemplate GeneratePolicyFile(JObject parsedTemplate, JToken policy, JToken api,
+            string operationId)
+        {
+            var content = policy["properties"].Value<string>("policyContent");
+            var template = new GeneratedTemplate
+            {
+                Type = ContentType.Xml,
+                XmlContent = content
+            };
+            var filenameAndDirectory = GetFilenameAndDirectoryForOperationPolicy(api, parsedTemplate, operationId);
+            template.FileName = filenameAndDirectory.FileName;
+            template.Directory = filenameAndDirectory.Directory;
+            return template;
         }
 
         private IEnumerable<GeneratedTemplate> GenerateProducts(JObject parsedTemplate, bool separatePolicyFile)
@@ -174,17 +198,28 @@ namespace APIManagementTemplate
         }
         private void ReplaceApiOperationPolictPolicyWithFileLink(JToken api, JObject parsedTemplate)
         {
-            var policies =
-                api.SelectTokens(
-                    "$..resources[?(@.type==\'Microsoft.ApiManagement/service/apis/operations/policies\')]");
+            ReplacePoliciesWithFileLink(api, ApiOperationPolicyResourceType, policy => GetParameterPart(policy, "name", -6), parsedTemplate);
+            ReplacePoliciesWithFileLink(api, ApiPolicyResourceType, policy => String.Empty, parsedTemplate);
+        }
+
+        private static void ReplacePoliciesWithFileLink(JToken api, string policyResourceType, Func<JToken, string> operationIdFunc, JObject parsedTemplate)
+        {
+            var jpath = $"$..resources[?(@.type==\'{policyResourceType}\')]";
+            var policies = api.SelectTokens(jpath);
             foreach (JToken policy in policies)
             {
-                var operationId = GetParameterPart(policy, "name", -6);
-                var filenameAndDirectory = GetFilenameAndDirectoryForOperationPolicy(api, parsedTemplate, operationId);
-                policy["properties"]["contentFormat"] = "rawxml-link";
-                var directory = filenameAndDirectory.Item2.Replace(@"\", "/");
-                policy["properties"]["policyContent"] = $"[concat(parameters('repoBaseUrl'), '/{directory}/{filenameAndDirectory.Item1}', parameters('TemplatesStorageAccountSASToken'))]";
+                var operationId = operationIdFunc(policy);
+                ReplacePolicyWithFileLink(api, parsedTemplate, operationId, policy);
             }
+        }
+
+        private static void ReplacePolicyWithFileLink(JToken api, JObject parsedTemplate, string operationId, JToken policy)
+        {
+            var fileInfo = GetFilenameAndDirectoryForOperationPolicy(api, parsedTemplate, operationId);
+            policy["properties"]["contentFormat"] = "rawxml-link";
+            var directory = fileInfo.Directory.Replace(@"\", "/");
+            policy["properties"]["policyContent"] =
+                $"[concat(parameters('repoBaseUrl'), '/{directory}/{fileInfo.FileName}', parameters('TemplatesStorageAccountSASToken'))]";
         }
 
         private static GeneratedTemplate GenerateTemplate(JObject parsedTemplate, string filename, string directory,
@@ -253,19 +288,20 @@ namespace APIManagementTemplate
             GeneratedTemplate generatedTemplate)
         {
             var filenameAndDirectory = GetFileNameAndDirectory(api, parsedTemplate);
-            generatedTemplate.FileName = filenameAndDirectory.Item1;
-            generatedTemplate.Directory = filenameAndDirectory.Item2;
+            generatedTemplate.FileName = filenameAndDirectory.FileName;
+            generatedTemplate.Directory = filenameAndDirectory.Directory;
         }
 
-        private static Tuple<string, string> GetFilenameAndDirectoryForOperationPolicy(JToken api,
+        private static FileInfo GetFilenameAndDirectoryForOperationPolicy(JToken api,
             JObject parsedTemplate, string operationId)
         {
-            var filenameAndDirectory = GetFileNameAndDirectory(api, parsedTemplate);
-            var newFilename = filenameAndDirectory.Item1.Replace(".template.json", $".{operationId}.policy.xml");
-            return new Tuple<string, string>(newFilename, filenameAndDirectory.Item2);
+            var fileInfo = GetFileNameAndDirectory(api, parsedTemplate);
+            fileInfo.FileName = fileInfo.FileName.Replace(".template.json", 
+                String.IsNullOrWhiteSpace(operationId) ? ".policy.xml" : $".{operationId}.policy.xml");
+            return fileInfo;
         }
 
-        private static Tuple<string, string> GetFileNameAndDirectory(JToken api, JObject parsedTemplate)
+        private static FileInfo GetFileNameAndDirectory(JToken api, JObject parsedTemplate)
         {
             string filename, directory;
             if (api["properties"]["apiVersionSetId"] != null)
@@ -274,15 +310,12 @@ namespace APIManagementTemplate
                 string version = GetApiVersion(api, parsedTemplate);
                 filename = $"api-{versionSetName}.{version}.template.json";
                 directory = $@"api-{versionSetName}\{version}";
-                
+                return new FileInfo(filename, directory);
             }
-            else
-            {
-                string name = api["properties"].Value<string>("displayName").Replace(' ', '-');
-                filename = $"api-{name}.template.json";
-                directory = $"api-{name}";
-            }
-            return new Tuple<string, string>(filename, directory);
+            string name = api["properties"].Value<string>("displayName").Replace(' ', '-');
+            filename = $"api-{name}.template.json";
+            directory = $"api-{name}";
+            return new FileInfo(filename, directory);
         }
 
         private static void SetFilenameAndDirectoryForVersionSet(JToken api, GeneratedTemplate generatedTemplate,
