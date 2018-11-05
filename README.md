@@ -6,8 +6,8 @@ This is a PowerShell script module to extract API Management to ARM templates, f
 **Install from PowerShell Gallery**  
 `PS> Install-Module -Name APIManagementTemplate`
 
- **Update to latest version from PowerShell Gallery**  
- `PS> Update-Module -Name APIManagementTemplate`
+**Update to latest version from PowerShell Gallery**  
+`PS> Update-Module -Name APIManagementTemplate`
 
 Install-Module is part of PowerShellGet which is included on Windows 10 and Windows Server 2016. See [this](https://docs.microsoft.com/en-us/powershell/gallery/installing-psget) link for installation instructions on older platforms.
 
