@@ -55,7 +55,13 @@ namespace APIManagementTemplate
             if (exportPIManagementInstance)
             {
                 var apim = await resourceCollector.GetResource(GetAPIMResourceIDString());
-                template.AddAPIManagementInstance(apim);
+                var apimTemplateResource = template.AddAPIManagementInstance(apim);
+                var policies = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/policies");
+                foreach (JObject policy in (policies == null ? new JArray() : policies.Value<JArray>("value")))
+                {
+                    var policyTemplateResource = template.CreatePolicy(policy);
+                    apimTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
+                }
             }
 
             var apis = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));

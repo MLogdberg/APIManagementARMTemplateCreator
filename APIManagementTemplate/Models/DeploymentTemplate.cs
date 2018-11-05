@@ -188,10 +188,10 @@ namespace APIManagementTemplate.Models
         private bool APIMInstanceAdded = false;
         private string apimservicename;
 
-        public void AddAPIManagementInstance(JObject restObject)
+        public JObject AddAPIManagementInstance(JObject restObject)
         {
             if (restObject == null)
-                return;
+                return null;
 
             string servicename = restObject.Value<string>("name");
             string type = restObject.Value<string>("type");
@@ -218,6 +218,7 @@ namespace APIManagementTemplate.Models
             resource["properties"]["virtualNetworkType"] = restObject["properties"]["virtualNetworkType"];
             this.resources.Add(resource);
             APIMInstanceAdded = true;
+            return resource;
         }
 
         public JObject AddApi(JObject restObject)
@@ -633,6 +634,7 @@ namespace APIManagementTemplate.Models
             string servicename = "";
             string apiname = "";
             string operationname = "";
+            bool servicePolicy = false;
             
             name = $"'{name}'";
 
@@ -657,6 +659,12 @@ namespace APIManagementTemplate.Models
                 operationname = $"'{operationname}'";
                 obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/', {apiname}, '/', {operationname}, '/', {name})]";
             }
+            else if (type == "Microsoft.ApiManagement/service/policies")
+            {
+                servicename = rid.ValueAfter("service");
+                obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/', 'policy')]";
+                servicePolicy = true;
+            }
 
             obj.type = type;
             var resource = JObject.FromObject(obj);
@@ -666,10 +674,12 @@ namespace APIManagementTemplate.Models
             if (APIMInstanceAdded)
             {
                 dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]");
-
             }
 
-            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_{servicename}_name') , {apiname})]");
+            if (!servicePolicy)
+            {
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_{servicename}_name') , {apiname})]");
+            }
 
             if (type == "Microsoft.ApiManagement/service/apis/operations/policies")
             {

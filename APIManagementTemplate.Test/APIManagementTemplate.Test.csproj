@@ -214,7 +214,7 @@
     <EmbeddedResource Include="Samples\UrlHandling\service-apidev-properties.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis.json" />
-    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-properties.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-operations.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-policies.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-schemas.json" />
@@ -225,6 +225,8 @@
     <EmbeddedResource Include="SamplesTemplate\template.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-products-unlimited-policies.json" />
     <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-products-57cd81afe568130059060001-policies.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-policies.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-properties.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />

@@ -10,9 +10,11 @@ namespace APIManagementTemplate.Test
     [TestClass]
     public class WithoutApiVersionSetIdTests
     {
-        private const string ProductPolicyType = "Microsoft.ApiManagement/service/products/policies";
-        private const string ApiType = "Microsoft.ApiManagement/service/apis";
+        private const string ProductPolicyResourceType = "Microsoft.ApiManagement/service/products/policies";
+        private const string ServicePolicyResourceType = "Microsoft.ApiManagement/service/policies";
+        private const string ApiResourceType = "Microsoft.ApiManagement/service/apis";
         private const string ProductResourceType = "Microsoft.ApiManagement/service/apis/products";
+        private const string ServiceResourceType = "Microsoft.ApiManagement/service";
         private IResourceCollector collector;
         [TestInitialize()]
         public void Initialize()
@@ -25,7 +27,7 @@ namespace APIManagementTemplate.Test
         {
             if (this._template != null)
                 return this._template;
-            var generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest", "maloapimtestclean", false, exportProducts, false, true, this.collector);
+            var generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest", "maloapimtestclean", false, exportProducts, true, true, this.collector);
             this._template = generator.GenerateTemplate().GetAwaiter().GetResult();
             return this._template;
         }
@@ -40,7 +42,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestApiVersionSetIdForApiIsNotSet()
         {
-            JToken api = GetResourceFromTemplate(ApiType);
+            JToken api = GetResourceFromTemplate(ApiResourceType);
             Assert.IsNotNull(api);
 
             var versionSetId = api["properties"]["apiVersionSetId"];
@@ -52,7 +54,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestProductContainsPolicy()
         {
-            IEnumerable<JToken> policies = GetSubResourceFromTemplate(ProductResourceType, ProductPolicyType);
+            IEnumerable<JToken> policies = GetSubResourceFromTemplate(ProductResourceType, ProductPolicyResourceType);
 
             Assert.AreEqual(1, policies.Count());
         }
@@ -66,7 +68,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestProductContainsPolicyWithCorrectName()
         {
-            var policy = GetSubResourceFromTemplate(ProductResourceType, ProductPolicyType).First();
+            var policy = GetSubResourceFromTemplate(ProductResourceType, ProductPolicyResourceType).First();
 
             var name = policy.Value<string>("name");
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', 'unlimited', '/', 'policy')]", name);
@@ -75,7 +77,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestProductContainsPolicyThatDependsOnProduct()
         {
-            var policy = GetSubResourceFromTemplate(ProductResourceType, ProductPolicyType).First();
+            var policy = GetSubResourceFromTemplate(ProductResourceType, ProductPolicyResourceType).First();
 
             var dependsOn = policy.Value<JArray>("dependsOn");
             Assert.IsTrue(dependsOn.Any(x =>
@@ -83,5 +85,26 @@ namespace APIManagementTemplate.Test
                 "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_ibizmalo_name'), 'unlimited')]"));
         }
 
+        [TestMethod]
+        public void TestServiceContainsPolicyWithCorrectName()
+        {
+            var policy = GetSubResourceFromTemplate(ServiceResourceType, ServicePolicyResourceType).First();
+
+            Assert.IsNotNull(policy);
+            var name = policy.Value<string>("name");
+            Assert.AreEqual("[concat(parameters('service_common-apim-itest_name'), '/', 'policy')]", name);
+        }
+
+
+        [TestMethod]
+        public void TestServiceContainsPolicyWithCorrectDependsOn()
+        {
+            var policy = GetSubResourceFromTemplate(ServiceResourceType, ServicePolicyResourceType).First();
+
+            Assert.IsNotNull(policy);
+            var dependsOn = policy.Value<JArray>("dependsOn");
+            Assert.AreEqual(1, dependsOn.Count());
+            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service', parameters('service_common-apim-itest_name'))]", dependsOn[0]);
+        }
     }
 }
