@@ -40,7 +40,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestResultContainsCorrectNumberOfItems()
         {
-            Assert.AreEqual(18, _generatedTemplates.Count);
+            Assert.AreEqual(19, _generatedTemplates.Count);
         }
         [TestMethod]
         public void TestResultContains_httpbinv1()
@@ -80,6 +80,12 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
+        public void TestResultContainsPolicyFileFor_Service()
+        {
+            AssertPolicyFile("service.policy.xml", "");
+        }
+
+        [TestMethod]
         public void TestResultContainsPolicyFor_HttpBinPutCreateResource()
         {
             AssertPolicyFile("api-Versioned-HTTP-bin-API.v2.put.policy.xml", "api-Versioned-HTTP-bin-API\\v2");
@@ -112,10 +118,7 @@ namespace APIManagementTemplate.Test
                     .Where(x => x.Value<string>("name").Contains("'httpBinAPI-v2', '/', 'put'"));
             Assert.AreEqual(1, policies.Count());
 
-            var policy = policies.First();
-            JToken properties = policy["properties"];
-            Assert.AreEqual("rawxml-link", properties.Value<string>("contentFormat"));
-            Assert.AreEqual("[concat(parameters('repoBaseUrl'), '/api-Versioned-HTTP-bin-API/v2/api-Versioned-HTTP-bin-API.v2.put.policy.xml', parameters('TemplatesStorageAccountSASToken'))]", properties.Value<string>("policyContent"));
+            AssertFileLink(policies.First(), "/api-Versioned-HTTP-bin-API/v2/api-Versioned-HTTP-bin-API.v2.put.policy.xml");
         }
 
         [TestMethod]
@@ -127,13 +130,9 @@ namespace APIManagementTemplate.Test
                     .Where(x => x.Value<string>("name").Contains("'httpBinAPI-v2', '/', 'policy'"));
             Assert.AreEqual(1, policies.Count());
 
-            var policy = policies.First();
-            JToken properties = policy["properties"];
-            Assert.AreEqual("rawxml-link", properties.Value<string>("contentFormat"));
-            Assert.AreEqual("[concat(parameters('repoBaseUrl'), '/api-Versioned-HTTP-bin-API/v2/api-Versioned-HTTP-bin-API.v2.policy.xml', parameters('TemplatesStorageAccountSASToken'))]", properties.Value<string>("policyContent"));
+            AssertFileLink(policies.First(), "/api-Versioned-HTTP-bin-API/v2/api-Versioned-HTTP-bin-API.v2.policy.xml");
         }
 
-        //TODO: Generate service-level-policies in GenerateTemplate
         //TODO: Generate files for service-level-policies
 
         private IEnumerable<JToken> GetPoliciesForProduct(string productFileName)
@@ -149,9 +148,16 @@ namespace APIManagementTemplate.Test
         {
             var policy = GetPoliciesForProduct(ProductStarterFilename).First();
 
+            AssertFileLink(policy, "/product-starter/product-starter.policy.xml");
+        }
+
+        private static void AssertFileLink(JToken policy, string path)
+        {
             JToken properties = policy["properties"];
             Assert.AreEqual("rawxml-link", properties.Value<string>("contentFormat"));
-            Assert.AreEqual("[concat(parameters('repoBaseUrl'), '/product-starter/product-starter.policy.xml', parameters('TemplatesStorageAccountSASToken'))]", properties.Value<string>("policyContent"));
+            Assert.AreEqual(
+                $"[concat(parameters('repoBaseUrl'), '{path}', parameters('TemplatesStorageAccountSASToken'))]",
+                properties.Value<string>("policyContent"));
         }
 
         [TestMethod]
@@ -295,9 +301,29 @@ namespace APIManagementTemplate.Test
         public void TestResultContainsServiceFor_Service()
         {
             var api = _generatedTemplates.Single(x => x.FileName == ServiceFilename);
-            var correctVersionSet = api.Content.SelectTokens("$.resources[?(@.type==\'Microsoft.ApiManagement/service\')]")
+            var services = api.Content.SelectTokens("$.resources[?(@.type==\'Microsoft.ApiManagement/service\')]")
                 .Where(x =>x.Value<string>("name").Contains("'service_PreDemoTest_name'"));
-            Assert.AreEqual(1, correctVersionSet.Count());
+            Assert.AreEqual(1, services.Count());
+        }
+
+
+        [TestMethod]
+        public void TestResultContainsPolicyFor_Service()
+        {
+            var service = _generatedTemplates.Single(x => x.FileName == ServiceFilename);
+            var policy = service.Content.SelectTokens("$..resources[?(@.type==\'Microsoft.ApiManagement/service/policies\')]");
+            Assert.AreEqual(1, policy.Count());
+        }
+
+        [TestMethod]
+        public void TestResultContainsPolicyWithFileLinkFor_Service()
+        {
+            var service = _generatedTemplates.Single(x => x.FileName == ServiceFilename);
+            var policy = service.Content.SelectTokens("$..resources[?(@.type==\'Microsoft.ApiManagement/service/policies\')]");
+
+            Assert.AreEqual(1, policy.Count());
+            AssertFileLink(policy.First(), "/service.policy.xml");
+
         }
 
         [TestMethod]

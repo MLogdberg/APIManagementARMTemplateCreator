@@ -92,7 +92,7 @@ namespace APIManagementTemplate.Test
 
             Assert.IsNotNull(policy);
             var name = policy.Value<string>("name");
-            Assert.AreEqual("[concat(parameters('service_common-apim-itest_name'), '/', 'policy')]", name);
+            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', 'policy')]", name);
         }
 
 
@@ -104,7 +104,7 @@ namespace APIManagementTemplate.Test
             Assert.IsNotNull(policy);
             var dependsOn = policy.Value<JArray>("dependsOn");
             Assert.AreEqual(1, dependsOn.Count());
-            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service', parameters('service_common-apim-itest_name'))]", dependsOn[0]);
+            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalo_name'))]", dependsOn[0]);
         }
     }
 }

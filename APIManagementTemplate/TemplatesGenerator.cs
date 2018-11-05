@@ -40,6 +40,7 @@ namespace APIManagementTemplate
         private const string ProductResourceType = "Microsoft.ApiManagement/service/products";
         private const string ApiResourceType = "Microsoft.ApiManagement/service/apis";
         private const string ServiceResourceType = "Microsoft.ApiManagement/service";
+        private const string ServicePolicyResourceType = "Microsoft.ApiManagement/service/policies";
         private const string StorageAccountResourceType = "Microsoft.Storage/storageAccounts";
         private const string SubscriptionResourceType = "Microsoft.ApiManagement/service/subscriptions";
         private const string UserResourceType = "Microsoft.ApiManagement/service/users";
@@ -57,14 +58,42 @@ namespace APIManagementTemplate
             JObject parsedTemplate = JObject.Parse(sourceTemplate);
             List<GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate, separatePolicyFile);
             templates.AddRange(GenerateProducts(parsedTemplate, separatePolicyFile));
-            templates.Add(GenerateTemplate(parsedTemplate, "service.template.json", String.Empty, ServiceResourceType,
-                OperationalInsightsWorkspaceResourceType, AppInsightsResourceType, StorageAccountResourceType));
+            templates.AddRange(GenerateService(parsedTemplate, separatePolicyFile));
             templates.Add(GenerateTemplate(parsedTemplate, "subscriptions.template.json", String.Empty,
                 SubscriptionResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "users.template.json", String.Empty, UserResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "groups.template.json", String.Empty, GroupResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "groupsUsers.template.json", String.Empty,
                 UserGroupResourceType));
+            return templates;
+        }
+
+        private IEnumerable<GeneratedTemplate> GenerateService(JObject parsedTemplate, bool separatePolicyFile)
+        {
+            List<GeneratedTemplate> templates = new List<GeneratedTemplate>();
+            string[] wantedResources = {
+                ServiceResourceType,OperationalInsightsWorkspaceResourceType, AppInsightsResourceType, StorageAccountResourceType
+            };
+            var generatedTemplate = new GeneratedTemplate { FileName = "service.template.json", Directory = String.Empty };
+            DeploymentTemplate template = new DeploymentTemplate(true);
+            var resources = parsedTemplate.SelectTokens("$.resources[*]")
+                .Where(r => wantedResources.Any(w => w == r.Value<string>("type")));
+            foreach (JToken resource in resources)
+            {
+                if (separatePolicyFile && resource.Value<string>("type") == ServiceResourceType)
+                {
+                    var policy = resource.SelectToken($"$..resources[?(@.type==\'{ServicePolicyResourceType}\')]");
+                    if (policy != null)
+                    {
+                        templates.Add(GenerateServicePolicyFile(parsedTemplate, policy));
+                        ReplacePolicyWithFileLink(policy, new FileInfo("service.policy.xml", String.Empty));
+                    }
+                }
+                template.parameters = GetParameters(parsedTemplate["parameters"], resource);
+                template.resources.Add(JObject.FromObject(resource));
+            }
+            generatedTemplate.Content = JObject.FromObject(template);
+            templates.Add(generatedTemplate);
             return templates;
         }
 
@@ -117,6 +146,19 @@ namespace APIManagementTemplate
             var filenameAndDirectory = GetFilenameAndDirectoryForOperationPolicy(api, parsedTemplate, operationId);
             template.FileName = filenameAndDirectory.FileName;
             template.Directory = filenameAndDirectory.Directory;
+            return template;
+        }
+
+        private static GeneratedTemplate GenerateServicePolicyFile(JObject parsedTemplate, JToken policy)
+        {
+            var content = policy["properties"].Value<string>("policyContent");
+            var template = new GeneratedTemplate
+            {
+                Type = ContentType.Xml,
+                XmlContent = content,
+                FileName = "service.policy.xml",
+                Directory = String.Empty
+            };
             return template;
         }
 
@@ -216,10 +258,18 @@ namespace APIManagementTemplate
         private static void ReplacePolicyWithFileLink(JToken api, JObject parsedTemplate, string operationId, JToken policy)
         {
             var fileInfo = GetFilenameAndDirectoryForOperationPolicy(api, parsedTemplate, operationId);
+            ReplacePolicyWithFileLink(policy, fileInfo);
+        }
+
+        private static void ReplacePolicyWithFileLink(JToken policy, FileInfo fileInfo)
+        {
             policy["properties"]["contentFormat"] = "rawxml-link";
-            var directory = fileInfo.Directory.Replace(@"\", "/");
+            string formattedDirectory = fileInfo.Directory.Replace(@"\", "/");
+            var directory = $"/{formattedDirectory}";
+            if (directory == "/")
+                directory = String.Empty;
             policy["properties"]["policyContent"] =
-                $"[concat(parameters('repoBaseUrl'), '/{directory}/{fileInfo.FileName}', parameters('TemplatesStorageAccountSASToken'))]";
+                $"[concat(parameters('repoBaseUrl'), '{directory}/{fileInfo.FileName}', parameters('TemplatesStorageAccountSASToken'))]";
         }
 
         private static GeneratedTemplate GenerateTemplate(JObject parsedTemplate, string filename, string directory,
