@@ -44,3 +44,18 @@ Example when user is connected to multitenants:
 
 
 After extraction a parameters file can be created off the ARMTemplate.
+
+### Multiple small ARM-templates with Write-APIManagementTemplates
+Use Write-APIManagementTemplates generate many small ARM templates (as suggested in https://github.com/Azure/azure-api-management-devops-example) instead of one big ARM template.
+
+`armclient token 80d4fe69-xxxx-4dd2-a938-9250f1c8ab03 | Get-APIManagementTemplate -APIManagement MyApiManagementInstance -ResourceGroup myResourceGroup -SubscriptionId 80d4fe69-xxxx-4dd2-a938-9250f1c8ab03 | Write-APIManagementTemplates -OutputDirectory templates -SeparatePolicyFile $true`
+
+### Specifications
+
+| Parameter | Description | Required | Default | 
+| --------- | ---------- | -------| --- |
+| ApiStandalone | If the APIs should be able to be deployed independently of the rest of the resources | false | true | 
+| OutputDirectory | The directory where the templates are written to | false | . | 
+| SeparatePolicyFile | If the policies should be written to a separate xml file | false | false | 
+| DebugTemplateFile | If set, the input ARM template is written to this file | false | |
+| ARMTemplate | The ARM template piped from Get-APIManagementTemplate - should not be manually set | false | |
