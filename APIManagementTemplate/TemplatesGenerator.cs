@@ -52,6 +52,7 @@ namespace APIManagementTemplate
         private const string ApiOperationResourceType = "Microsoft.ApiManagement/service/apis/operations";
         private const string ApiOperationPolicyResourceType = "Microsoft.ApiManagement/service/apis/operations/policies";
         private const string ApiPolicyResourceType = "Microsoft.ApiManagement/service/apis/policies";
+        private const string ServicePolicyFileName = "service.policy.xml";
 
         public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false)
         {
@@ -86,7 +87,7 @@ namespace APIManagementTemplate
                     if (policy != null)
                     {
                         templates.Add(GenerateServicePolicyFile(parsedTemplate, policy));
-                        ReplacePolicyWithFileLink(policy, new FileInfo("service.policy.xml", String.Empty));
+                        ReplacePolicyWithFileLink(policy, new FileInfo(ServicePolicyFileName, String.Empty));
                     }
                 }
                 template.parameters = GetParameters(parsedTemplate["parameters"], resource);
@@ -156,7 +157,7 @@ namespace APIManagementTemplate
             {
                 Type = ContentType.Xml,
                 XmlContent = content,
-                FileName = "service.policy.xml",
+                FileName = ServicePolicyFileName,
                 Directory = String.Empty
             };
             return template;
