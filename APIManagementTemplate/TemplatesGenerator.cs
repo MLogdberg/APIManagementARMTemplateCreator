@@ -36,12 +36,13 @@ namespace APIManagementTemplate
         private const string OperationalInsightsWorkspaceResourceType = "Microsoft.OperationalInsights/workspaces";
         private const string AppInsightsResourceType = "Microsoft.Insights/components";
         private const string ProductPolicyResourceType = "Microsoft.ApiManagement/service/products/policies";
+        private const string ApiOperationResourceType = "Microsoft.ApiManagement/service/apis/operations";
+        private const string ApiOperationPolicyResourceType = "Microsoft.ApiManagement/service/apis/operations/policies";
 
-        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone,
-            bool separatePolicyFile = false)
+        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false)
         {
             JObject parsedTemplate = JObject.Parse(sourceTemplate);
-            List<GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate);
+            List<GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate, separatePolicyFile);
             templates.AddRange(GenerateProducts(parsedTemplate, separatePolicyFile));
             templates.Add(GenerateTemplate(parsedTemplate, "service.template.json", String.Empty, ServiceResourceType,
                 OperationalInsightsWorkspaceResourceType, AppInsightsResourceType, StorageAccountResourceType));
@@ -54,16 +55,45 @@ namespace APIManagementTemplate
             return templates;
         }
 
-        private List<GeneratedTemplate> GenerateAPIsAndVersionSets(bool apiStandalone, JObject parsedTemplate)
+        private List<GeneratedTemplate> GenerateAPIsAndVersionSets(bool apiStandalone, JObject parsedTemplate, bool separatePolicyFile)
         {
             var apis = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == ApiResourceType);
-            List<GeneratedTemplate> templates =
-                apis.Select(api => GenerateAPI(api, parsedTemplate, apiStandalone)).ToList();
+            List<GeneratedTemplate> templates = separatePolicyFile? GenerateAPIPolicyFiles(apis, parsedTemplate).ToList()
+                : new List<GeneratedTemplate>();
+            templates.AddRange(apis.Select(api => GenerateAPI(api, parsedTemplate, apiStandalone, separatePolicyFile)));
             var versionSets = apis.Where(api => api["properties"]["apiVersionSetId"] != null)
                 .Distinct(new ApiVersionSetIdComparer())
                 .Select(api => GenerateVersionSet(api, parsedTemplate, apiStandalone)).ToList();
             templates.AddRange(versionSets);
             return templates;
+        }
+
+        private IEnumerable<GeneratedTemplate> GenerateAPIPolicyFiles(IEnumerable<JToken> apis, JObject parsedTemplate)
+        {
+            var policyFiles = new List<GeneratedTemplate>();
+            foreach (JToken api in apis)
+            {
+                var operations = api["resources"].Where(x => x.Value<string>("type") == ApiOperationResourceType);
+                foreach (var operation in operations)
+                {
+                    var policy = operation["resources"].FirstOrDefault(x => x.Value<string>("type") == ApiOperationPolicyResourceType);
+                    if (policy != null)
+                    {
+                        var operationId = GetParameterPart(operation, "name", -2);
+                        var content = policy["properties"].Value<string>("policyContent");
+                        var template = new GeneratedTemplate
+                        {
+                            Type = ContentType.Xml,
+                            XmlContent = content
+                        };
+                        var filenameAndDirectory = GetFilenameAndDirectoryForOperationPolicy(api, parsedTemplate, operationId);
+                        template.FileName = filenameAndDirectory.Item1;
+                        template.Directory = filenameAndDirectory.Item2;
+                        policyFiles.Add(template);
+                    }
+                }
+            }
+            return policyFiles;
         }
 
         private IEnumerable<GeneratedTemplate> GenerateProducts(JObject parsedTemplate, bool separatePolicyFile)
@@ -142,6 +172,20 @@ namespace APIManagementTemplate
                 policy["properties"]["policyContent"] = $"[concat(parameters('repoBaseUrl'), '/product-{productId}/product-{productId}.policy.xml', parameters('TemplatesStorageAccountSASToken'))]";
             }
         }
+        private void ReplaceApiOperationPolictPolicyWithFileLink(JToken api, JObject parsedTemplate)
+        {
+            var policies =
+                api.SelectTokens(
+                    "$..resources[?(@.type==\'Microsoft.ApiManagement/service/apis/operations/policies\')]");
+            foreach (JToken policy in policies)
+            {
+                var operationId = GetParameterPart(policy, "name", -6);
+                var filenameAndDirectory = GetFilenameAndDirectoryForOperationPolicy(api, parsedTemplate, operationId);
+                policy["properties"]["contentFormat"] = "rawxml-link";
+                var directory = filenameAndDirectory.Item2.Replace(@"\", "/");
+                policy["properties"]["policyContent"] = $"[concat(parameters('repoBaseUrl'), '/{directory}/{filenameAndDirectory.Item1}', parameters('TemplatesStorageAccountSASToken'))]";
+            }
+        }
 
         private static GeneratedTemplate GenerateTemplate(JObject parsedTemplate, string filename, string directory,
             params string[] wantedResources)
@@ -179,10 +223,15 @@ namespace APIManagementTemplate
             return generatedTemplate;
         }
 
-        private GeneratedTemplate GenerateAPI(JToken api, JObject parsedTemplate, bool apiStandalone)
+        private GeneratedTemplate GenerateAPI(JToken api, JObject parsedTemplate, bool apiStandalone, bool separatePolicyFile)
         {
             GeneratedTemplate generatedTemplate = new GeneratedTemplate();
             DeploymentTemplate template = new DeploymentTemplate(true);
+            if (separatePolicyFile)
+            {
+                ReplaceApiOperationPolictPolicyWithFileLink(api, parsedTemplate);
+                AddParametersForFileLink(parsedTemplate);
+            }
             template.parameters = GetParameters(parsedTemplate["parameters"], api);
 
             SetFilenameAndDirectory(api, parsedTemplate, generatedTemplate);
@@ -203,19 +252,37 @@ namespace APIManagementTemplate
         private static void SetFilenameAndDirectory(JToken api, JObject parsedTemplate,
             GeneratedTemplate generatedTemplate)
         {
+            var filenameAndDirectory = GetFileNameAndDirectory(api, parsedTemplate);
+            generatedTemplate.FileName = filenameAndDirectory.Item1;
+            generatedTemplate.Directory = filenameAndDirectory.Item2;
+        }
+
+        private static Tuple<string, string> GetFilenameAndDirectoryForOperationPolicy(JToken api,
+            JObject parsedTemplate, string operationId)
+        {
+            var filenameAndDirectory = GetFileNameAndDirectory(api, parsedTemplate);
+            var newFilename = filenameAndDirectory.Item1.Replace(".template.json", $".{operationId}.policy.xml");
+            return new Tuple<string, string>(newFilename, filenameAndDirectory.Item2);
+        }
+
+        private static Tuple<string, string> GetFileNameAndDirectory(JToken api, JObject parsedTemplate)
+        {
+            string filename, directory;
             if (api["properties"]["apiVersionSetId"] != null)
             {
                 string versionSetName = GetVersionSetName(api, parsedTemplate);
                 string version = GetApiVersion(api, parsedTemplate);
-                generatedTemplate.FileName = $"api-{versionSetName}.{version}.template.json";
-                generatedTemplate.Directory = $@"api-{versionSetName}\{version}";
+                filename = $"api-{versionSetName}.{version}.template.json";
+                directory = $@"api-{versionSetName}\{version}";
+                
             }
             else
             {
                 string name = api["properties"].Value<string>("displayName").Replace(' ', '-');
-                generatedTemplate.FileName = $"api-{name}.template.json";
-                generatedTemplate.Directory = $"api-{name}";
+                filename = $"api-{name}.template.json";
+                directory = $"api-{name}";
             }
+            return new Tuple<string, string>(filename, directory);
         }
 
         private static void SetFilenameAndDirectoryForVersionSet(JToken api, GeneratedTemplate generatedTemplate,

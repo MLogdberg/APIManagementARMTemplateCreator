@@ -13,7 +13,7 @@ namespace APIManagementTemplate
     [Cmdlet("Write", "APIManagementTemplates", ConfirmImpact = ConfirmImpact.None)]
     public class WriteApiManagementTemplatesCmdlet : PSCmdlet
     {
-        [Parameter(Mandatory = false, HelpMessage = "Piped input from armclient", ValueFromPipeline = true)]
+        [Parameter(Mandatory = false, HelpMessage = "Piped input from Get-APIManagementTemplate", ValueFromPipeline = true)]
         public string ARMTemplate;
 
         [Parameter(Mandatory = false, HelpMessage = "Generate templates for APIs that can be deployed standalone (without the rest of the resources)")]
@@ -25,8 +25,13 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false, HelpMessage = "Policies are written to a separate file")]
         public bool SeparatePolicyFile = false;
 
+        [Parameter(Mandatory = false, HelpMessage = "If set, the input template is written to this file ")]
+        public string DebugTemplateFile = "";
+
         protected override void ProcessRecord()
         {
+            if (!string.IsNullOrEmpty(DebugTemplateFile))
+                System.IO.File.WriteAllText(DebugTemplateFile, ARMTemplate);
             var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone, SeparatePolicyFile);
             foreach (GeneratedTemplate template in templates)
             {
