@@ -50,7 +50,7 @@ After extraction a parameters file can be created off the ARMTemplate.
 ### Multiple small ARM-templates with Write-APIManagementTemplates
 Use Write-APIManagementTemplates generate many small ARM templates (as suggested in https://github.com/Azure/azure-api-management-devops-example) instead of one big ARM template.
 
-`armclient token 80d4fe69-xxxx-4dd2-a938-9250f1c8ab03 | Get-APIManagementTemplate -APIManagement MyApiManagementInstance -ResourceGroup myResourceGroup -SubscriptionId 80d4fe69-xxxx-4dd2-a938-9250f1c8ab03 | Write-APIManagementTemplates -OutputDirectory templates -SeparatePolicyFile $true`
+`armclient token 80d4fe69-xxxx-4dd2-a938-9250f1c8ab03 | Get-APIManagementTemplate -APIManagement MyApiManagementInstance -ResourceGroup myResourceGroup -SubscriptionId 80d4fe69-xxxx-4dd2-a938-9250f1c8ab03 | Write-APIManagementTemplates -OutputDirectory C:\temp\templates -SeparatePolicyFile $true`
 
 ### Specifications
 

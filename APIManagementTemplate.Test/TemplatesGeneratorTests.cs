@@ -151,6 +151,14 @@ namespace APIManagementTemplate.Test
             AssertFileLink(policy, "/product-starter/product-starter.policy.xml");
         }
 
+        [TestMethod]
+        public void TestResultContainsProductPolicyFileFor_Starter()
+        {
+            var file = _generatedTemplates.Single(x => x.FileName == "product-starter.policy.xml");
+            Assert.AreEqual(ContentType.Xml, file.Type);
+            Assert.IsFalse(file.XmlContent.StartsWith("[concat(parameters('repoBaseUrl')"));
+        }
+
         private static void AssertFileLink(JToken policy, string path)
         {
             JToken properties = policy["properties"];

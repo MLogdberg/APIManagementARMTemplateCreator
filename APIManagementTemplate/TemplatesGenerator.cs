@@ -166,12 +166,13 @@ namespace APIManagementTemplate
         private IEnumerable<GeneratedTemplate> GenerateProducts(JObject parsedTemplate, bool separatePolicyFile)
         {
             var products = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == ProductResourceType);
-            List<GeneratedTemplate> templates = products
-                .Select(product => GenerateProduct(product, parsedTemplate, separatePolicyFile)).ToList();
+            List<GeneratedTemplate> templates = new List<GeneratedTemplate>();
             if (separatePolicyFile)
             {
                 templates.AddRange(products.Select(p => GenerateProductPolicy(p)).Where(x => x != null));
             }
+            templates.AddRange(products
+                .Select(product => GenerateProduct(product, parsedTemplate, separatePolicyFile)));
             return templates;
         }
 
