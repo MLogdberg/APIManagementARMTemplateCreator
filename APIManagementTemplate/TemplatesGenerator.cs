@@ -15,6 +15,15 @@ namespace APIManagementTemplate
         public JObject Content { get; set; }
         public string XmlContent { get; set; }
         public ContentType Type { get; set; } = ContentType.Json;
+
+        public string GetPath()
+        {
+            return Directory == String.Empty ? $"/{FileName}" : $"/{Directory}/{FileName}";
+        }
+        public string GetUnixPath()
+        {
+            return GetPath().Replace(@"\", "/");
+        }
     }
 
     public class FileInfo
@@ -66,7 +75,91 @@ namespace APIManagementTemplate
             templates.Add(GenerateTemplate(parsedTemplate, "groups.template.json", String.Empty, GroupResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "groupsUsers.template.json", String.Empty,
                 UserGroupResourceType));
+            templates.Add(GenerateMasterTemplate(templates.Where(x => x.Type == ContentType.Json).ToList(), parsedTemplate));
             return templates;
+        }
+
+        private GeneratedTemplate GenerateMasterTemplate(List<GeneratedTemplate> generatedTemplates, JObject parsedTemplate)
+        {
+            var generatedTemplate = new GeneratedTemplate { Directory = String.Empty, FileName = "master.template.json" };
+            DeploymentTemplate template = new DeploymentTemplate(true);
+            foreach (GeneratedTemplate template2 in generatedTemplates)
+            {
+                template.resources.Add(GenerateDeployment(template2, generatedTemplates));
+            }
+            template.parameters = GetParameters(parsedTemplate["parameters"], template.resources);
+            generatedTemplate.Content = JObject.FromObject(template);
+            return generatedTemplate;
+        }
+
+        private JObject GetParameters(JToken parameters, IList<JObject> resources)
+        {
+            var p = resources.Select(x => GetParameters(parameters, x)).ToArray();
+            var p1 = p[0];
+            foreach (JObject jObject in p.Skip(1))
+            {
+                p1.Merge(jObject);
+            }
+            return p1;
+        }
+
+        private JObject GenerateDeployment(GeneratedTemplate template2, List<GeneratedTemplate> generatedTemplates)
+        {
+            var deployment = new
+            {
+                apiVersion = "2017-05-10",
+                name = template2.GetUnixPath().Replace("/", "_"),
+                type ="Microsoft.Resources/deployments",
+                properties = new {
+                    mode = "Incremental",
+                    templateLink = new
+                    {
+                        uri = $"[concat(parameters('repoBaseUrl'), '{template2.GetUnixPath()}', parameters('TemplatesStorageAccountSASToken'))]",
+                        contentVersion = "1.0.0.0"
+                    },
+                    parameters = GenerateDeploymentParameters(template2)
+                },
+                dependsOn = GenerateDeploymentDependsOn(template2, generatedTemplates)
+            };
+
+            return JObject.FromObject(deployment);
+        }
+
+        private JArray GenerateDeploymentDependsOn(GeneratedTemplate template2, List<GeneratedTemplate> generatedTemplates)
+        {
+            var dependsOn = new JArray();
+            var dependencies = template2.Content.SelectTokens("$.resources[*].dependsOn[*]");
+            foreach (JToken dependency in dependencies)
+            {
+                var name = dependency.Value<string>();
+                var resourceType = GetSplitPart(1, name);
+                var nameParts = name.Split(',').Skip(1).Select(x => x.Trim().Replace("'))]", "')").Replace("')]", "')"));
+                var matches = generatedTemplates.Where(template =>
+                    template.Content.SelectTokens($"$..resources[?(@.type=='{resourceType}')]")
+                        .Any(resource => nameParts.All(namePart => resource.Value<string>("name").Contains(namePart))));
+                if(matches.Any())
+                {
+                    var match = matches.First();
+                    dependsOn.Add($"[resourceId('Microsoft.Resources/deployments', '{match.GetUnixPath().Replace("/", "_")}')]");
+                }
+                else
+                {
+                    var notFound = true;
+                }
+            }
+            return dependsOn;
+        }
+
+        private JObject GenerateDeploymentParameters(GeneratedTemplate template2)
+        {
+            var parameters = new JObject();
+            var parametersFromTemplate = template2.Content["parameters"];
+            foreach (JProperty token in parametersFromTemplate.Cast<JProperty>())
+            {
+                var name = token.Name;
+                parameters.Add(name, JObject.FromObject(new {value = $"[parameters('{name}')]"}));
+            }
+            return parameters;
         }
 
         private IEnumerable<GeneratedTemplate> GenerateService(JObject parsedTemplate, bool separatePolicyFile)
@@ -405,7 +498,13 @@ namespace APIManagementTemplate
 
         private static string GetParameterPart(JToken jToken, string name, int index, char separator = '\'')
         {
-            string[] split = jToken.Value<string>(name).Split(separator);
+            var value = jToken.Value<string>(name);
+            return GetSplitPart(index, value, separator);
+        }
+
+        private static string GetSplitPart(int index, string value, char separator = '\'')
+        {
+            string[] split = value.Split(separator);
             if (index > split.Length - 1 || index < -1 * split.Length)
                 return String.Empty;
             if (index >= 0)

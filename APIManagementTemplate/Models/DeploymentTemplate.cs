@@ -193,7 +193,7 @@ namespace APIManagementTemplate.Models
             if (restObject == null)
                 return null;
 
-            string servicename = restObject.Value<string>("name");
+            string servicename = restObject.Value<string>("name").ToLowerInvariant();
             string type = restObject.Value<string>("type");
             apimservicename = servicename;
             var obj = new ResourceTemplate();

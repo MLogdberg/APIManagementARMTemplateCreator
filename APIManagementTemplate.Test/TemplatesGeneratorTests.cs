@@ -19,6 +19,8 @@ namespace APIManagementTemplate.Test
         private const string HttpBinVersionSetFilename = "api-Versioned-HTTP-bin-API.version-set.template.json";
         private const string ServiceFilename = "service.template.json";
         private const string ProductStarterFilename = "product-starter.template.json";
+        private const string MasterTemplateFilename = "master.template.json";
+        private const string ApiEchoApiDirectory = "api-Echo-API";
         private TemplatesGenerator _templatesGenerator;
         private string _sourceTemplate;
         private IList<GeneratedTemplate> _generatedTemplates;
@@ -40,7 +42,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestResultContainsCorrectNumberOfItems()
         {
-            Assert.AreEqual(19, _generatedTemplates.Count);
+            Assert.AreEqual(20, _generatedTemplates.Count);
         }
         [TestMethod]
         public void TestResultContains_httpbinv1()
@@ -63,7 +65,7 @@ namespace APIManagementTemplate.Test
         {
             Assert.IsTrue(_generatedTemplates.Any(x =>
                 x.FileName == ProductStarterFilename &&
-                x.Directory == @"product-starter" ));
+                x.Directory == @"product-starter"));
         }
 
         [TestMethod]
@@ -76,7 +78,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestResultContainsPolicyFor_EchoApiCreateResource()
         {
-            AssertPolicyFile("api-Echo-API.create-resource.policy.xml", "api-Echo-API");
+            AssertPolicyFile("api-Echo-API.create-resource.policy.xml", ApiEchoApiDirectory);
         }
 
         [TestMethod]
@@ -213,7 +215,7 @@ namespace APIManagementTemplate.Test
             var noApis = api.Content.SelectTokens(JPathAPI)
                 .Count(x => x.Value<string>("name").Contains("httpBinAPI"));
             Assert.AreEqual(1, noApis);
-        }        
+        }
 
         [TestMethod]
         public void TestResultContainsAPIFor_httpbinv2()
@@ -266,7 +268,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestResultContains_EchoV1()
         {
-            Assert.IsTrue(_generatedTemplates.Any(x => x.FileName == EchoFilename && x.Directory == @"api-Echo-API"));
+            Assert.IsTrue(_generatedTemplates.Any(x => x.FileName == EchoFilename && x.Directory == ApiEchoApiDirectory));
         }
 
         [TestMethod]
@@ -310,7 +312,7 @@ namespace APIManagementTemplate.Test
         {
             var api = _generatedTemplates.Single(x => x.FileName == ServiceFilename);
             var services = api.Content.SelectTokens("$.resources[?(@.type==\'Microsoft.ApiManagement/service\')]")
-                .Where(x =>x.Value<string>("name").Contains("'service_PreDemoTest_name'"));
+                .Where(x => x.Value<string>("name").Contains("'service_PreDemoTest_name'"));
             Assert.AreEqual(1, services.Count());
         }
 
@@ -349,6 +351,91 @@ namespace APIManagementTemplate.Test
             var parameters = api.Content.SelectTokens(JPathParameters);
 
             Assert.AreEqual(1, parameters.Count());
+        }
+
+        [TestMethod]
+        public void TestResultContainsMasterTemplateJson()
+        {
+            var masterTemplate = GetMasterTemplate();
+            Assert.IsNotNull(masterTemplate);
+        }
+
+        private GeneratedTemplate GetMasterTemplate()
+        {
+            return _generatedTemplates.FirstOrDefault(x => x.FileName == MasterTemplateFilename && x.Directory == String.Empty);
+        }
+
+        [TestMethod]
+        public void TestResultContainsMasterTemplateJsonWith_ServiceTemplate()
+        {
+            AssertMasterTemplateDeployment("/service.template.json");
+        }
+
+        [TestMethod]
+        public void TestResultContainsMasterTemplateJsonWith_ApiCalculator()
+        {
+            AssertMasterTemplateDeployment($"/{ApiEchoApiDirectory}/{EchoFilename}");
+        }
+
+        [TestMethod]
+        public void TestResultContainsMasterTemplateJsonWith_UnlimitedProduct()
+        {
+            var deployment = AssertMasterTemplateDeployment($"/product-unlimited/product-unlimited.template.json", false);
+            var dependsOn = deployment["dependsOn"];
+            Assert.IsNotNull(dependsOn);
+            Assert.AreEqual(1, dependsOn.Count());
+        }
+
+        [TestMethod]
+        public void TestResultContainsMasterTemplateJsonWith_HttpBinV2()
+        {
+            AssertMasterTemplateDeployment("/api-Versioned-HTTP-bin-API/v2/api-Versioned-HTTP-bin-API.v2.template.json");
+        }
+
+        [TestMethod]
+        public void TestResultContainsMasterTemplateParameter_repoBaseUrl()
+        {
+            var template = GetMasterTemplate();
+            var repoBaseUrl = template.Content["parameters"]["repoBaseUrl"];
+            Assert.IsNotNull(repoBaseUrl);
+        }
+
+        [TestMethod]
+        public void TestResultContainsMasterTemplateParameter__artifactsLocationSasToken()
+        {
+            var template = GetMasterTemplate();
+            var repoBaseUrl = template.Content["parameters"]["TemplatesStorageAccountSASToken"];
+            Assert.IsNotNull(repoBaseUrl);
+        }
+
+        private JToken AssertMasterTemplateDeployment(string path, bool checkRepoBaseUrl = true)
+        {
+            var template = GetMasterTemplate();
+            var deployments = template.Content.SelectTokens("$.resources[?(@.type=='Microsoft.Resources/deployments')]")
+                .Where(x => x.Value<string>("name") == path.Replace("/", "_"));
+            Assert.AreEqual(1, deployments.Count());
+            var deployment = deployments.First();
+            var properties = deployment["properties"];
+            Assert.IsNotNull(properties);
+
+            var mode = properties.Value<string>("mode");
+            Assert.AreEqual("Incremental", mode);
+
+            var uri = deployments.First()["properties"]["templateLink"].Value<string>("uri");
+            Assert.AreEqual(
+                $"[concat(parameters('repoBaseUrl'), '{path}', parameters('TemplatesStorageAccountSASToken'))]", uri);
+
+            var contentVersion = deployments.First()["properties"]["templateLink"].Value<string>("contentVersion");
+            Assert.AreEqual("1.0.0.0", contentVersion);
+
+            var parameters = deployments.First()["properties"]["parameters"];
+            Assert.IsNotNull(parameters);
+            if (checkRepoBaseUrl)
+            {
+                var repoBaseUrl = parameters["repoBaseUrl"];
+                Assert.IsNotNull(repoBaseUrl);
+            }
+            return deployment;
         }
     }
 }

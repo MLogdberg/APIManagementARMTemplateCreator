@@ -95,6 +95,18 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', 'policy')]", name);
         }
 
+        [TestMethod]
+        public void TestServiceContainsOneParameterWithServiceName()
+        {
+            //The background to this test is that the name part of the id and the name of the service ARM template could have
+            //upper case letter but in all other places it is in lowercase.
+            //This caused the bug where we got two parameters service_ibizmalo_name and service_Ibizmalo_name (if the name of the service is Ibizmalo)
+            var template = GetTemplate();
+            var parameters = template.SelectToken("$.parameters").Cast<JProperty>();
+            var serviceNameParameters = parameters.Where(p => p.Name.ToLowerInvariant() == "service_ibizmalo_name");
+
+            Assert.AreEqual(1, serviceNameParameters.Count());
+        }
 
         [TestMethod]
         public void TestServiceContainsPolicyWithCorrectDependsOn()

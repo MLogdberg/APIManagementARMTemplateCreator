@@ -1,6 +1,6 @@
 {
-    "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo",
-    "name": "ibizmalo",
+    "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/Ibizmalo",
+    "name": "Ibizmalo",
     "type": "Microsoft.ApiManagement/service",
     "tags": {},
     "location": "West Europe",
