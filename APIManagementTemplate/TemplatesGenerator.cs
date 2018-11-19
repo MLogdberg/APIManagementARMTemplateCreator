@@ -16,6 +16,8 @@ namespace APIManagementTemplate
         public string XmlContent { get; set; }
         public ContentType Type { get; set; } = ContentType.Json;
 
+        public List<string> ExternalDependencies = new List<string>();
+
         public string GetPath()
         {
             return Directory == String.Empty ? $"/{FileName}" : $"/{Directory}/{FileName}";
@@ -24,6 +26,12 @@ namespace APIManagementTemplate
         {
             return GetPath().Replace(@"\", "/");
         }
+
+        public string GetShortPath()
+        {
+            return String.IsNullOrWhiteSpace(Directory) ? FileName : $"{FileName}_{Directory.GetHashCode()}";
+        }
+
     }
 
     public class FileInfo
@@ -62,6 +70,10 @@ namespace APIManagementTemplate
         private const string ApiOperationPolicyResourceType = "Microsoft.ApiManagement/service/apis/operations/policies";
         private const string ApiPolicyResourceType = "Microsoft.ApiManagement/service/apis/policies";
         private const string ServicePolicyFileName = "service.policy.xml";
+        private const string PropertyResourceType = "Microsoft.ApiManagement/service/properties";
+        private const string BackendResourceType = "Microsoft.ApiManagement/service/backends";
+        private const string OpenIdConnectProviderResourceType = "Microsoft.ApiManagement/service/openidConnectProviders";
+        private const string CertificateResourceType = "Microsoft.ApiManagement/service/certificates";
 
         public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false)
         {
@@ -69,17 +81,50 @@ namespace APIManagementTemplate
             List<GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate, separatePolicyFile);
             templates.AddRange(GenerateProducts(parsedTemplate, separatePolicyFile));
             templates.AddRange(GenerateService(parsedTemplate, separatePolicyFile));
-            templates.Add(GenerateTemplate(parsedTemplate, "subscriptions.template.json", String.Empty,
-                SubscriptionResourceType));
+            templates.Add(GenerateTemplate(parsedTemplate, "subscriptions.template.json", String.Empty, SubscriptionResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "users.template.json", String.Empty, UserResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "groups.template.json", String.Empty, GroupResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "groupsUsers.template.json", String.Empty,
                 UserGroupResourceType));
-            templates.Add(GenerateMasterTemplate(templates.Where(x => x.Type == ContentType.Json).ToList(), parsedTemplate));
+            MoveExternalDependencies(templates);
+            templates.Add(GenerateMasterTemplate(templates.Where(x => x.Type == ContentType.Json).ToList(), parsedTemplate, separatePolicyFile));
             return templates;
         }
 
-        private GeneratedTemplate GenerateMasterTemplate(List<GeneratedTemplate> generatedTemplates, JObject parsedTemplate)
+        private void MoveExternalDependencies(List<GeneratedTemplate> templates)
+        {
+            foreach (GeneratedTemplate template in templates.Where(x => x.Type == ContentType.Json))
+            {
+                var dependsOn = template.Content.SelectTokens("$..dependsOn[*]").ToList();
+                foreach (JToken dependency in dependsOn)
+                {
+                    var name = dependency.Value<string>();
+                    if (!IsLocalDependency(name, template))
+                    {
+                        template.ExternalDependencies.Add(name);
+                        dependency.Remove();
+                    }
+                }
+            }
+        }
+
+        private static bool IsLocalDependency(string name, GeneratedTemplate template)
+        {
+            var resourceType = GetSplitPart(1, name);
+            var nameParts = name.Split(',').Skip(1).Select(x => x.Trim().Replace("'))]", "')").Replace("')]", "')"));
+            var localDependency = template.Content.SelectTokens($"$..resources[?(@.type=='{resourceType}')]")
+                .Any(resource => nameParts.All(namePart => NameContainsPart(resource, namePart)));
+            return localDependency;
+        }
+
+        private static bool NameContainsPart(JToken resource, string namePart)
+        {
+            string name = resource.Value<string>("name").ToLowerInvariant();
+            string part = namePart.ToLowerInvariant();
+            return name.Contains(part) || (part.StartsWith("'") && name.Contains($"'/{part.Split('\'')[1]}'"));
+        }
+
+        private GeneratedTemplate GenerateMasterTemplate(List<GeneratedTemplate> generatedTemplates, JObject parsedTemplate, bool separatePolicyFile)
         {
             var generatedTemplate = new GeneratedTemplate { Directory = String.Empty, FileName = "master.template.json" };
             DeploymentTemplate template = new DeploymentTemplate(true);
@@ -87,20 +132,39 @@ namespace APIManagementTemplate
             {
                 template.resources.Add(GenerateDeployment(template2, generatedTemplates));
             }
-            template.parameters = GetParameters(parsedTemplate["parameters"], template.resources);
+            template.parameters = GetParameters(parsedTemplate["parameters"], template.resources, separatePolicyFile);
             generatedTemplate.Content = JObject.FromObject(template);
             return generatedTemplate;
         }
 
-        private JObject GetParameters(JToken parameters, IList<JObject> resources)
+        private JObject GetParameters(JToken parameters, IList<JObject> resources, bool separatePolicyFile)
         {
             var p = resources.Select(x => GetParameters(parameters, x)).ToArray();
-            var p1 = p[0];
+            var allParameters = p[0];
             foreach (JObject jObject in p.Skip(1))
             {
-                p1.Merge(jObject);
+                allParameters.Merge(jObject);
             }
-            return p1;
+            if (!separatePolicyFile)
+            {
+                if (allParameters["repoBaseUrl"] == null)
+                {
+                    allParameters["repoBaseUrl"] = JToken.FromObject(new
+                    {
+                        type = "string",
+                        metadata = new {description = "Base URL of the repository"}
+                    });
+                }
+                if (allParameters["TemplatesStorageAccountSASToken"] == null)
+                {
+                    allParameters["TemplatesStorageAccountSASToken"] = JToken.FromObject(new
+                    {
+                        type = "string",
+                        defaultValue = String.Empty
+                    });
+                }
+            }
+            return allParameters;
         }
 
         private JObject GenerateDeployment(GeneratedTemplate template2, List<GeneratedTemplate> generatedTemplates)
@@ -108,7 +172,7 @@ namespace APIManagementTemplate
             var deployment = new
             {
                 apiVersion = "2017-05-10",
-                name = template2.GetUnixPath().Replace("/", "_"),
+                name = template2.GetShortPath(),
                 type ="Microsoft.Resources/deployments",
                 properties = new {
                     mode = "Incremental",
@@ -125,22 +189,17 @@ namespace APIManagementTemplate
             return JObject.FromObject(deployment);
         }
 
-        private JArray GenerateDeploymentDependsOn(GeneratedTemplate template2, List<GeneratedTemplate> generatedTemplates)
+
+        private JArray GenerateDeploymentDependsOn(GeneratedTemplate template, List<GeneratedTemplate> generatedTemplates)
         {
             var dependsOn = new JArray();
-            var dependencies = template2.Content.SelectTokens("$.resources[*].dependsOn[*]");
-            foreach (JToken dependency in dependencies)
+            foreach (string name in template.ExternalDependencies)
             {
-                var name = dependency.Value<string>();
-                var resourceType = GetSplitPart(1, name);
-                var nameParts = name.Split(',').Skip(1).Select(x => x.Trim().Replace("'))]", "')").Replace("')]", "')"));
-                var matches = generatedTemplates.Where(template =>
-                    template.Content.SelectTokens($"$..resources[?(@.type=='{resourceType}')]")
-                        .Any(resource => nameParts.All(namePart => resource.Value<string>("name").Contains(namePart))));
+                var matches = generatedTemplates.Where(t => IsLocalDependency(name, t));
                 if(matches.Any())
                 {
                     var match = matches.First();
-                    dependsOn.Add($"[resourceId('Microsoft.Resources/deployments', '{match.GetUnixPath().Replace("/", "_")}')]");
+                    dependsOn.Add($"[resourceId('Microsoft.Resources/deployments', '{match.GetShortPath()}')]");
                 }
                 else
                 {
@@ -174,13 +233,20 @@ namespace APIManagementTemplate
                 .Where(r => wantedResources.Any(w => w == r.Value<string>("type")));
             foreach (JToken resource in resources)
             {
-                if (separatePolicyFile && resource.Value<string>("type") == ServiceResourceType)
+                if (resource.Value<string>("type") == ServiceResourceType)
                 {
-                    var policy = resource.SelectToken($"$..resources[?(@.type==\'{ServicePolicyResourceType}\')]");
-                    if (policy != null)
+                    AddServiceResources(parsedTemplate, resource, PropertyResourceType);
+                    AddServiceResources(parsedTemplate, resource, BackendResourceType);
+                    AddServiceResources(parsedTemplate, resource, OpenIdConnectProviderResourceType);
+                    AddServiceResources(parsedTemplate, resource, CertificateResourceType);
+                    if (separatePolicyFile)
                     {
-                        templates.Add(GenerateServicePolicyFile(parsedTemplate, policy));
-                        ReplacePolicyWithFileLink(policy, new FileInfo(ServicePolicyFileName, String.Empty));
+                        var policy = resource.SelectToken($"$..resources[?(@.type==\'{ServicePolicyResourceType}\')]");
+                        if (policy != null)
+                        {
+                            templates.Add(GenerateServicePolicyFile(parsedTemplate, policy));
+                            ReplacePolicyWithFileLink(policy, new FileInfo(ServicePolicyFileName, String.Empty));
+                        }
                     }
                 }
                 template.parameters = GetParameters(parsedTemplate["parameters"], resource);
@@ -189,6 +255,16 @@ namespace APIManagementTemplate
             generatedTemplate.Content = JObject.FromObject(template);
             templates.Add(generatedTemplate);
             return templates;
+        }
+
+        private static void AddServiceResources(JObject parsedTemplate, JToken resource, string resourceType)
+        {
+            var properties = parsedTemplate.SelectTokens($"$..resources[?(@.type==\'{resourceType}\')]");
+            JArray subResources = (JArray) resource["resources"];
+            foreach (JToken property in properties.ToArray())
+            {
+                subResources.Add(property);
+            }
         }
 
         private List<GeneratedTemplate> GenerateAPIsAndVersionSets(bool apiStandalone, JObject parsedTemplate, bool separatePolicyFile)
@@ -359,6 +435,7 @@ namespace APIManagementTemplate
         private static void ReplacePolicyWithFileLink(JToken policy, FileInfo fileInfo)
         {
             policy["properties"]["contentFormat"] = "rawxml-link";
+            policy["apiVersion"] = "2018-01-01";
             string formattedDirectory = fileInfo.Directory.Replace(@"\", "/");
             var directory = $"/{formattedDirectory}";
             if (directory == "/")

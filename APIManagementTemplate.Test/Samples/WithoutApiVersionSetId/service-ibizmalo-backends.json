@@ -1,0 +1,38 @@
+{
+    "value": [
+        {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/backends/1",
+            "type": "Microsoft.ApiManagement/service/backends",
+            "name": "1",
+            "properties": {
+                "title": null,
+                "description": "My backend",
+                "url": "https://www.mydomain.com/",
+                "protocol": "http",
+                "tls": {
+                    "validateCertificateChain": false
+                }
+            }
+        },
+        {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/backends/ifdeveloperfunctions",
+            "type": "Microsoft.ApiManagement/service/backends",
+            "name": "myfunctions",
+            "properties": {
+                "title": null,
+                "description": "myfunctions",
+                "url": "https://myfunctions.azurewebsites.net/api",
+                "protocol": "http",
+                "resourceId": "https://management.azure.com/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.Web/sites/myfunctions",
+                "credentials": {
+                    "query": {
+                        "code": [
+                            "{{myfunctions-key}}"
+                        ]
+                    }
+                }
+            }
+        }
+    ],
+    "nextLink": ""
+}

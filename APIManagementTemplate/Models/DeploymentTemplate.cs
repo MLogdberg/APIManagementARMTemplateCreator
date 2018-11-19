@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -266,25 +267,23 @@ namespace APIManagementTemplate.Models
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
             string apiname = apiid.ValueAfter("apis");
-
-
+            apiname = parametrizePropertiesOnly ? $"'{apiname}'" : $"parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}')";
 
             var obj = new ResourceTemplate();
             obj.AddName($"parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}')");
-            obj.AddName($"parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}')");
+            obj.AddName(apiname);
             obj.AddName($"'{name}'");
 
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'),'/',parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}'), '/{name}')]";
             obj.type = type;
             obj.properties = restObject.Value<JObject>("properties");
-            
+
             if (APIMInstanceAdded)
             {
                 obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]");
                 //resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]" });
             }
-            obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_{servicename}_name'),parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}'))]");
+            obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_{servicename}_name'),{apiname})]");
 
             return obj;
         }
@@ -689,6 +688,106 @@ namespace APIManagementTemplate.Models
             resource["dependsOn"] = dependsOn;
             return resource;
             //this.resources.Add(resource);
+        }
+        public JObject CreateServiceResource(JObject restObject, string resourceType, bool addResource)
+        {
+            var obj = new ResourceTemplate
+            {
+                comments = "Generated for resource " + restObject.Value<string>("id"),
+                type = resourceType
+            };
+            var rid = new AzureResourceId(restObject.Value<string>("id"));
+            var servicename = rid.ValueAfter("service");
+            obj.AddName($"parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}')");
+            var name= restObject.Value<string>("name");
+            var resourceTypeShort = GetResourceTypeShort(resourceType);
+            name = parametrizePropertiesOnly ? $"'{name}'" : $"parameters('{AddParameter($"{resourceTypeShort}_{name}_name", "string", name)}')";
+            obj.AddName(name);
+            var resource = JObject.FromObject(obj);
+            resource["properties"] = restObject["properties"];
+            var dependsOn = new JArray();
+            if (APIMInstanceAdded)
+            {
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]");
+            }
+            resource["dependsOn"] = dependsOn;
+            if (addResource)
+            {
+                if(resources.All(x => x.Value<string>("name") != resource.Value<string>("name")))
+                    resources.Add(resource);
+            }
+                
+            return resource;
+        }
+
+        private string GetResourceTypeShort(string resourceType)
+        {
+            var split = resourceType.Split('/');
+            var type = split[split.Length - 1];
+            if (type.EndsWith("s"))
+                return type.Substring(0, type.Length - 1);
+            return type;
+        }
+
+        public JObject CreateCertificate(JObject restObject, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/certificates", addResource);
+            var certificatename = new AzureResourceId(restObject.Value<string>("id")).ValueAfter("certificates");
+            var properties = new
+            {
+                data = WrapParameterName(AddParameter($"certificate_{certificatename}_data", "securestring", String.Empty)),
+                password = WrapParameterName(AddParameter($"certificate_{certificatename}_password", "securestring", String.Empty))
+            };
+            resource["properties"] = JObject.FromObject(properties);
+            return resource;
+        }
+
+        public JObject CreateLogger(JObject restObject, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/loggers", addResource);
+            var loggerName = new AzureResourceId(restObject.Value<string>("id")).ValueAfter("loggers");
+            var credentials = resource["properties"]?["credentials"];
+            if (credentials != null)
+            {
+                if (credentials.Value<string>("connectionString") != null)
+                {
+                    credentials["connectionString"] = WrapParameterName(AddParameter($"logger_{loggerName}_connectionString", "securestring", String.Empty));
+                }
+                if (credentials.Value<string>("name") != null)
+                {
+                    credentials["name"] = WrapParameterName(AddParameter($"logger_{loggerName}_credentialName", "string", GetDefaultValue(resource, "credentials", "name")));
+                }
+            }
+            return resource;
+        }
+
+        public JObject CreateOpenIDConnectProvider(JObject restObject, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/openidConnectProviders", addResource);
+            var providerName = new AzureResourceId(restObject.Value<string>("id")).ValueAfter("openidConnectProviders");
+            resource["properties"]["displayName"] = WrapParameterName(AddParameter($"openidConnectProvider_{providerName}_displayname", "string", GetDefaultValue(resource, "displayName")));
+            resource["properties"]["metadataEndpoint"] = WrapParameterName(AddParameter($"openidConnectProvider_{providerName}_metadataEndpoint", "string", GetDefaultValue(resource, "metadataEndpoint")));
+            resource["properties"]["clientId"] = WrapParameterName(AddParameter($"openidConnectProvider_{providerName}_clientId", "string", GetDefaultValue(resource, "clientId")));
+            resource["properties"]["clientSecret"] = WrapParameterName(AddParameter($"openidConnectProvider_{providerName}_clientSecret", "securestring", String.Empty));
+            return resource;
+        }
+
+        private static string GetDefaultValue(JObject resource, params string[] names)
+        {
+            var prop = resource["properties"];
+            foreach (var name in names)
+            {
+                prop = prop[name];
+                if (prop == null)
+                    return string.Empty;
+            }
+            return prop.Value<string>()??String.Empty;
+        }
+
+        public JObject CreateBackend(JObject restObject)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/backends", false);
+            return resource;
         }
 
         public void RemoveResources_BuiltInGroups()

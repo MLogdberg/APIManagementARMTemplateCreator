@@ -1,0 +1,121 @@
+{
+    "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/tfs/operations/Customer_GetCustomerInfo",
+    "type": "Microsoft.ApiManagement/service/apis/operations",
+    "name": "Customer_GetCustomerInfo",
+    "properties": {
+        "displayName": "Customer_GetCustomerInfo",
+        "method": "POST",
+        "urlTemplate": "/api/Customer",
+        "templateParameters": [],
+        "description": null,
+        "request": {
+            "queryParameters": [],
+            "headers": [],
+            "representations": [
+                {
+                    "contentType": "application/json",
+                    "sample": "{\r\n  \"NationalIdentityNumber\": \"194008045116\"\r\n}",
+                    "schemaId": "5b7572981142a50298c7f4a6",
+                    "typeName": "GetCustomerRequest"
+                },
+                {
+                    "contentType": "text/json",
+                    "sample": "{\r\n  \"NationalIdentityNumber\": \"194008045116\"\r\n}",
+                    "schemaId": "5b7572981142a50298c7f4a6",
+                    "typeName": "GetCustomerRequest"
+                },
+                {
+                    "contentType": "application/xml",
+                    "sample": "{\r\n  \"NationalIdentityNumber\": \"194008045116\"\r\n}",
+                    "schemaId": "5b7572981142a50298c7f4a6",
+                    "typeName": "GetCustomerRequest"
+                },
+                {
+                    "contentType": "text/xml",
+                    "sample": "{\r\n  \"NationalIdentityNumber\": \"194008045116\"\r\n}",
+                    "schemaId": "5b7572981142a50298c7f4a6",
+                    "typeName": "GetCustomerRequest"
+                },
+                {
+                    "contentType": "application/x-www-form-urlencoded"
+                }
+            ]
+        },
+        "responses": [
+            {
+                "statusCode": 200,
+                "description": "Information was found",
+                "representations": [
+                    {
+                        "contentType": "application/json",
+                        "schemaId": "5b7572981142a50298c7f4a6",
+                        "typeName": "Customer"
+                    },
+                    {
+                        "contentType": "text/json",
+                        "schemaId": "5b7572981142a50298c7f4a6",
+                        "typeName": "Customer"
+                    },
+                    {
+                        "contentType": "application/xml",
+                        "schemaId": "5b7572981142a50298c7f4a6",
+                        "typeName": "Customer"
+                    },
+                    {
+                        "contentType": "text/xml",
+                        "schemaId": "5b7572981142a50298c7f4a6",
+                        "typeName": "Customer"
+                    }
+                ],
+                "headers": []
+            },
+            {
+                "statusCode": 400,
+                "description": "There is an error with the request",
+                "representations": [
+                    {
+                        "contentType": "application/json",
+                        "schemaId": "5b7572981142a50298c7f4a6",
+                        "typeName": "ErrorResponse"
+                    },
+                    {
+                        "contentType": "text/json",
+                        "schemaId": "5b7572981142a50298c7f4a6",
+                        "typeName": "ErrorResponse"
+                    },
+                    {
+                        "contentType": "application/xml",
+                        "schemaId": "5b7572981142a50298c7f4a6",
+                        "typeName": "ErrorResponse"
+                    },
+                    {
+                        "contentType": "text/xml",
+                        "schemaId": "5b7572981142a50298c7f4a6",
+                        "typeName": "ErrorResponse"
+                    }
+                ],
+                "headers": []
+            },
+            {
+                "statusCode": 401,
+                "description": "Incorrect API-key",
+                "representations": [
+                    {
+                        "contentType": "application/json"
+                    },
+                    {
+                        "contentType": "text/json"
+                    },
+                    {
+                        "contentType": "application/xml"
+                    },
+                    {
+                        "contentType": "text/xml"
+                    }
+                ],
+                "headers": []
+            }
+        ],
+        "policies": null
+    }
+}

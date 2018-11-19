@@ -59,6 +59,7 @@
     <Compile Include="AzureResourceIdTests.cs" />
     <Compile Include="DeploymentTemplateTests.cs" />
     <Compile Include="FunctionAppMixedWithLogicAppTests.cs" />
+    <Compile Include="TemplatesGeneratorTestsWithSeparatePolicyFileAsFalse.cs" />
     <Compile Include="TemplatesGeneratorTests.cs" />
     <Compile Include="WithoutApiVersionSetIdTests.cs" />
     <Compile Include="FunctionAppUneditedTests.cs" />
@@ -227,6 +228,14 @@
     <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-products-57cd81afe568130059060001-policies.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-policies.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-properties.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-loggers.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-operations-Customer_GetCustomerInfo.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-operations-Customer_GetCustomerInfo-policies.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-backends.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-backends-myfunctions.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\sites-myfunctions.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-certificates.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-openidConnectProviders.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />
