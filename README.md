@@ -41,6 +41,7 @@ Example when user is connected to multitenants:
 | ExportProducts | Flag inidicating if Products should be exported, default true | false
 | Token | An AAD Token to access the resources - should not include `Bearer`, only the token | false |
 | ParametrizePropertiesOnly | If parameters only should be created for properties such as names of apim services or logic apps and not names of groups, apis or products | false |
+| ReplaceSetBackendServiceBaseUrlWithProperty | If the base-url of <set-backend-service> with should be replaced with a property instead of a parameter. If this is false you will not be able to set SeparatePolicyFile=true for Write-APIManagementTemplates when you have set-backend-service with base-url-attribute in a policy | false |
 | DebugOutPutFolder | If set, result from rest interface will be saved to this folder | false |
 | ClaimsDump | A dump of claims piped in from `armclient` - should not be manually set | false |
 

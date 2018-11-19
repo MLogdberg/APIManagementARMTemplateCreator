@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using APIManagementTemplate.Models;
@@ -9,7 +10,6 @@ namespace APIManagementTemplate.Test
 {
     //TODO: Add support for Diagnostics (on service and api)
     //TODO: Support API standalone when generating master.template.json
-    //TODO: Support policy in separate file
 
     [TestClass]
     public class WithoutApiVersionSetIdTests
@@ -23,6 +23,10 @@ namespace APIManagementTemplate.Test
         private const string SchemaResourceType = "Microsoft.ApiManagement/service/apis/schemas";
         private const string BackendResourceType = "Microsoft.ApiManagement/service/backends";
         private const string OpenIdConnectProviderResourceType = "Microsoft.ApiManagement/service/openidConnectProviders";
+        private const string CertificateResourceType = "Microsoft.ApiManagement/service/certificates";
+        private const string OperationResourceType = "Microsoft.ApiManagement/service/apis/operations";
+        private const string OperationPolicyResourceType = "Microsoft.ApiManagement/service/apis/operations/policies";
+        private const string ApiPolicyResourceType = "Microsoft.ApiManagement/service/apis/policies";
 
         private IResourceCollector collector;
 
@@ -35,12 +39,12 @@ namespace APIManagementTemplate.Test
 
         private JObject _template = null;
 
-        private JObject GetTemplate(bool exportProducts = false, bool parametrizePropertiesOnly = true)
+        private JObject GetTemplate(bool exportProducts = false, bool parametrizePropertiesOnly = true, bool replaceSetBackendServiceBaseUrlAsProperty = false)
         {
             if (this._template != null)
                 return this._template;
             var generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest",
-                "maloapimtestclean", false, exportProducts, true, parametrizePropertiesOnly, this.collector);
+                "maloapimtestclean", false, exportProducts, true, parametrizePropertiesOnly, this.collector, replaceSetBackendServiceBaseUrlAsProperty);
             this._template = generator.GenerateTemplate().GetAwaiter().GetResult();
             return this._template;
         }
@@ -76,7 +80,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestContainsCertificate()
         {
-            JToken certificate = GetResourceFromTemplate("Microsoft.ApiManagement/service/certificates", true);
+            JToken certificate = GetResourceFromTemplate(CertificateResourceType, true);
             Assert.IsNotNull(certificate);
 
             var properties = certificate["properties"];
@@ -149,6 +153,42 @@ namespace APIManagementTemplate.Test
 
             var name = policy.Value<string>("name");
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', 'unlimited', '/', 'policy')]", name);
+        }
+
+        [TestMethod]
+        public void TestApiContainsPolicyReplacedSetBaseUrl()
+        {
+            var template = GetTemplate();
+            var apiPolicies = template.SelectTokens($"$..resources[?(@.type=='{ApiPolicyResourceType}')]");
+            var policy = apiPolicies.FirstOrDefault();
+            Assert.IsNotNull(policy);
+            var policyContent = policy["properties"]?.Value<string>("policyContent");
+
+            Assert.IsTrue(policyContent.StartsWith("[Concat('"));
+
+        }
+
+        [TestMethod]
+        public void TestApiContainsPolicyReplacedSetBaseUrlAsPropertyWhenReplaceSetBaseUrlAsPropertyIsTrue()
+        {
+            var template = GetTemplate(replaceSetBackendServiceBaseUrlAsProperty: true);
+            var apiPolicies = template.SelectTokens($"$..resources[?(@.type=='{ApiPolicyResourceType}')]");
+            var policy = apiPolicies.FirstOrDefault();
+            Assert.IsNotNull(policy);
+            var policyContent = policy["properties"]?.Value<string>("policyContent");
+
+            Assert.IsFalse(policyContent.StartsWith("[Concat('"));
+            Assert.IsTrue(policyContent.Contains("{{api_tfs_backendurl}}"));
+
+        }
+
+        [TestMethod]
+        public void TestApiContainsPropertyWhenReplaceSetBaseUrlAsPropertyIsTrue()
+        {
+            var template = GetTemplate(replaceSetBackendServiceBaseUrlAsProperty: true);
+            var property = template.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/properties')]")
+                .SingleOrDefault(x => x.Value<string>("name").Contains("api_tfs_backendurl"));
+            Assert.IsNotNull(property);
         }
 
         [TestMethod]

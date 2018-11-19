@@ -29,9 +29,10 @@ namespace APIManagementTemplate
         private bool exportGroups;
         private bool exportProducts;
         private bool parametrizePropertiesOnly;
+        private bool replaceSetBackendServiceBaseUrlAsProperty;
 
         IResourceCollector resourceCollector;
-        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector)
+        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -41,6 +42,7 @@ namespace APIManagementTemplate
             this.exportProducts = exportProducts;
             this.exportPIManagementInstance = exportPIManagementInstance;
             this.parametrizePropertiesOnly = parametrizePropertiesOnly;
+            this.replaceSetBackendServiceBaseUrlAsProperty = replaceSetBackendServiceBaseUrlAsProperty;
             this.resourceCollector = resourceCollector;
         }
 
@@ -162,8 +164,8 @@ namespace APIManagementTemplate
                     //Handle SOAP Backend
                     var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>("policyContent"));
                     await AddCertificate(policy, template);
-                    var policyTemplateResource = template.CreatePolicy(policy);
                     PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
+                    var policyTemplateResource = template.CreatePolicy(policy);
                     this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"), null);
                     apiTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
 
@@ -496,15 +498,49 @@ namespace APIManagementTemplate
             if (backendService != null)
             {
 
-                if (backendService.Attribute("base-url") != null)
+                if (backendService.Attribute("base-url") != null && !backendService.Attribute("base-url").Value.Contains("{{"))
                 {
-                    var baseUrl = backendService.Attribute("base-url");
-                    var paramname = template.AddParameter($"api_{apiname}_backendurl", "string", backendService.Attribute("base-url").Value);
-                    policy["properties"]["policyContent"] = CreatePolicyContentReplaceBaseUrl(backendService, policyContent, $"parameters('{paramname}')");
+                    string baseUrl = backendService.Attribute("base-url").Value;
+                    var paramname = template.AddParameter($"api_{apiname}_backendurl", "string", baseUrl);
+                    if (replaceSetBackendServiceBaseUrlAsProperty)
+                    {
+                        policy["properties"]["policyContent"] = CreatePolicyContentReplaceBaseUrlWithProperty(backendService, policyContent, paramname);
+                        string id = GetIdFromPolicy(policy);
+                        AzureResourceId resourceId = new AzureResourceId(id);
+                        var lookFor = $"/service/{resourceId.ValueAfter("service")}";
+                        var index = id.IndexOf(lookFor);
+                        var serviceId = id.Substring(0, index + lookFor.Length);
+                        var property = new
+                        {
+                            id = $"{serviceId}/properties/{paramname}",
+                            type = "Microsoft.ApiManagement/service/properties",
+                            name= paramname,
+                            properties = new 
+                            {
+                                displayName = paramname,
+                                value = $"[parameters('{paramname}')]",
+                                secret = false
+                            }
+                        };
+                        template.AddProperty(JObject.FromObject(property));
+                    }
+                    else
+                    {
+                        policy["properties"]["policyContent"] = CreatePolicyContentReplaceBaseUrl(backendService, policyContent, $"parameters('{paramname}')");
+                    }
                 }
 
             }
 
+        }
+
+        private static string GetIdFromPolicy(JObject policy)
+        {
+            var id = policy.Value<string>("id");
+            if (id != null)
+                return id;
+            var comment = policy.Value<string>("comments");
+            return comment.Substring(comment.IndexOf("/subscriptions/", StringComparison.InvariantCulture));
         }
 
 
@@ -515,6 +551,15 @@ namespace APIManagementTemplate
             {
                 int index = policyContent.IndexOf(baseUrl.Value);
                 return "[Concat('" + policyContent.Substring(0, index).Replace("'", "''") + "'," + replaceText + ",'" + policyContent.Substring(index + baseUrl.Value.Length).Replace("'", "''") + "')]";
+            }
+            return policyContent;
+        }
+        private string CreatePolicyContentReplaceBaseUrlWithProperty(XElement backendService, string policyContent, string parameterName)
+        {
+            var baseUrl = backendService.Attribute("base-url");
+            if (baseUrl != null && policyContent.IndexOf(baseUrl.Value) > -1)
+            {
+                return policyContent.Replace(baseUrl.Value, $"{{{{{parameterName}}}}}");
             }
             return policyContent;
         }

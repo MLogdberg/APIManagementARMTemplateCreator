@@ -405,6 +405,7 @@ namespace APIManagementTemplate
             var policy = product["resources"].FirstOrDefault(x => x.Value<string>("type") == ProductPolicyResourceType);
             if (policy != null)
             {
+                policy["apiVersion"] = "2018-01-01";
                 policy["properties"]["contentFormat"] = "rawxml-link";
                 policy["properties"]["policyContent"] = $"[concat(parameters('repoBaseUrl'), '/product-{productId}/product-{productId}.policy.xml', parameters('TemplatesStorageAccountSASToken'))]";
             }
