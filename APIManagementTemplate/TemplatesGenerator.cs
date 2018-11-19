@@ -74,6 +74,7 @@ namespace APIManagementTemplate
         private const string BackendResourceType = "Microsoft.ApiManagement/service/backends";
         private const string OpenIdConnectProviderResourceType = "Microsoft.ApiManagement/service/openidConnectProviders";
         private const string CertificateResourceType = "Microsoft.ApiManagement/service/certificates";
+        public const string TemplatesStorageAccountSASToken = "_artifactsLocationSasToken";
 
         public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false)
         {
@@ -155,9 +156,9 @@ namespace APIManagementTemplate
                         metadata = new {description = "Base URL of the repository"}
                     });
                 }
-                if (allParameters["TemplatesStorageAccountSASToken"] == null)
+                if (allParameters[TemplatesStorageAccountSASToken] == null)
                 {
-                    allParameters["TemplatesStorageAccountSASToken"] = JToken.FromObject(new
+                    allParameters[TemplatesStorageAccountSASToken] = JToken.FromObject(new
                     {
                         type = "string",
                         defaultValue = String.Empty
@@ -178,7 +179,7 @@ namespace APIManagementTemplate
                     mode = "Incremental",
                     templateLink = new
                     {
-                        uri = $"[concat(parameters('repoBaseUrl'), '{template2.GetUnixPath()}', parameters('TemplatesStorageAccountSASToken'))]",
+                        uri = $"[concat(parameters('repoBaseUrl'), '{template2.GetUnixPath()}', parameters('{TemplatesStorageAccountSASToken}'))]",
                         contentVersion = "1.0.0.0"
                     },
                     parameters = GenerateDeploymentParameters(template2)
@@ -392,7 +393,7 @@ namespace APIManagementTemplate
                     type = "string",
                     metadata = new {description = "Base URL of the repository"}
                 });
-                parameters["TemplatesStorageAccountSASToken"] = JToken.FromObject(new
+                parameters[TemplatesStorageAccountSASToken] = JToken.FromObject(new
                 {
                     type = "string",
                     defaultValue = String.Empty
@@ -407,7 +408,7 @@ namespace APIManagementTemplate
             {
                 policy["apiVersion"] = "2018-01-01";
                 policy["properties"]["contentFormat"] = "rawxml-link";
-                policy["properties"]["policyContent"] = $"[concat(parameters('repoBaseUrl'), '/product-{productId}/product-{productId}.policy.xml', parameters('TemplatesStorageAccountSASToken'))]";
+                policy["properties"]["policyContent"] = $"[concat(parameters('repoBaseUrl'), '/product-{productId}/product-{productId}.policy.xml', parameters('{TemplatesStorageAccountSASToken}'))]";
             }
         }
         private void ReplaceApiOperationPolictPolicyWithFileLink(JToken api, JObject parsedTemplate)
@@ -442,7 +443,7 @@ namespace APIManagementTemplate
             if (directory == "/")
                 directory = String.Empty;
             policy["properties"]["policyContent"] =
-                $"[concat(parameters('repoBaseUrl'), '{directory}/{fileInfo.FileName}', parameters('TemplatesStorageAccountSASToken'))]";
+                $"[concat(parameters('repoBaseUrl'), '{directory}/{fileInfo.FileName}', parameters('{TemplatesStorageAccountSASToken}'))]";
         }
 
         private static GeneratedTemplate GenerateTemplate(JObject parsedTemplate, string filename, string directory,

@@ -165,7 +165,7 @@ namespace APIManagementTemplate.Test
             JToken properties = policy["properties"];
             Assert.AreEqual("rawxml-link", properties.Value<string>("contentFormat"));
             Assert.AreEqual(
-                $"[concat(parameters('repoBaseUrl'), '{path}', parameters('TemplatesStorageAccountSASToken'))]",
+                $"[concat(parameters('repoBaseUrl'), '{path}', parameters('{TemplatesGenerator.TemplatesStorageAccountSASToken}'))]",
                 properties.Value<string>("policyContent"));
         }
 
@@ -185,7 +185,7 @@ namespace APIManagementTemplate.Test
         public void TestResultContainsTemplatesStorageAccountSASTokenParameterForProduct()
         {
             var template = _generatedTemplates.Single(x => x.FileName == ProductStarterFilename);
-            var parameter = template.Content["parameters"]["TemplatesStorageAccountSASToken"];
+            var parameter = template.Content["parameters"][TemplatesGenerator.TemplatesStorageAccountSASToken];
             Assert.IsNotNull(parameter);
             Assert.AreEqual("string", parameter.Value<string>("type"));
             Assert.AreEqual(String.Empty, parameter.Value<string>("defaultValue"));
@@ -417,7 +417,7 @@ namespace APIManagementTemplate.Test
         public void TestResultContainsMasterTemplateParameter__artifactsLocationSasToken()
         {
             var template = GetMasterTemplate();
-            var repoBaseUrl = template.Content["parameters"]["TemplatesStorageAccountSASToken"];
+            var repoBaseUrl = template.Content["parameters"][TemplatesGenerator.TemplatesStorageAccountSASToken];
             Assert.IsNotNull(repoBaseUrl);
         }
 
@@ -448,7 +448,7 @@ namespace APIManagementTemplate.Test
 
             var uri = deployments.First()["properties"]["templateLink"].Value<string>("uri");
             Assert.AreEqual(
-                $"[concat(parameters('repoBaseUrl'), '{path}/{fileName}', parameters('TemplatesStorageAccountSASToken'))]", uri);
+                $"[concat(parameters('repoBaseUrl'), '{path}/{fileName}', parameters('{TemplatesGenerator.TemplatesStorageAccountSASToken}'))]", uri);
 
             var contentVersion = deployments.First()["properties"]["templateLink"].Value<string>("contentVersion");
             Assert.AreEqual("1.0.0.0", contentVersion);

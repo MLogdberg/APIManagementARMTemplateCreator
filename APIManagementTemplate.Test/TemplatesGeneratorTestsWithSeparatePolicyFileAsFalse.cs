@@ -90,7 +90,7 @@ namespace APIManagementTemplate.Test
         public void TestResultContainsMasterTemplateParameter__artifactsLocationSasToken()
         {
             var template = GetMasterTemplate();
-            var repoBaseUrl = template.Content["parameters"]["TemplatesStorageAccountSASToken"];
+            var repoBaseUrl = template.Content["parameters"][TemplatesGenerator.TemplatesStorageAccountSASToken];
             Assert.IsNotNull(repoBaseUrl);
         }
       
