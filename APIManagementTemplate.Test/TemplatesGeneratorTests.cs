@@ -21,6 +21,7 @@ namespace APIManagementTemplate.Test
         private const string ProductStarterFilename = "product-starter.template.json";
         private const string MasterTemplateFilename = "master.template.json";
         private const string ApiEchoApiDirectory = "api-Echo-API";
+        private const string DeploymentResourceType = "Microsoft.Resources/deployments";
         private TemplatesGenerator _templatesGenerator;
         private string _sourceTemplate;
         private IList<GeneratedTemplate> _generatedTemplates;
@@ -30,7 +31,7 @@ namespace APIManagementTemplate.Test
         {
             _templatesGenerator = new TemplatesGenerator();
             _sourceTemplate = Utils.GetEmbededFileContent("APIManagementTemplate.Test.SamplesTemplate.template.json");
-            _generatedTemplates = _templatesGenerator.Generate(_sourceTemplate, true, true);
+            _generatedTemplates = _templatesGenerator.Generate(_sourceTemplate, true, true, true);
         }
 
         [TestMethod]
@@ -42,7 +43,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestResultContainsCorrectNumberOfItems()
         {
-            Assert.AreEqual(20, _generatedTemplates.Count);
+            Assert.AreEqual(23, _generatedTemplates.Count);
         }
         [TestMethod]
         public void TestResultContains_httpbinv1()
@@ -235,6 +236,42 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
+        public void TestResultContainsAPIMasterFileFor_Httpbin()
+        {
+            var api = _generatedTemplates.Single(x => x.Directory == "api-Versioned-HTTP-bin-API" && x.FileName == "api-Versioned-HTTP-bin-API.master.template.json");
+            
+            var deployments = api.Content.SelectTokens("$.resources[*]");
+            Assert.AreEqual(3, deployments.Count());
+
+        }
+
+        [TestMethod]
+        public void TestResultContainsMasterParametersFile()
+        {
+            var parameterTemplate = _generatedTemplates.Single(x => x.Directory == String.Empty && x.FileName == "master.parameters.json");
+            var parameters = parameterTemplate.Content.SelectToken("$.parameters");
+            Assert.AreNotEqual(0, parameters.Count());
+
+            var serviceNameParameter = parameters.Cast<JProperty>().FirstOrDefault(x => x.Name == "service_PreDemoTest_name");
+
+            Assert.IsNotNull(serviceNameParameter);
+            Assert.AreEqual("PreDemoTest", serviceNameParameter.Value["value"].Value<string>());
+        }
+
+        [TestMethod]
+        public void TestResultContainsApiMasterParametersFile_ForHttpBin()
+        {
+            var parameterTemplate = _generatedTemplates.Single(x => x.Directory == "api-Versioned-HTTP-bin-API" && x.FileName == "api-Versioned-HTTP-bin-API.master.parameters.json");
+            var parameters = parameterTemplate.Content.SelectToken("$.parameters");
+            Assert.AreNotEqual(0, parameters.Count());
+
+            var serviceNameParameter = parameters.Cast<JProperty>().FirstOrDefault(x => x.Name == "service_PreDemoTest_name");
+
+            Assert.IsNotNull(serviceNameParameter);
+            Assert.AreEqual("PreDemoTest", serviceNameParameter.Value["value"].Value<string>());
+        }
+
+        [TestMethod]
         public void TestResultContains_Service()
         {
             Assert.IsTrue(_generatedTemplates.Any(x => x.FileName == ServiceFilename && x.Directory == String.Empty));
@@ -373,6 +410,16 @@ namespace APIManagementTemplate.Test
             Assert.IsNotNull(masterTemplate);
         }
 
+        [TestMethod]
+        public void TestResultContainsMasterTemplateWithoutAPIs()
+        {
+            var masterTemplate = GetMasterTemplate();
+            Assert.IsNotNull(masterTemplate);
+            var apis = masterTemplate.Content.SelectTokens($"$..resources[?(@.type=='{DeploymentResourceType}')]")
+                .Where(x => x.Value<string>("name").StartsWith("api-"));
+            Assert.AreEqual(0, apis.Count());
+        }
+
         private GeneratedTemplate GetMasterTemplate()
         {
             return _generatedTemplates.FirstOrDefault(x => x.FileName == MasterTemplateFilename && x.Directory == String.Empty);
@@ -385,24 +432,12 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
-        public void TestResultContainsMasterTemplateJsonWith_ApiCalculator()
-        {
-            AssertMasterTemplateDeployment($"/{ApiEchoApiDirectory}", EchoFilename);
-        }
-
-        [TestMethod]
         public void TestResultContainsMasterTemplateJsonWith_UnlimitedProduct()
         {
             var deployment = AssertMasterTemplateDeployment("/product-unlimited","product-unlimited.template.json", false);
             var dependsOn = deployment["dependsOn"];
             Assert.IsNotNull(dependsOn);
             Assert.AreEqual(1, dependsOn.Count());
-        }
-
-        [TestMethod]
-        public void TestResultContainsMasterTemplateJsonWith_HttpBinV2()
-        {
-            AssertMasterTemplateDeployment("/api-Versioned-HTTP-bin-API/v2","api-Versioned-HTTP-bin-API.v2.template.json");
         }
 
         [TestMethod]

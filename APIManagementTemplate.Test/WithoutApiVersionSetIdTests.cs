@@ -9,7 +9,6 @@ using System.Linq;
 namespace APIManagementTemplate.Test
 {
     //TODO: Add support for Diagnostics (on service and api)
-    //TODO: Support API standalone when generating master.template.json
 
     [TestClass]
     public class WithoutApiVersionSetIdTests
@@ -39,20 +38,20 @@ namespace APIManagementTemplate.Test
 
         private JObject _template = null;
 
-        private JObject GetTemplate(bool exportProducts = false, bool parametrizePropertiesOnly = true, bool replaceSetBackendServiceBaseUrlAsProperty = false)
+        private JObject GetTemplate(bool exportProducts = false, bool parametrizePropertiesOnly = true, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false)
         {
             if (this._template != null)
                 return this._template;
             var generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest",
-                "maloapimtestclean", false, exportProducts, true, parametrizePropertiesOnly, this.collector, replaceSetBackendServiceBaseUrlAsProperty);
+                "maloapimtestclean", false, exportProducts, true, parametrizePropertiesOnly, this.collector, replaceSetBackendServiceBaseUrlAsProperty, fixedServiceNameParameter);
             this._template = generator.GenerateTemplate().GetAwaiter().GetResult();
             return this._template;
         }
 
 
-        private JToken GetResourceFromTemplate(string resourceType, bool parametrizePropertiesOnly = true)
+        private JToken GetResourceFromTemplate(string resourceType, bool parametrizePropertiesOnly = true, bool fixedServiceNameParameter = false)
         {
-            var template = GetTemplate(true, parametrizePropertiesOnly);
+            var template = GetTemplate(true, parametrizePropertiesOnly, fixedServiceNameParameter: fixedServiceNameParameter);
             return template["resources"].FirstOrDefault(rr => rr["type"].Value<string>() == resourceType);
         }
 
@@ -95,6 +94,13 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual("[parameters('certificate_MyCertificate_password')]", password.Value<string>());
 
             Assert.AreEqual(2, properties.Children().Count());
+        }
+
+        [TestMethod]
+        public void TestServiceNameParameterIsApimServiceNameWhenUseFixedServiceNameParameter()
+        {
+            var service = GetResourceFromTemplate(ServiceResourceType, fixedServiceNameParameter: true);
+            Assert.AreEqual("[parameters('apimServiceName')]", service.Value<string>("name"));
         }
 
         [TestMethod]

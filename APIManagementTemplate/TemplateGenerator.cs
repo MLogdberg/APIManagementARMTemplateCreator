@@ -30,9 +30,10 @@ namespace APIManagementTemplate
         private bool exportProducts;
         private bool parametrizePropertiesOnly;
         private bool replaceSetBackendServiceBaseUrlAsProperty;
+        private bool fixedServiceNameParameter;
 
         IResourceCollector resourceCollector;
-        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false)
+        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -44,6 +45,7 @@ namespace APIManagementTemplate
             this.parametrizePropertiesOnly = parametrizePropertiesOnly;
             this.replaceSetBackendServiceBaseUrlAsProperty = replaceSetBackendServiceBaseUrlAsProperty;
             this.resourceCollector = resourceCollector;
+            this.fixedServiceNameParameter = fixedServiceNameParameter;
         }
 
         private string GetAPIMResourceIDString()
@@ -53,7 +55,7 @@ namespace APIManagementTemplate
 
         public async Task<JObject> GenerateTemplate()
         {
-            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly);
+            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly, this.fixedServiceNameParameter);
             if (exportPIManagementInstance)
             {
                 var apim = await resourceCollector.GetResource(GetAPIMResourceIDString());
@@ -148,7 +150,7 @@ namespace APIManagementTemplate
                                 apiTemplateResource["dependsOn"] = new JArray();
 
                             //add dependeOn
-                            apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('service_{servicename}_name'), '{backendInstance.Value<string>("name")}')]");
+                            apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
                         }
                         await AddCertificate(policy, template);
 
@@ -178,7 +180,7 @@ namespace APIManagementTemplate
                             apiTemplateResource["dependsOn"] = new JArray();
 
                         //add dependeOn
-                        apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('service_{servicename}_name'), '{backendInstance.Value<string>("name")}')]");
+                        apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
                     }
 
                     //handle nextlink?
@@ -227,7 +229,7 @@ namespace APIManagementTemplate
                             if (productProperties["apiVersionSetId"] != null)
                             {
                                 var apiVersionSetId = new AzureResourceId(productProperties["apiVersionSetId"].ToString()).ValueAfter("api-version-sets");
-                                productProperties["apiVersionSetId"] = $"[resourceId('Microsoft.ApiManagement/service/api-version-sets', parameters('service_{servicename}_name'), '{apiVersionSetId}')]";
+                                productProperties["apiVersionSetId"] = $"[resourceId('Microsoft.ApiManagement/service/api-version-sets', parameters('{GetServiceName(servicename)}'), '{apiVersionSetId}')]";
                             }
                             productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(productApi));
                         }
@@ -241,7 +243,7 @@ namespace APIManagementTemplate
                                 var groupObject = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/groups/" + group.Value<string>("name"));
                                 template.AddGroup(groupObject);
                                 productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(group));
-                                productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_{servicename}_name'), '{group.Value<string>("name")}')]");
+                                productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/groups', parameters('{GetServiceName(servicename)}'), '{group.Value<string>("name")}')]");
                             }
                         }
                         var policies = await resourceCollector.GetResource(id + "/policies");
@@ -298,6 +300,12 @@ namespace APIManagementTemplate
 
             return JObject.FromObject(template);
 
+        }
+
+        private string GetServiceName(string serviceName)
+        {
+            var template = new DeploymentTemplate(this.parametrizePropertiesOnly, fixedServiceNameParameter);
+            return template.GetServiceName(serviceName);
         }
 
         private async Task AddCertificate(JObject policy, DeploymentTemplate template)

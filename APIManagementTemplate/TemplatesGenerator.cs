@@ -75,8 +75,9 @@ namespace APIManagementTemplate
         private const string OpenIdConnectProviderResourceType = "Microsoft.ApiManagement/service/openidConnectProviders";
         private const string CertificateResourceType = "Microsoft.ApiManagement/service/certificates";
         public const string TemplatesStorageAccountSASToken = "_artifactsLocationSasToken";
+        private const string MasterTemplateJson = "master.template.json";
 
-        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false)
+        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false, bool generateParameterFiles = false)
         {
             JObject parsedTemplate = JObject.Parse(sourceTemplate);
             List<GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate, separatePolicyFile);
@@ -88,9 +89,19 @@ namespace APIManagementTemplate
             templates.Add(GenerateTemplate(parsedTemplate, "groupsUsers.template.json", String.Empty,
                 UserGroupResourceType));
             MoveExternalDependencies(templates);
-            templates.Add(GenerateMasterTemplate(templates.Where(x => x.Type == ContentType.Json).ToList(), parsedTemplate, separatePolicyFile));
+            templates.Add(GenerateMasterTemplate(templates.Where(x => x.Type == ContentType.Json).ToList(), parsedTemplate, separatePolicyFile, apiStandalone));
+            templates.AddRange(GenerateAPIMasterTemplate(templates, parsedTemplate, separatePolicyFile, apiStandalone));
+            if (generateParameterFiles)
+            {
+                templates.Add(GenerateParameterFile(templates.FirstOrDefault(x => x.FileName == MasterTemplateJson && x.Directory == String.Empty)));
+                foreach (GeneratedTemplate template in templates.Where(x => x.FileName.EndsWith(".master.template.json")).ToArray())
+                {
+                    templates.Add(GenerateParameterFile(template));
+                }
+            }
             return templates;
         }
+
 
         private void MoveExternalDependencies(List<GeneratedTemplate> templates)
         {
@@ -125,11 +136,45 @@ namespace APIManagementTemplate
             return name.Contains(part) || (part.StartsWith("'") && name.Contains($"'/{part.Split('\'')[1]}'"));
         }
 
-        private GeneratedTemplate GenerateMasterTemplate(List<GeneratedTemplate> generatedTemplates, JObject parsedTemplate, bool separatePolicyFile)
+        private IEnumerable<GeneratedTemplate> GenerateAPIMasterTemplate(List<GeneratedTemplate> templates, JObject parsedTemplate, bool separatePolicyFile, bool apiStandalone)
         {
-            var generatedTemplate = new GeneratedTemplate { Directory = String.Empty, FileName = "master.template.json" };
-            DeploymentTemplate template = new DeploymentTemplate(true);
-            foreach (GeneratedTemplate template2 in generatedTemplates)
+            var masterApis = new List<GeneratedTemplate>();
+            foreach (var versionSet in templates.Where(x => x.FileName.EndsWith(".version-set.template.json")))
+            {
+                masterApis.Add(GeneratedMasterTemplate2(parsedTemplate, separatePolicyFile,
+                    $"{versionSet.Directory}.master.template.json", versionSet.Directory,
+                    templates.Where(x => x.Directory.StartsWith(versionSet.Directory) && x.Type == ContentType.Json), templates.Where(x => x.Type == ContentType.Json).ToList()));
+            }
+            return masterApis;
+        }
+
+        private GeneratedTemplate GenerateParameterFile(GeneratedTemplate masterTemplate)
+        {
+            var generatedTemplate = new GeneratedTemplate { Directory = masterTemplate.Directory, FileName = masterTemplate.FileName.Replace(".template.json", ".parameters.json") };
+            DeploymentParameters template = new DeploymentParameters();
+            var parameters = masterTemplate.Content["parameters"];
+            foreach (JProperty parameter in parameters.Cast<JProperty>())
+            {
+                string name = parameter.Name;
+                string type = parameter.Value["type"].Value<string>();
+                string value = parameter.Value["defaultValue"]?.Value<string>()?? String.Empty;
+                template.AddParameter(name, value);
+            }
+            generatedTemplate.Content = JObject.FromObject(template);
+            return generatedTemplate;
+        }
+
+        private GeneratedTemplate GenerateMasterTemplate(List<GeneratedTemplate> generatedTemplates, JObject parsedTemplate, bool separatePolicyFile, bool apiStandalone)
+        {
+            return GeneratedMasterTemplate2(parsedTemplate, separatePolicyFile, MasterTemplateJson, String.Empty, generatedTemplates.Where(x =>
+                !apiStandalone || !x.Directory.StartsWith("api-")), generatedTemplates);
+        }
+
+        private GeneratedTemplate GeneratedMasterTemplate2(JObject parsedTemplate, bool separatePolicyFile, string fileName, string directory, IEnumerable<GeneratedTemplate> filteredTemplates, List<GeneratedTemplate> generatedTemplates)
+        {
+            var generatedTemplate = new GeneratedTemplate {Directory = directory, FileName = fileName};
+            DeploymentTemplate template = new DeploymentTemplate(true, true);
+            foreach (GeneratedTemplate template2 in filteredTemplates)
             {
                 template.resources.Add(GenerateDeployment(template2, generatedTemplates));
             }
@@ -229,7 +274,7 @@ namespace APIManagementTemplate
                 ServiceResourceType,OperationalInsightsWorkspaceResourceType, AppInsightsResourceType, StorageAccountResourceType
             };
             var generatedTemplate = new GeneratedTemplate { FileName = "service.template.json", Directory = String.Empty };
-            DeploymentTemplate template = new DeploymentTemplate(true);
+            DeploymentTemplate template = new DeploymentTemplate(true, true);
             var resources = parsedTemplate.SelectTokens("$.resources[*]")
                 .Where(r => wantedResources.Any(w => w == r.Value<string>("type")));
             foreach (JToken resource in resources)
@@ -371,7 +416,7 @@ namespace APIManagementTemplate
                 Directory = $"product-{productId}",
                 FileName = $"product-{productId}.template.json"
             };
-            DeploymentTemplate template = new DeploymentTemplate(true);
+            DeploymentTemplate template = new DeploymentTemplate(true, true);
             if (separatePolicyFile)
             {
                 ReplaceProductPolicyWithFileLink(product, productId);
@@ -450,7 +495,7 @@ namespace APIManagementTemplate
             params string[] wantedResources)
         {
             var generatedTemplate = new GeneratedTemplate {Directory = directory, FileName = filename};
-            DeploymentTemplate template = new DeploymentTemplate(true);
+            DeploymentTemplate template = new DeploymentTemplate(true, true);
             var resources = parsedTemplate.SelectTokens("$.resources[*]")
                 .Where(r => wantedResources.Any(w => w == r.Value<string>("type")));
             foreach (JToken resource in resources)
@@ -465,7 +510,7 @@ namespace APIManagementTemplate
         private GeneratedTemplate GenerateVersionSet(JToken api, JObject parsedTemplate, bool apiStandalone)
         {
             GeneratedTemplate generatedTemplate = new GeneratedTemplate();
-            DeploymentTemplate template = new DeploymentTemplate(true);
+            DeploymentTemplate template = new DeploymentTemplate(true, true);
             SetFilenameAndDirectoryForVersionSet(api, generatedTemplate, parsedTemplate);
             var versionSetId = GetParameterPart(api["properties"], "apiVersionSetId", -2);
             var versionSet = parsedTemplate
@@ -485,7 +530,7 @@ namespace APIManagementTemplate
         private GeneratedTemplate GenerateAPI(JToken api, JObject parsedTemplate, bool apiStandalone, bool separatePolicyFile)
         {
             GeneratedTemplate generatedTemplate = new GeneratedTemplate();
-            DeploymentTemplate template = new DeploymentTemplate(true);
+            DeploymentTemplate template = new DeploymentTemplate(true, true);
             if (separatePolicyFile)
             {
                 ReplaceApiOperationPolictPolicyWithFileLink(api, parsedTemplate);

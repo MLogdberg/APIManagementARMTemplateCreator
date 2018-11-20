@@ -30,7 +30,7 @@ namespace APIManagementTemplate.Test
         {
             _templatesGenerator = new TemplatesGenerator();
             _sourceTemplate = Utils.GetEmbededFileContent("APIManagementTemplate.Test.SamplesTemplate.template.json");
-            _generatedTemplates = _templatesGenerator.Generate(_sourceTemplate, true, false);
+            _generatedTemplates = _templatesGenerator.Generate(_sourceTemplate, false, false);
         }
 
         [TestMethod]
@@ -109,7 +109,7 @@ namespace APIManagementTemplate.Test
 
             var uri = deployments.First()["properties"]["templateLink"].Value<string>("uri");
             Assert.AreEqual(
-                $"[concat(parameters('repoBaseUrl'), '{path}/{fileName}', parameters('TemplatesStorageAccountSASToken'))]", uri);
+                $"[concat(parameters('repoBaseUrl'), '{path}/{fileName}', parameters('_artifactsLocationSasToken'))]", uri);
 
             var contentVersion = deployments.First()["properties"]["templateLink"].Value<string>("contentVersion");
             Assert.AreEqual("1.0.0.0", contentVersion);
