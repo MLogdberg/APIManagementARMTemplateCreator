@@ -32,5 +32,26 @@ namespace APIManagementTemplate
             }
             return "";
         }
+        public static string GetCertificateThumbPrintIdFromPolicy(string policyContent)
+        {
+            try
+            {
+                var docu = XDocument.Parse(policyContent);
+                var backend = docu.Descendants("authentication-certificate").LastOrDefault();
+                if (backend != null && backend.Attribute("thumbprint") != null)
+                {
+                    XAttribute thumbprint = backend.Attribute("thumbprint");
+                    if (thumbprint == null)
+                    {
+                        return "";
+                    }
+                    return thumbprint.Value;
+                }
+            }
+            catch (Exception e)
+            {
+            }
+            return "";
+        }
     }
 }

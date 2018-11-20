@@ -13,7 +13,10 @@
     ],
     "authenticationSettings": {
       "oAuth2": null,
-      "openid": null
+      "openid": {
+          "openidProviderId": "myOpenIdProvider",
+          "bearerTokenSendingMethods": null
+      }
     },
     "subscriptionKeyParameterNames": {
       "header": "Ocp-Apim-Subscription-Key",

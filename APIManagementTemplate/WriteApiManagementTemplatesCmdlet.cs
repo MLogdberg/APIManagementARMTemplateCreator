@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json.Linq;
 using System.Management.Automation;
@@ -13,23 +14,52 @@ namespace APIManagementTemplate
     [Cmdlet("Write", "APIManagementTemplates", ConfirmImpact = ConfirmImpact.None)]
     public class WriteApiManagementTemplatesCmdlet : PSCmdlet
     {
-        [Parameter(Mandatory = false, HelpMessage = "Piped input from armclient", ValueFromPipeline = true)]
+        [Parameter(Mandatory = false, HelpMessage = "Piped input from Get-APIManagementTemplate", ValueFromPipeline = true)]
         public string ARMTemplate;
 
         [Parameter(Mandatory = false, HelpMessage = "Generate templates for APIs that can be deployed standalone (without the rest of the resources)")]
         public bool ApiStandalone = true;
+
+        [Parameter(Mandatory = false, HelpMessage = "The output directory")]
+        public string OutputDirectory = ".";
+
+        [Parameter(Mandatory = false, HelpMessage = "Policies are written to a separate file")]
+        public bool SeparatePolicyFile = false;
+
+        [Parameter(Mandatory = false, HelpMessage = "If the template already exists in the output directory, it will be merged with the new result.")]
+        public bool MergeTemplates = false;
+
+        [Parameter(Mandatory = false, HelpMessage = "If parameter files should be generated")]
+        public bool GenerateParameterFiles = false;
+
+        [Parameter(Mandatory = false, HelpMessage = "If set, the input template is written to this file ")]
+        public string DebugTemplateFile = "";
+
         protected override void ProcessRecord()
         {
-            var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone);
+            if (!string.IsNullOrEmpty(DebugTemplateFile))
+                File.WriteAllText(DebugTemplateFile, ARMTemplate);
+            var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone, SeparatePolicyFile, GenerateParameterFiles);
             foreach (GeneratedTemplate template in templates)
             {
-                string filename = template.FileName;
+                string filename = $@"{OutputDirectory}\{template.FileName}";
                 if (!String.IsNullOrWhiteSpace(template.Directory))
                 {
-                    System.IO.Directory.CreateDirectory(template.Directory);
-                    filename = $@"{template.Directory}\{template.FileName}";
+                    var directory = $@"{OutputDirectory}\{template.Directory}";
+                    Directory.CreateDirectory(directory);
+                    filename = $@"{directory}\{template.FileName}";
                 }
-                System.IO.File.WriteAllText(filename, JObject.FromObject(template.Content).ToString());
+
+                if (File.Exists(filename) && MergeTemplates && template.Type == ContentType.Json)
+                {
+                    JObject oldTemplate = JObject.Parse(File.ReadAllText(filename));
+                    oldTemplate.Merge(template.Content, new JsonMergeSettings
+                    {
+                        MergeArrayHandling = MergeArrayHandling.Union
+                    });
+                    template.Content = oldTemplate;
+                }
+                File.WriteAllText(filename, template.Type == ContentType.Json ? template.Content.ToString() : template.XmlContent);
             }
         }
     }

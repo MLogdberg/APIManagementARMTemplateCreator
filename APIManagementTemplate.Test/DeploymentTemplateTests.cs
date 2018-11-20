@@ -54,10 +54,32 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestSchema()
         {
-            var document = Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.Schema.simpleschema.json");
-            var template = new DeploymentTemplate();
-            var actual = template.CreateAPISchema(JObject.Parse(document));
+            ResourceTemplate actual = GetSchema(false);
             Assert.IsNotNull(actual);
+        }
+
+        [TestMethod]
+        public void TestSchemaDependsOnWhenParametrizePropertiesOnlyIsFalse()
+        {
+            ResourceTemplate actual = GetSchema(false);
+            Assert.AreEqual(1, actual.dependsOn.Count);
+            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_dev_name'),parameters('api_vita-gatan_name'))]", actual.dependsOn[0].Value<string>());
+        }
+
+        [TestMethod]
+        public void TestSchemaDependsOnWhenParametrizePropertiesOnlyIsTrue()
+        {
+            ResourceTemplate actual = GetSchema(true);
+            Assert.AreEqual(1, actual.dependsOn.Count);
+            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_dev_name'),'vita-gatan')]", actual.dependsOn[0].Value<string>());
+        }
+
+        private static ResourceTemplate GetSchema(bool parametrizePropertiesOnly = false)
+        {
+            var document = Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.Schema.simpleschema.json");
+            var template = new DeploymentTemplate(parametrizePropertiesOnly);
+            var actual = template.CreateAPISchema(JObject.Parse(document));
+            return actual;
         }
 
         [TestMethod]

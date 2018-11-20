@@ -1,4 +1,34 @@
-{
-  "value": [],
+﻿{
+  "value": [
+    {
+        "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/tfs/schemas/5b7572981142a50298c7f4a6",
+        "type": "Microsoft.ApiManagement/service/apis/schemas",
+        "name": "5b7572981142a50298c7f4a6",
+        "properties": {
+            "contentType": "application/vnd.ms-azure-apim.swagger.definitions+json",
+            "document": {
+                "definitions": {
+                    "GetCustomerRequest": {
+                        "required": [
+                            "NationalIdentityNumber"
+                        ],
+                        "type": "object",
+                        "properties": {
+                            "NationalIdentityNumber": {
+                                "maxLength": 12,
+                                "minLength": 12,
+                                "pattern": "^\\d{12}$",
+                                "type": "string"
+                            }
+                        },
+                        "example": {
+                            "NationalIdentityNumber": "196512141234"
+                        }
+                    }
+                }
+            }
+        }
+    }
+  ],
   "nextLink": ""
 }
