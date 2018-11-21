@@ -31,7 +31,7 @@ namespace APIManagementTemplate.Test
         {
             _templatesGenerator = new TemplatesGenerator();
             _sourceTemplate = Utils.GetEmbededFileContent("APIManagementTemplate.Test.SamplesTemplate.template.json");
-            _generatedTemplates = _templatesGenerator.Generate(_sourceTemplate, true, true, true);
+            _generatedTemplates = _templatesGenerator.Generate(_sourceTemplate, true, true, true, true);
         }
 
         [TestMethod]
@@ -275,6 +275,31 @@ namespace APIManagementTemplate.Test
         public void TestResultContains_Service()
         {
             Assert.IsTrue(_generatedTemplates.Any(x => x.FileName == ServiceFilename && x.Directory == String.Empty));
+        }
+
+
+        [TestMethod]
+        public void TestResultContains_PropertyForMyFunctionsKeyWithoutListSecrets()
+        {
+            GeneratedTemplate serviceTemplate = _generatedTemplates.Single(x => x.FileName == ServiceFilename && x.Directory == String.Empty);
+
+            var property = serviceTemplate.Content.SelectTokens("$..resources[?(@.type=='Microsoft.ApiManagement/service/properties')]")
+                .SingleOrDefault(x => x["name"].Value<string>().Contains("myfunctions-key"));
+            Assert.IsNotNull(property);
+
+            var value = property["properties"].Value<string>("value");
+            Assert.IsFalse(value.StartsWith("[listsecrets("));
+
+            Assert.AreEqual("[parameters('myfunctions-key')]", value);
+        }
+
+        [TestMethod]
+        public void TestResultContains_ParameterForMyFunctionsKey()
+        {
+            GeneratedTemplate serviceTemplate = _generatedTemplates.Single(x => x.FileName == ServiceFilename && x.Directory == String.Empty);
+
+            var parameter = serviceTemplate.Content.SelectToken("$.parameters.myfunctions-key");
+            Assert.IsNotNull(parameter);
         }
 
         [TestMethod]

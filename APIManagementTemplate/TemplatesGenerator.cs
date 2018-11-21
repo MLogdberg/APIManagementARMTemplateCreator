@@ -77,10 +77,12 @@ namespace APIManagementTemplate
         public const string TemplatesStorageAccountSASToken = "_artifactsLocationSasToken";
         private const string MasterTemplateJson = "master.template.json";
 
-        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false, bool generateParameterFiles = false)
+        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false, bool generateParameterFiles = false, bool replaceListSecretsWithParameter = false)
         {
             JObject parsedTemplate = JObject.Parse(sourceTemplate);
-            List<GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate, separatePolicyFile);
+            if (replaceListSecretsWithParameter)
+                ReplaceListSecretsWithParameter(parsedTemplate);
+            List <GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate, separatePolicyFile);
             templates.AddRange(GenerateProducts(parsedTemplate, separatePolicyFile));
             templates.AddRange(GenerateService(parsedTemplate, separatePolicyFile));
             templates.Add(GenerateTemplate(parsedTemplate, "subscriptions.template.json", String.Empty, SubscriptionResourceType));
@@ -100,6 +102,22 @@ namespace APIManagementTemplate
                 }
             }
             return templates;
+        }
+
+        private void ReplaceListSecretsWithParameter(JObject parsedTemplate)
+        {
+            var properties = parsedTemplate.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/properties')]").Where(x =>
+                    x["properties"]?.Value<string>("value").StartsWith("[listsecrets(") ?? false);
+            foreach (JToken property in properties)
+            {
+                var displayName = property["properties"].Value<string>("displayName");
+                property["properties"]["value"] = $"[parameters('{displayName}')]";
+                parsedTemplate["parameters"][displayName]= JToken.FromObject(new
+                {
+                    type = "string",
+                    defaultValue = String.Empty
+                });
+            }
         }
 
 

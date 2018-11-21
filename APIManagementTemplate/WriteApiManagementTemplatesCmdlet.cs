@@ -32,6 +32,9 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false, HelpMessage = "If parameter files should be generated")]
         public bool GenerateParameterFiles = false;
 
+        [Parameter(Mandatory = false, HelpMessage = "If the key to an Azure Function should be defined in a parameter instead of calling listsecrets")]
+        public bool ReplaceListSecretsWithParameter = false;
+
         [Parameter(Mandatory = false, HelpMessage = "If set, the input template is written to this file ")]
         public string DebugTemplateFile = "";
 
