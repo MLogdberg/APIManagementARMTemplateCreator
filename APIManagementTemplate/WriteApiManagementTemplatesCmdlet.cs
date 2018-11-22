@@ -42,7 +42,7 @@ namespace APIManagementTemplate
         {
             if (!string.IsNullOrEmpty(DebugTemplateFile))
                 File.WriteAllText(DebugTemplateFile, ARMTemplate);
-            var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone, SeparatePolicyFile, GenerateParameterFiles);
+            var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone, SeparatePolicyFile, GenerateParameterFiles, ReplaceListSecretsWithParameter);
             foreach (GeneratedTemplate template in templates)
             {
                 string filename = $@"{OutputDirectory}\{template.FileName}";
@@ -56,11 +56,7 @@ namespace APIManagementTemplate
                 if (File.Exists(filename) && MergeTemplates && template.Type == ContentType.Json)
                 {
                     JObject oldTemplate = JObject.Parse(File.ReadAllText(filename));
-                    oldTemplate.Merge(template.Content, new JsonMergeSettings
-                    {
-                        MergeArrayHandling = MergeArrayHandling.Union
-                    });
-                    template.Content = oldTemplate;
+                    template.Content = JObjectMerger.Merge(oldTemplate, template.Content);
                 }
                 File.WriteAllText(filename, template.Type == ContentType.Json ? template.Content.ToString() : template.XmlContent);
             }

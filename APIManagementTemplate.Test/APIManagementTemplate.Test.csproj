@@ -59,6 +59,7 @@
     <Compile Include="AzureResourceIdTests.cs" />
     <Compile Include="DeploymentTemplateTests.cs" />
     <Compile Include="FunctionAppMixedWithLogicAppTests.cs" />
+    <Compile Include="JObjectMergerTests.cs" />
     <Compile Include="TemplatesGeneratorTestsWithSeparatePolicyFileAsFalse.cs" />
     <Compile Include="TemplatesGeneratorTests.cs" />
     <Compile Include="WithoutApiVersionSetIdTests.cs" />
