@@ -114,7 +114,7 @@ namespace APIManagementTemplate
                 property["properties"]["value"] = $"[parameters('{displayName}')]";
                 parsedTemplate["parameters"][displayName]= JToken.FromObject(new
                 {
-                    type = "string",
+                    type = "securestring",
                     defaultValue = String.Empty
                 });
             }

@@ -56,7 +56,7 @@ namespace APIManagementTemplate
                 if (File.Exists(filename) && MergeTemplates && template.Type == ContentType.Json)
                 {
                     JObject oldTemplate = JObject.Parse(File.ReadAllText(filename));
-                    template.Content = JObjectMerger.Merge(oldTemplate, template.Content);
+                    template.Content = TemplateMerger.Merge(oldTemplate, template.Content);
                 }
                 File.WriteAllText(filename, template.Type == ContentType.Json ? template.Content.ToString() : template.XmlContent);
             }

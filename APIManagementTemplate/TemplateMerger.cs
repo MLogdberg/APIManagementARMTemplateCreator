@@ -5,11 +5,17 @@ using Newtonsoft.Json.Linq;
 
 namespace APIManagementTemplate
 {
-    public class JObjectMerger
+    public class TemplateMerger
     {
-        public static JObject Merge(JObject oldObject, JObject newObject, string idPropertyName = "name")
+        /// <summary>
+        /// Merges the changes in the newObject into the oldObject.
+        /// Please not that the contents of oldObject is changed!
+        /// </summary>
+        /// <param name="oldObject">The old object. The contents of this parameter is changed by this function</param>
+        /// <param name="newObject">The new object.</param>
+        /// <returns></returns>
+        public static JObject Merge(JObject oldObject, JObject newObject)
         {
-            var comparer = new JTokenComparer();
             foreach (KeyValuePair<string, JToken> pair in newObject)
             {
                 if (oldObject[pair.Key] != null)
@@ -25,7 +31,7 @@ namespace APIManagementTemplate
                             }
                             else if (item is JObject)
                             {
-                                var oldItem = oldArray.OfType<JObject>().FirstOrDefault(x => JTokenComparer.SameNameAndType(x, item));
+                                var oldItem = oldArray.OfType<JObject>().FirstOrDefault(x => SameIdentity(x, item, pair.Key));
                                 if (oldItem == null)
                                 {
                                     if (oldArray.OfType<JObject>().Any(x => JToken.EqualityComparer.Equals(x, item)))
@@ -35,7 +41,7 @@ namespace APIManagementTemplate
                                     oldArray.Add(item);
                                 else
                                 {
-                                    Merge(oldItem, (JObject)item, idPropertyName);
+                                    Merge(oldItem, (JObject)item);
                                 }
                             }
                         }
@@ -48,42 +54,37 @@ namespace APIManagementTemplate
                     {
                         oldObject[pair.Key] = pair.Value;
                     }
-                    else
-                    {
-                        var sju = 7;
-                    }
                 }
-
                 else
                     oldObject[pair.Key] = pair.Value;
             }
             return oldObject;
         }
 
-        public class JTokenComparer
+        public static bool SameIdentity(JToken x, JToken y, string parent)
         {
-            public static bool SameNameAndType(JToken x, JToken y)
+            if (x == null || y == null)
+                return false;
+            switch (parent.ToLower())
             {
-                if (x == null || y == null)
-                    return false;
-                var nameX = x.Value<string>("name");
-                var typeX = x.Value<string>("type");
-                var nameY = y.Value<string>("name");
-                var typeY = y.Value<string>("type");
-
-                if (nameX == null || typeX == null || nameY == null || typeY == null)
-                    return false;
-                return nameX == nameY && typeX == typeY;
+                case "resources":
+                    return JTokenEqualsOnProperties(x, y, "name", "type");
+                case "responses":
+                    return JTokenEqualsOnProperties(x, y, "statusCode");
+                case "representations":
+                    return JTokenEqualsOnProperties(x, y, "contentType");
+                case "templateparameters":
+                    return JTokenEqualsOnProperties(x, y, "name");
+                default:
+                    return JToken.EqualityComparer.Equals(x, y);
             }
+        }
 
-            public static int GetHashCode(JObject obj)
-            {
-                var name = obj.Value<string>("name");
-                var type = obj.Value<string>("type");
-                if (name != null && type != null)
-                    return $"{name}:{type}".GetHashCode();
-                return obj.GetHashCode();
-            }
+        private static bool JTokenEqualsOnProperties(JToken x, JToken y, params string[] properties)
+        {
+            if (properties.Any(p => x.Value<string>(p) == null || y.Value<string>(p) == null))
+                return false;
+            return properties.All(p => x.Value<string>(p) == y.Value<string>(p));
         }
     }
 

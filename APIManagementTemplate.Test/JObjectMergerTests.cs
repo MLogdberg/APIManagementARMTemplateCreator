@@ -70,6 +70,50 @@ namespace APIManagementTemplate.Test
                 new { resources = new object[] { new { b = 1 } } },
                 new { resources = new object[] { new { name = "1", a = 1 }, new { b = 1 } } });
         }
+        [TestMethod]
+        public void TestComplexArrayMergeOnResources()
+        {
+            AssertMerge(
+                new { resources = new object[] { new { name = "1", type="1", a = 1 } } },
+                new { resources = new object[] { new { name = "1", type = "1", a = 2 } } },
+                new { resources = new object[] { new { name = "1", type = "1", a = 2 } } });
+        }
+
+        [TestMethod]
+        public void TestComplexArrayMergeOnResponses()
+        {
+            AssertMerge(
+                new { responses = new object[] { new { statusCode = 200, a = 1 } } },
+                new { responses = new object[] { new { statusCode = 200, a = 2 } } },
+                new { responses = new object[] { new { statusCode = 200, a = 2 } } });
+        }
+
+        [TestMethod]
+        public void TestComplexArrayMergeOnRepresentations()
+        {
+            AssertMerge(
+                new { representations = new object[] { new { contentType = "application/json", a = 1 } } },
+                new { representations = new object[] { new { contentType = "application/json", a = 2 } } },
+                new { representations = new object[] { new { contentType = "application/json", a = 2 } } });
+        }
+
+        [TestMethod]
+        public void TestComplexArrayMergeOnTemplateParameters()
+        {
+            AssertMerge(
+                new { templateParameters = new object[] { new { name = "param1", a = 1 } } },
+                new { templateParameters = new object[] { new { name = "param1", a = 2 } } },
+                new { templateParameters = new object[] { new { name = "param1", a = 2 } } });
+        }
+
+        [TestMethod]
+        public void TestComplexArrayMergeOnUnknown()
+        {
+            AssertMerge(
+                new { unknown = new object[] { new { name = "param1", a = 1 } } },
+                new { unknown = new object[] { new { name = "param1", a = 2 } } },
+                new { unknown = new object[] { new { name = "param1", a = 1 }, new { name = "param1", a = 2 } } });
+        }
 
         [TestMethod]
         public void TestComplexArrayMergeStringValues1()
@@ -128,7 +172,7 @@ namespace APIManagementTemplate.Test
 
         private static void AssertMerge(object oldObject, object newObject, object expected)
         {
-            JObject result = JObjectMerger.Merge(JObject.FromObject(oldObject), JObject.FromObject(newObject), "name");
+            JObject result = TemplateMerger.Merge(JObject.FromObject(oldObject), JObject.FromObject(newObject));
 
             Assert.IsTrue(JObject.EqualityComparer.Equals(JObject.FromObject(expected), result));
         }

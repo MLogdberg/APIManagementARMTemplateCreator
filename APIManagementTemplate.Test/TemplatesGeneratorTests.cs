@@ -300,6 +300,9 @@ namespace APIManagementTemplate.Test
 
             var parameter = serviceTemplate.Content.SelectToken("$.parameters.myfunctions-key");
             Assert.IsNotNull(parameter);
+
+            Assert.AreEqual("securestring", parameter.Value<string>("type"));
+            Assert.AreEqual("", parameter.Value<string>("defaultValue"));
         }
 
         [TestMethod]
