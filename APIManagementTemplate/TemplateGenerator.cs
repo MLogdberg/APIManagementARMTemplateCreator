@@ -349,7 +349,7 @@ namespace APIManagementTemplate
                 string version = "2018-02-01";
                 if(backendInstance["properties"].Value<string>("resourceId").Contains("Microsoft.Logic"))
                 {
-                    version = "2017-03-01";
+                    version = "2017-07-01";
                 }
 
                 azureResource = await resourceCollector.GetResource(backendInstance["properties"].Value<string>("resourceId"), "", version);
