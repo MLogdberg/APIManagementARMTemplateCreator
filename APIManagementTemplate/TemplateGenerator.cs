@@ -80,7 +80,7 @@ namespace APIManagementTemplate
             var apis = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
             if (apis != null)
             {
-                foreach (JObject apiObject in (!string.IsNullOrEmpty(apiVersion) ? apis.Value<JArray>("value").Where(aa => aa.Value<string>("apiVersion") == this.apiVersion) : apis.Value<JArray>("value")))
+                foreach (JObject apiObject in (!string.IsNullOrEmpty(apiVersion) ? apis.Value<JArray>("value").Where(aa => aa["properties"].Value<string>("apiVersion") == this.apiVersion) : apis.Value<JArray>("value")))
                 {
 
                     var id = apiObject.Value<string>("id");
@@ -346,7 +346,13 @@ namespace APIManagementTemplate
             JObject azureResource = null;
             if (backendInstance["properties"]["resourceId"] != null)
             {
-                azureResource = await resourceCollector.GetResource(backendInstance["properties"].Value<string>("resourceId"), "", "2018-02-01");
+                string version = "2018-02-01";
+                if(backendInstance["properties"].Value<string>("resourceId").Contains("Microsoft.Logic"))
+                {
+                    version = "2017-03-01";
+                }
+
+                azureResource = await resourceCollector.GetResource(backendInstance["properties"].Value<string>("resourceId"), "", version);
             }
 
             var property = template.AddBackend(backendInstance, azureResource);
