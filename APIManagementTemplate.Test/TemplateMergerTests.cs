@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 namespace APIManagementTemplate.Test
 {
     [TestClass]
-    public class JObjectMergerTests
+    public class TemplateMergerTests
     {
         [TestInitialize()]
         public void Initialize()

@@ -394,6 +394,7 @@ namespace APIManagementTemplate.Models
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
 
+            var dependsOn = new JArray();
             if (restObject["properties"]["resourceId"] != null)
             {
                 string resourceid = restObject["properties"].Value<string>("resourceId");
@@ -442,9 +443,18 @@ namespace APIManagementTemplate.Models
                         name = sitename.ToLower(),
                         extraInfo = $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key"
                     };
+                    var code = (resource["properties"]?["credentials"]?["query"]?.Value<JArray>("code") ?? new JArray()).FirstOrDefault();
+                    if (code != null)
+                    {
+                        var value = code.Value<string>();
+                        if (value.StartsWith("{{") && value.EndsWith("}}"))
+                        {
+                            var parsed = value.Substring(2, value.Length - 4);
+                            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('{GetServiceName(servicename)}'),'{parsed}')]");
+                        }
+                    }
                 }
                 resource["properties"]["resourceId"] = "[concat('https://management.azure.com/','" + aid.ToString().Substring(1) + ")]";
-
             }
             else
             {
@@ -453,7 +463,8 @@ namespace APIManagementTemplate.Models
 
             if (APIMInstanceAdded)
             {
-                resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]" });
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
+                resource["dependsOn"] = dependsOn;
             }
 
             if (this.resources.Where(rr => rr.Value<string>("name") == obj.name).Count() == 0)

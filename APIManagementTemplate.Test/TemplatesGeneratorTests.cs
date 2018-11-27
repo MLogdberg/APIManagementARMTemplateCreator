@@ -70,6 +70,19 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
+        public void TestResultContains_ProductStarterWithoutAPI()
+        {
+            var product = _generatedTemplates.First(x => x.FileName == ProductStarterFilename && x.Directory == @"product-starter");
+            Assert.IsNotNull(product);
+
+            var apis = product.Content.SelectTokens($"$..resources[?(@.type=='Microsoft.ApiManagement/service/products/apis')]");
+
+            Assert.AreEqual(0, apis.Count());
+
+
+        }
+
+        [TestMethod]
         public void TestResultContainsPolicyFor_Starter()
         {
             IEnumerable<JToken> policies = GetPoliciesForProduct(ProductStarterFilename);
@@ -188,7 +201,7 @@ namespace APIManagementTemplate.Test
             var template = _generatedTemplates.Single(x => x.FileName == ProductStarterFilename);
             var parameter = template.Content["parameters"][TemplatesGenerator.TemplatesStorageAccountSASToken];
             Assert.IsNotNull(parameter);
-            Assert.AreEqual("string", parameter.Value<string>("type"));
+            Assert.AreEqual("securestring", parameter.Value<string>("type"));
             Assert.AreEqual(String.Empty, parameter.Value<string>("defaultValue"));
         }
 
@@ -236,6 +249,23 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
+        public void TestResultContainsAPIFor_EchoV1WithProductAPI()
+        {
+            var template = _generatedTemplates.Single(x => x.FileName == EchoFilename);
+
+            var productApi = template.Content.SelectToken("$.resources[?(@.type=='Microsoft.ApiManagement/service/products/apis')]");
+            Assert.IsNotNull(productApi);
+
+            Assert.AreEqual("[concat(parameters('service_PreDemoTest_name'), '/', 'starter', '/', 'echo-api')]", productApi.Value<string>("name"));
+
+            var dependsOn = productApi.Value<JArray>("dependsOn").Values<string>();
+            Assert.AreEqual(1, dependsOn.Count());
+
+            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_PreDemoTest_name'),'echo-api')]", 
+                dependsOn.First());
+        }
+
+        [TestMethod]
         public void TestResultContainsAPIMasterFileFor_Httpbin()
         {
             var api = _generatedTemplates.Single(x => x.Directory == "api-Versioned-HTTP-bin-API" && x.FileName == "api-Versioned-HTTP-bin-API.master.template.json");
@@ -256,6 +286,24 @@ namespace APIManagementTemplate.Test
 
             Assert.IsNotNull(serviceNameParameter);
             Assert.AreEqual("PreDemoTest", serviceNameParameter.Value["value"].Value<string>());
+        }
+        [TestMethod]
+        public void TestResultContainsMasterParametersFileForVersionedHttpBin()
+        {
+            var parameterTemplate = _generatedTemplates.Single(x => x.Directory == "api-Versioned-HTTP-bin-API" && x.FileName == "api-Versioned-HTTP-bin-API.master.parameters.json");
+            var parameters = parameterTemplate.Content.SelectToken("$.parameters");
+            Assert.AreNotEqual(0, parameters.Count());
+
+            var echoApiIsCurrent = parameters.Cast<JProperty>().FirstOrDefault(x => x.Name == "httpBinAPI_isCurrent");
+
+            Assert.IsNotNull(echoApiIsCurrent);
+            Assert.AreEqual(JTokenType.Boolean, echoApiIsCurrent.Value["value"].Type);
+            Assert.AreEqual(true, echoApiIsCurrent.Value["value"].Value<bool>());
+
+            Assert.IsNull(parameters.Cast<JProperty>().FirstOrDefault(x => x.Name == "repoBaseUrl"));
+            Assert.IsNull(parameters.Cast<JProperty>().FirstOrDefault(x => x.Name == "apimServiceName"));
+
+            // echo-api_isCurrent
         }
 
         [TestMethod]
