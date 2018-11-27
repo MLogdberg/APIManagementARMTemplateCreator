@@ -662,6 +662,9 @@ namespace APIManagementTemplate
 
         private static string GetApiVersion(JToken api, JObject parsedTemplate)
         {
+            if (api["properties"]["apiVersion"] == null)
+                return "default";
+
             var apiVersion = GetParameterPart(api["properties"], "apiVersion", -2);
             var jpath = $"$.parameters.{apiVersion}.defaultValue";
             var version = parsedTemplate.SelectToken(jpath).Value<string>();

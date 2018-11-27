@@ -44,6 +44,7 @@ Example when user is connected to multitenants:
 | ReplaceSetBackendServiceBaseUrlWithProperty | If the base-url of <set-backend-service> with should be replaced with a property instead of a parameter. If this is false you will not be able to set SeparatePolicyFile=true for Write-APIManagementTemplates when you have set-backend-service with base-url-attribute in a policy | false |
 | FixedServiceNameParameter | True if the parameter for the name of the service should have a fixed name (apimServiceName). Otherwise the parameter name will depend on the name of the service (service_PreDemoTest_name)| false |
 | DebugOutPutFolder | If set, result from rest interface will be saved to this folder | false |
+| ApiVersion | If set, api result will be filtered based on this value i.e: v2 | false |
 | ClaimsDump | A dump of claims piped in from `armclient` - should not be manually set | false |
 
 

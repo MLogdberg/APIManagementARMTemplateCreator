@@ -368,6 +368,11 @@ namespace APIManagementTemplate.Models
                 if (sample.StartsWith("["))
                     rep["sample"] = "[" + sample;
 
+                string generatedSample = rep.Value<string>("generatedSample") ?? "";
+                if (generatedSample.StartsWith("["))
+                    rep["generatedSample"] = "[" + generatedSample;
+
+
                 var schema = rep.Value<string>("schemaId");
                 if (!string.IsNullOrEmpty(schema))
                     ll.Add(schema);

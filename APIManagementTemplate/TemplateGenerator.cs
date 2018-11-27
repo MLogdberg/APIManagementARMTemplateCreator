@@ -31,9 +31,10 @@ namespace APIManagementTemplate
         private bool parametrizePropertiesOnly;
         private bool replaceSetBackendServiceBaseUrlAsProperty;
         private bool fixedServiceNameParameter;
+        private string apiVersion;
 
         IResourceCollector resourceCollector;
-        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false)
+        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, string apiVersion= null)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -46,6 +47,7 @@ namespace APIManagementTemplate
             this.replaceSetBackendServiceBaseUrlAsProperty = replaceSetBackendServiceBaseUrlAsProperty;
             this.resourceCollector = resourceCollector;
             this.fixedServiceNameParameter = fixedServiceNameParameter;
+            this.apiVersion = apiVersion;
         }
 
         private string GetAPIMResourceIDString()
@@ -76,75 +78,107 @@ namespace APIManagementTemplate
             }
 
             var apis = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
-            foreach (JObject apiObject in (apis == null ? new JArray() : apis.Value<JArray>("value")))
+            if (apis != null)
             {
-
-                var id = apiObject.Value<string>("id");
-
-
-                var apiInstance = await resourceCollector.GetResource(id);
-                var apiTemplateResource = template.AddApi(apiInstance);
-
-                //Api version set
-                string apiversionsetid = apiTemplateResource["properties"].Value<string>("apiVersionSetId");
-                if (!string.IsNullOrEmpty(apiversionsetid))
+                foreach (JObject apiObject in (!string.IsNullOrEmpty(apiVersion) ? apis.Value<JArray>("value").Where(aa => aa["properties"].Value<string>("apiVersion") == this.apiVersion) : apis.Value<JArray>("value")))
                 {
-                    AzureResourceId aiapiversion = new AzureResourceId(apiInstance["properties"].Value<string>("apiVersionSetId"));
 
-                    var versionsetResource = template.AddVersionSet(await resourceCollector.GetResource(apiversionsetid));
-                    if (versionsetResource != null)
+                    var id = apiObject.Value<string>("id");
+
+
+                    var apiInstance = await resourceCollector.GetResource(id);
+                    var apiTemplateResource = template.AddApi(apiInstance);
+
+                    //Api version set
+                    string apiversionsetid = apiTemplateResource["properties"].Value<string>("apiVersionSetId");
+                    if (!string.IsNullOrEmpty(apiversionsetid))
                     {
-                        string resourceid = $"[resourceId('Microsoft.ApiManagement/service/api-version-sets',{versionsetResource.GetResourceId()})]";
-                        apiTemplateResource["properties"]["apiVersionSetId"] = resourceid;
-                        apiTemplateResource.Value<JArray>("dependsOn").Add(resourceid);
-                    }
-                }
-                string openidProviderId = GetOpenIdProviderId(apiTemplateResource);
-                if (!String.IsNullOrWhiteSpace(openidProviderId))
-                {
-                    if (this.openidConnectProviders == null)
-                    {
-                        openidConnectProviders = new List<JObject>();
-                        var providers = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/openidConnectProviders");
-                        foreach (JObject openidConnectProvider in (providers == null ? new JArray() : providers.Value<JArray>("value")))
+                        AzureResourceId aiapiversion = new AzureResourceId(apiInstance["properties"].Value<string>("apiVersionSetId"));
+
+                        var versionsetResource = template.AddVersionSet(await resourceCollector.GetResource(apiversionsetid));
+                        if (versionsetResource != null)
                         {
-                            openidConnectProviders.Add(openidConnectProvider);
+                            string resourceid = $"[resourceId('Microsoft.ApiManagement/service/api-version-sets',{versionsetResource.GetResourceId()})]";
+                            apiTemplateResource["properties"]["apiVersionSetId"] = resourceid;
+                            apiTemplateResource.Value<JArray>("dependsOn").Add(resourceid);
                         }
                     }
-                    var openIdProvider = this.openidConnectProviders.FirstOrDefault(x => x.Value<string>("name") == openidProviderId);
-                    template.CreateOpenIDConnectProvider(openIdProvider, true);
-                }
-
-                var operations = await resourceCollector.GetResource(id + "/operations");
-                foreach (JObject operation in (operations == null ? new JArray() : operations.Value<JArray>("value")))
-                {
-                    var opId = operation.Value<string>("id");
-
-                    var operationInstance = await resourceCollector.GetResource(opId);
-                    var operationTemplateResource = template.CreateOperation(operationInstance);
-                    apiTemplateResource.Value<JArray>("resources").Add(operationTemplateResource);
-
-
-                    var operationPolicies = await resourceCollector.GetResource(opId + "/policies");
-                    foreach (JObject policy in (operationPolicies == null ? new JArray() : operationPolicies.Value<JArray>("value")))
+                    string openidProviderId = GetOpenIdProviderId(apiTemplateResource);
+                    if (!String.IsNullOrWhiteSpace(openidProviderId))
                     {
-                        var pol = template.CreatePolicy(policy);
-
-                        //add properties
-                        this.PolicyHandleProperties(pol, apiTemplateResource.Value<string>("name"), (operationInstance.Value<string>("name").StartsWith("api-") ? operationInstance.Value<string>("name").Substring(4, (operationInstance.Value<string>("name").LastIndexOf("-" + operationInstance["properties"].Value<string>("method").ToLower())) - 4) : operationInstance.Value<string>("name")));
-
-                        var operationSuffix = apiInstance.Value<string>("name") + "_" + operationInstance.Value<string>("name");
-                        //Handle Azure Resources
-                        if (!this.PolicyHandeAzureResources(pol, apiTemplateResource.Value<string>("name"), template))
+                        if (this.openidConnectProviders == null)
                         {
-                            PolicyHandeBackendUrl(pol, operationSuffix, template);
+                            openidConnectProviders = new List<JObject>();
+                            var providers = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/openidConnectProviders");
+                            foreach (JObject openidConnectProvider in (providers == null ? new JArray() : providers.Value<JArray>("value")))
+                            {
+                                openidConnectProviders.Add(openidConnectProvider);
+                            }
                         }
+                        var openIdProvider = this.openidConnectProviders.FirstOrDefault(x => x.Value<string>("name") == openidProviderId);
+                        template.CreateOpenIDConnectProvider(openIdProvider, true);
+                    }
 
+                    var operations = await resourceCollector.GetResource(id + "/operations");
+                    foreach (JObject operation in (operations == null ? new JArray() : operations.Value<JArray>("value")))
+                    {
+                        var opId = operation.Value<string>("id");
+
+                        var operationInstance = await resourceCollector.GetResource(opId);
+                        var operationTemplateResource = template.CreateOperation(operationInstance);
+                        apiTemplateResource.Value<JArray>("resources").Add(operationTemplateResource);
+
+
+                        var operationPolicies = await resourceCollector.GetResource(opId + "/policies");
+                        foreach (JObject policy in (operationPolicies == null ? new JArray() : operationPolicies.Value<JArray>("value")))
+                        {
+                            var pol = template.CreatePolicy(policy);
+
+                            //add properties
+                            this.PolicyHandleProperties(pol, apiTemplateResource.Value<string>("name"), (operationInstance.Value<string>("name").StartsWith("api-") ? operationInstance.Value<string>("name").Substring(4, (operationInstance.Value<string>("name").LastIndexOf("-" + operationInstance["properties"].Value<string>("method").ToLower())) - 4) : operationInstance.Value<string>("name")));
+
+                            var operationSuffix = apiInstance.Value<string>("name") + "_" + operationInstance.Value<string>("name");
+                            //Handle Azure Resources
+                            if (!this.PolicyHandeAzureResources(pol, apiTemplateResource.Value<string>("name"), template))
+                            {
+                                PolicyHandeBackendUrl(pol, operationSuffix, template);
+                            }
+
+                            var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>("policyContent"));
+
+                            if (!string.IsNullOrEmpty(backendid))
+                            {
+                                JObject backendInstance = await HandleBackend(template, operationSuffix, backendid);
+
+                                if (apiTemplateResource.Value<JArray>("dependsOn") == null)
+                                    apiTemplateResource["dependsOn"] = new JArray();
+
+                                //add dependeOn
+                                apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
+                            }
+                            await AddCertificate(policy, template);
+
+                            operationTemplateResource.Value<JArray>("resources").Add(pol);
+                            //handle nextlink?
+                        }
+                        //handle nextlink?                
+                    }
+
+                    var apiPolicies = await resourceCollector.GetResource(id + "/policies");
+                    foreach (JObject policy in (apiPolicies == null ? new JArray() : apiPolicies.Value<JArray>("value")))
+                    {
+                        //Handle SOAP Backend
                         var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>("policyContent"));
+                        await AddCertificate(policy, template);
+                        PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
+                        var policyTemplateResource = template.CreatePolicy(policy);
+                        this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"), null);
+                        apiTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
+
 
                         if (!string.IsNullOrEmpty(backendid))
                         {
-                            JObject backendInstance = await HandleBackend(template, operationSuffix, backendid);
+                            JObject backendInstance = await HandleBackend(template, apiObject.Value<string>("name"), backendid);
 
                             if (apiTemplateResource.Value<JArray>("dependsOn") == null)
                                 apiTemplateResource["dependsOn"] = new JArray();
@@ -152,48 +186,19 @@ namespace APIManagementTemplate
                             //add dependeOn
                             apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
                         }
-                        await AddCertificate(policy, template);
 
-                        operationTemplateResource.Value<JArray>("resources").Add(pol);
                         //handle nextlink?
                     }
-                    //handle nextlink?                
-                }
-
-                var apiPolicies = await resourceCollector.GetResource(id + "/policies");
-                foreach (JObject policy in (apiPolicies == null ? new JArray() : apiPolicies.Value<JArray>("value")))
-                {
-                    //Handle SOAP Backend
-                    var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>("policyContent"));
-                    await AddCertificate(policy, template);
-                    PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
-                    var policyTemplateResource = template.CreatePolicy(policy);
-                    this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"), null);
-                    apiTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
-
-
-                    if (!string.IsNullOrEmpty(backendid))
+                    //schemas
+                    var apiSchemas = await resourceCollector.GetResource(id + "/schemas");
+                    foreach (JObject schema in (apiSchemas == null ? new JArray() : apiSchemas.Value<JArray>("value")))
                     {
-                        JObject backendInstance = await HandleBackend(template, apiObject.Value<string>("name"), backendid);
-
-                        if (apiTemplateResource.Value<JArray>("dependsOn") == null)
-                            apiTemplateResource["dependsOn"] = new JArray();
-
-                        //add dependeOn
-                        apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
+                        var schemaTemplate = template.CreateAPISchema(schema);
+                        apiTemplateResource.Value<JArray>("resources").Add(JObject.FromObject(schemaTemplate));
                     }
 
                     //handle nextlink?
                 }
-                //schemas
-                var apiSchemas = await resourceCollector.GetResource(id + "/schemas");
-                foreach (JObject schema in (apiSchemas == null ? new JArray() : apiSchemas.Value<JArray>("value")))
-                {
-                    var schemaTemplate = template.CreateAPISchema(schema);
-                    apiTemplateResource.Value<JArray>("resources").Add(JObject.FromObject(schemaTemplate));
-                }
-
-                //handle nextlink?
             }
 
             // Export all groups if we don't export the products.
@@ -341,7 +346,13 @@ namespace APIManagementTemplate
             JObject azureResource = null;
             if (backendInstance["properties"]["resourceId"] != null)
             {
-                azureResource = await resourceCollector.GetResource(backendInstance["properties"].Value<string>("resourceId"), "", "2018-02-01");
+                string version = "2018-02-01";
+                if(backendInstance["properties"].Value<string>("resourceId").Contains("Microsoft.Logic"))
+                {
+                    version = "2017-07-01";
+                }
+
+                azureResource = await resourceCollector.GetResource(backendInstance["properties"].Value<string>("resourceId"), "", version);
             }
 
             var property = template.AddBackend(backendInstance, azureResource);
