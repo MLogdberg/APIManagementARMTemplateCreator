@@ -47,7 +47,7 @@ namespace APIManagementTemplate
             this.replaceSetBackendServiceBaseUrlAsProperty = replaceSetBackendServiceBaseUrlAsProperty;
             this.resourceCollector = resourceCollector;
             this.fixedServiceNameParameter = fixedServiceNameParameter;
-            this.apiVersion = apiVersion;
+            this.apiVersion = apiVersion ?? "default";
         }
 
         private string GetAPIMResourceIDString()
