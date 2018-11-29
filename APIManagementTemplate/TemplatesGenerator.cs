@@ -29,7 +29,7 @@ namespace APIManagementTemplate
 
         public string GetShortPath()
         {
-            return String.IsNullOrWhiteSpace(Directory) ? FileName : $"{FileName}_{Directory.GetHashCode()}";
+            return FileName;
         }
 
     }
@@ -76,12 +76,15 @@ namespace APIManagementTemplate
         private const string CertificateResourceType = "Microsoft.ApiManagement/service/certificates";
         public const string TemplatesStorageAccountSASToken = "_artifactsLocationSasToken";
         private const string MasterTemplateJson = "master.template.json";
+        private const string ProductAPIResourceType = "Microsoft.ApiManagement/service/products/apis";
 
-        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false, bool generateParameterFiles = false)
+        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false, bool generateParameterFiles = false, bool replaceListSecretsWithParameter = false)
         {
             JObject parsedTemplate = JObject.Parse(sourceTemplate);
-            List<GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate, separatePolicyFile);
-            templates.AddRange(GenerateProducts(parsedTemplate, separatePolicyFile));
+            if (replaceListSecretsWithParameter)
+                ReplaceListSecretsWithParameter(parsedTemplate);
+            List <GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate, separatePolicyFile);
+            templates.AddRange(GenerateProducts(parsedTemplate, separatePolicyFile, apiStandalone));
             templates.AddRange(GenerateService(parsedTemplate, separatePolicyFile));
             templates.Add(GenerateTemplate(parsedTemplate, "subscriptions.template.json", String.Empty, SubscriptionResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "users.template.json", String.Empty, UserResourceType));
@@ -96,10 +99,26 @@ namespace APIManagementTemplate
                 templates.Add(GenerateParameterFile(templates.FirstOrDefault(x => x.FileName == MasterTemplateJson && x.Directory == String.Empty)));
                 foreach (GeneratedTemplate template in templates.Where(x => x.FileName.EndsWith(".master.template.json")).ToArray())
                 {
-                    templates.Add(GenerateParameterFile(template));
+                    templates.Add(GenerateParameterFile(template, true));
                 }
             }
             return templates;
+        }
+
+        private void ReplaceListSecretsWithParameter(JObject parsedTemplate)
+        {
+            var properties = parsedTemplate.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/properties')]").Where(x =>
+                    x["properties"]?.Value<string>("value").StartsWith("[listsecrets(") ?? false);
+            foreach (JToken property in properties)
+            {
+                var displayName = property["properties"].Value<string>("displayName");
+                property["properties"]["value"] = $"[parameters('{displayName}')]";
+                parsedTemplate["parameters"][displayName]= JToken.FromObject(new
+                {
+                    type = "securestring",
+                    defaultValue = String.Empty
+                });
+            }
         }
 
 
@@ -148,18 +167,34 @@ namespace APIManagementTemplate
             return masterApis;
         }
 
-        private GeneratedTemplate GenerateParameterFile(GeneratedTemplate masterTemplate)
+        private GeneratedTemplate GenerateParameterFile(GeneratedTemplate masterTemplate, bool apiMasterParameterFile = false)
         {
             var generatedTemplate = new GeneratedTemplate { Directory = masterTemplate.Directory, FileName = masterTemplate.FileName.Replace(".template.json", ".parameters.json") };
             DeploymentParameters template = new DeploymentParameters();
             var parameters = masterTemplate.Content["parameters"];
-            foreach (JProperty parameter in parameters.Cast<JProperty>())
+            var excludedParameters = new List<string> {TemplatesStorageAccountSASToken};
+            if (apiMasterParameterFile)
+            {
+                excludedParameters.Add("repoBaseUrl");
+                excludedParameters.Add("apimServiceName");
+            }
+            
+            foreach (JProperty parameter in parameters.Cast<JProperty>().Where(p => excludedParameters.All(e => e != p.Name)))
             {
                 string name = parameter.Name;
                 string type = parameter.Value["type"].Value<string>();
-                string value = parameter.Value["defaultValue"]?.Value<string>()?? String.Empty;
-                template.AddParameter(name, value);
+                switch (type)
+                {
+                    case "bool":
+                        bool boolValue = parameter.Value["defaultValue"]?.Value<bool>() ?? false;
+                        template.AddParameter(name, boolValue);
+                        break;
+                    default:
+                        string value = parameter.Value["defaultValue"]?.Value<string>() ?? String.Empty;
+                        template.AddParameter(name, value);
+                        break;
             }
+        }
             generatedTemplate.Content = JObject.FromObject(template);
             return generatedTemplate;
         }
@@ -205,7 +240,7 @@ namespace APIManagementTemplate
                 {
                     allParameters[TemplatesStorageAccountSASToken] = JToken.FromObject(new
                     {
-                        type = "string",
+                        type = "securestring",
                         defaultValue = String.Empty
                     });
                 }
@@ -378,7 +413,7 @@ namespace APIManagementTemplate
             return template;
         }
 
-        private IEnumerable<GeneratedTemplate> GenerateProducts(JObject parsedTemplate, bool separatePolicyFile)
+        private IEnumerable<GeneratedTemplate> GenerateProducts(JObject parsedTemplate, bool separatePolicyFile, bool apiStandalone)
         {
             var products = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == ProductResourceType);
             List<GeneratedTemplate> templates = new List<GeneratedTemplate>();
@@ -387,7 +422,7 @@ namespace APIManagementTemplate
                 templates.AddRange(products.Select(p => GenerateProductPolicy(p)).Where(x => x != null));
             }
             templates.AddRange(products
-                .Select(product => GenerateProduct(product, parsedTemplate, separatePolicyFile)));
+                .Select(product => GenerateProduct(product, parsedTemplate, separatePolicyFile, apiStandalone)));
             return templates;
         }
 
@@ -408,7 +443,7 @@ namespace APIManagementTemplate
             };
         }
 
-        private GeneratedTemplate GenerateProduct(JToken product, JObject parsedTemplate, bool separatePolicyFile)
+        private GeneratedTemplate GenerateProduct(JToken product, JObject parsedTemplate, bool separatePolicyFile, bool apiStandalone)
         {
             var productId = GetParameterPart(product, "name", -2).Substring(1);
             GeneratedTemplate generatedTemplate = new GeneratedTemplate
@@ -425,7 +460,18 @@ namespace APIManagementTemplate
             template.parameters = GetParameters(parsedTemplate["parameters"], product);
             template.resources.Add(JObject.FromObject(product));
             generatedTemplate.Content = JObject.FromObject(template);
+            if (apiStandalone)
+                RemoveProductAPIs(generatedTemplate.Content);
             return generatedTemplate;
+        }
+
+        private void RemoveProductAPIs(JObject content)
+        {
+            var apis = content.SelectTokens($"$..resources[?(@.type=='{ProductAPIResourceType}')]");
+            foreach (var api in apis.ToArray())
+            {
+                api.Remove();
+            }
         }
 
         private void AddParametersForFileLink(JToken template)
@@ -440,7 +486,7 @@ namespace APIManagementTemplate
                 });
                 parameters[TemplatesStorageAccountSASToken] = JToken.FromObject(new
                 {
-                    type = "string",
+                    type = "securestring",
                     defaultValue = String.Empty
                 });
             }
@@ -540,8 +586,27 @@ namespace APIManagementTemplate
 
             SetFilenameAndDirectory(api, parsedTemplate, generatedTemplate);
             template.resources.Add(apiStandalone ? RemoveServiceDependencies(api) : JObject.FromObject(api));
+            if (apiStandalone)
+                AddProductAPI(api, parsedTemplate, template.resources);
             generatedTemplate.Content = JObject.FromObject(template);
             return generatedTemplate;
+        }
+
+        private void AddProductAPI(JToken api, JObject parsedTemplate, IList<JObject> templateResources)
+        {
+            string apiName = GetParameterPart(api, "name", -2);
+            if (apiName.StartsWith("/"))
+                apiName = apiName.Substring(1, apiName.Length - 1);
+            var productApi = parsedTemplate.SelectTokens($"$..resources[?(@.type=='{ProductAPIResourceType}')]")
+                .FirstOrDefault(p => GetParameterPart(p, "name", -2) == apiName);
+            if (productApi != null)
+            {
+                var dependsOn = productApi.Value<JArray>("") ?? new JArray();
+                var serviceName = GetParameterPart(api, "name", -4);
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{serviceName}'),'{apiName}')]");
+                productApi["dependsOn"] = dependsOn;
+                templateResources.Add(JObject.FromObject(productApi));
+            }
         }
 
         private static JObject RemoveServiceDependencies(JToken api)

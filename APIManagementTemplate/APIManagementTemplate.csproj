@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="ApiVersionSetIdComparer.cs" />
     <Compile Include="Constants\Constants.cs" />
+    <Compile Include="TemplateMerger.cs" />
     <Compile Include="Models\DeploymentParameters.cs" />
     <Compile Include="TemplatesGenerator.cs" />
     <Compile Include="WriteApiManagementTemplatesCmdlet.cs" />

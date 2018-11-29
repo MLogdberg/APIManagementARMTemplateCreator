@@ -297,6 +297,16 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
+        public void TestServiceContainsBackendWith2DependsOn()
+        {
+            var backend = GetResourceFromTemplate(BackendResourceType, true);
+            var dependsOn = backend.Value<JArray>("dependsOn").Values<string>();
+
+            Assert.AreEqual(2, dependsOn.Count());
+            Assert.IsTrue(dependsOn.Contains("[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_ibizmalo_name'),'myfunctions-key')]"));
+        }
+
+        [TestMethod]
         public void TestServiceContainsOpenIdConnectProvider()
         {
             var openIdConnectProvider = GetResourceFromTemplate(OpenIdConnectProviderResourceType);
