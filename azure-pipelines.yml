@@ -30,8 +30,7 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
     
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact'
+- task: PublishPipelineArtifact@0
   inputs:
-    PathtoPublish: '$(build.artifactstagingdirectory)'
-    ArtifactName: 'drop'
+    artifactName: 'drop'
+    targetPath: 'bin/release'
