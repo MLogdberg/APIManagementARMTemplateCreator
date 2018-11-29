@@ -64,5 +64,6 @@ Use Write-APIManagementTemplates generate many small ARM templates (as suggested
 | SeparatePolicyFile | If the policies should be written to a separate xml file | false | false | 
 | MergeTemplates | If the template already exists in the output directory, it will be merged with the new result. | false | false | 
 | GenerateParameterFiles | If parameter files should be generated | false | false | 
+| ReplaceListSecretsWithParameter | If the key to an Azure Function should be defined in a parameter instead of calling listsecrets | false | false |
 | DebugTemplateFile | If set, the input ARM template is written to this file | false | |
 | ARMTemplate | The ARM template piped from Get-APIManagementTemplate - should not be manually set | false | |
