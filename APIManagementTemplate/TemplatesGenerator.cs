@@ -498,7 +498,7 @@ namespace APIManagementTemplate
             if (policy != null)
             {
                 policy["apiVersion"] = "2018-01-01";
-                policy["properties"]["contentFormat"] = "rawxml-link";
+                policy["properties"]["contentFormat"] = "xml-link";
                 policy["properties"]["policyContent"] = $"[concat(parameters('repoBaseUrl'), '/product-{productId}/product-{productId}.policy.xml', parameters('{TemplatesStorageAccountSASToken}'))]";
             }
         }
@@ -527,7 +527,7 @@ namespace APIManagementTemplate
 
         private static void ReplacePolicyWithFileLink(JToken policy, FileInfo fileInfo)
         {
-            policy["properties"]["contentFormat"] = "rawxml-link";
+            policy["properties"]["contentFormat"] = "xml-link";
             policy["apiVersion"] = "2018-01-01";
             string formattedDirectory = fileInfo.Directory.Replace(@"\", "/");
             var directory = $"/{formattedDirectory}";
