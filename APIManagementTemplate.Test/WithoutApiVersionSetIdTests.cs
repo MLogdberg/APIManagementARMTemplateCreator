@@ -8,8 +8,6 @@ using System.Linq;
 
 namespace APIManagementTemplate.Test
 {
-    //TODO: Add support for Diagnostics (on service and api)
-
     [TestClass]
     public class WithoutApiVersionSetIdTests
     {
@@ -364,6 +362,10 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual("[parameters('service_ibizmalo_location')]", appInsightsInstance.Value<string>("location"));
             Assert.AreEqual("other", appInsightsInstance.Value<string>("kind"));
             Assert.AreEqual("other", appInsightsInstance["properties"]?.Value<string>("Application_Type"));
+            var dependsOn = appInsightsInstance.Value<JArray>("dependsOn").Values<string>();
+            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalo_name'))]", dependsOn.SingleOrDefault());
+            Assert.AreEqual("2015-05-01", appInsightsInstance.Value<string>("apiVersion"));
+
         }
 
         [TestMethod]

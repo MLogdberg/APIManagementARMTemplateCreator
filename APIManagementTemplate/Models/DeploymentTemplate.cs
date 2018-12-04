@@ -730,8 +730,16 @@ namespace APIManagementTemplate.Models
             obj.name = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_applicationInsights", "string", name));
             var resource = JObject.FromObject(obj);
             resource["location"] = WrapParameterName($"{GetServiceName(servicename, false)}_location");
+            resource["apiVersion"] = "2015-05-01";
             resource["kind"] = "other";
             resource["properties"] = JObject.FromObject(new { Application_Type =  "other" });
+            if (APIMInstanceAdded)
+            {
+                resource["dependsOn"] = new JArray
+                {
+                    $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]"
+                };
+            }
             return  resource;
         }
 
