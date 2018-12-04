@@ -94,6 +94,7 @@ namespace APIManagementTemplate
             MoveExternalDependencies(templates);
             templates.Add(GenerateMasterTemplate(templates.Where(x => x.Type == ContentType.Json).ToList(), parsedTemplate, separatePolicyFile, apiStandalone));
             templates.AddRange(GenerateAPIMasterTemplate(templates, parsedTemplate, separatePolicyFile, apiStandalone));
+            MoveExternalDependencies(templates.Where(x => x.FileName.EndsWith(MasterTemplateJson)).ToList());
             if (generateParameterFiles)
             {
                 templates.Add(GenerateParameterFile(templates.FirstOrDefault(x => x.FileName == MasterTemplateJson && x.Directory == String.Empty)));

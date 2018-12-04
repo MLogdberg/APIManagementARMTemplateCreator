@@ -53,6 +53,9 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false,HelpMessage = "If the parameter for the service name always should be called apimServiceName or depend on the name of the service")]
         public bool FixedServiceNameParameter = false;
 
+        [Parameter(Mandatory = false,HelpMessage = "If an Application Insights instance should be created. Otherwise you need to provide the instrumentation key of an existing Application Insights instance as a parameter")]
+        public bool CreateApplicationInsightsInstance = false;
+
         [Parameter(Mandatory = false, HelpMessage = "If set, result from rest interface will be saved to this folder")]
         public string DebugOutPutFolder = "";
 
@@ -85,7 +88,7 @@ namespace APIManagementTemplate
 
             try
             {
-                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter,ApiVersion);
+                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter, CreateApplicationInsightsInstance, ApiVersion);
                 JObject result = generator.GenerateTemplate().Result;
                 WriteObject(result.ToString());
             }

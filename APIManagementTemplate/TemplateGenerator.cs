@@ -31,10 +31,11 @@ namespace APIManagementTemplate
         private bool parametrizePropertiesOnly;
         private bool replaceSetBackendServiceBaseUrlAsProperty;
         private bool fixedServiceNameParameter;
+        private bool createApplicationInsightsInstance;
         private string apiVersion;
 
         IResourceCollector resourceCollector;
-        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, string apiVersion= null)
+        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -47,6 +48,7 @@ namespace APIManagementTemplate
             this.replaceSetBackendServiceBaseUrlAsProperty = replaceSetBackendServiceBaseUrlAsProperty;
             this.resourceCollector = resourceCollector;
             this.fixedServiceNameParameter = fixedServiceNameParameter;
+            this.createApplicationInsightsInstance = createApplicationInsightsInstance;
             this.apiVersion = apiVersion;
         }
 
@@ -57,7 +59,7 @@ namespace APIManagementTemplate
 
         public async Task<JObject> GenerateTemplate()
         {
-            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly, this.fixedServiceNameParameter);
+            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly, this.fixedServiceNameParameter, this.createApplicationInsightsInstance);
             if (exportPIManagementInstance)
             {
                 var apim = await resourceCollector.GetResource(GetAPIMResourceIDString());
@@ -71,7 +73,12 @@ namespace APIManagementTemplate
                 var loggers = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/loggers");
                 foreach (JObject logger in (loggers == null ? new JArray() : loggers.Value<JArray>("value")))
                 {
-                    HandleProperties(logger.Value<string>("name"), "Logger", logger["properties"].ToString());
+                    bool isApplicationInsightsLogger = (logger["properties"]?["loggerType"]?.Value<string>() ?? string.Empty) == "applicationInsights";
+                    if (createApplicationInsightsInstance && isApplicationInsightsLogger)
+                        apimTemplateResource.Value<JArray>("resources").Add(template.AddApplicationInsightsInstance(logger));
+
+                    if (!createApplicationInsightsInstance || !isApplicationInsightsLogger)
+                        HandleProperties(logger.Value<string>("name"), "Logger", logger["properties"].ToString());
                     var loggerTemplateResource = template.CreateLogger(logger, false);
                     apimTemplateResource.Value<JArray>("resources").Add(loggerTemplateResource);
                 }
