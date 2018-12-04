@@ -78,13 +78,13 @@ namespace APIManagementTemplate
         private const string MasterTemplateJson = "master.template.json";
         private const string ProductAPIResourceType = "Microsoft.ApiManagement/service/products/apis";
 
-        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false, bool generateParameterFiles = false, bool replaceListSecretsWithParameter = false)
+        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false, bool generateParameterFiles = false, bool replaceListSecretsWithParameter = false, bool listApiInProduct = false)
         {
             JObject parsedTemplate = JObject.Parse(sourceTemplate);
             if (replaceListSecretsWithParameter)
                 ReplaceListSecretsWithParameter(parsedTemplate);
             List <GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate, separatePolicyFile);
-            templates.AddRange(GenerateProducts(parsedTemplate, separatePolicyFile, apiStandalone));
+            templates.AddRange(GenerateProducts(parsedTemplate, separatePolicyFile, apiStandalone, listApiInProduct));
             templates.AddRange(GenerateService(parsedTemplate, separatePolicyFile));
             templates.Add(GenerateTemplate(parsedTemplate, "subscriptions.template.json", String.Empty, SubscriptionResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "users.template.json", String.Empty, UserResourceType));
@@ -413,7 +413,7 @@ namespace APIManagementTemplate
             return template;
         }
 
-        private IEnumerable<GeneratedTemplate> GenerateProducts(JObject parsedTemplate, bool separatePolicyFile, bool apiStandalone)
+        private IEnumerable<GeneratedTemplate> GenerateProducts(JObject parsedTemplate, bool separatePolicyFile, bool apiStandalone, bool listApiInProduct)
         {
             var products = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == ProductResourceType);
             List<GeneratedTemplate> templates = new List<GeneratedTemplate>();
@@ -422,13 +422,13 @@ namespace APIManagementTemplate
                 templates.AddRange(products.Select(p => GenerateProductPolicy(p)).Where(x => x != null));
             }
             templates.AddRange(products
-                .Select(product => GenerateProduct(product, parsedTemplate, separatePolicyFile, apiStandalone)));
+                .Select(product => GenerateProduct(product, parsedTemplate, separatePolicyFile, apiStandalone, listApiInProduct)));
             return templates;
         }
 
         private GeneratedTemplate GenerateProductPolicy(JToken product)
         {
-            var productId = GetParameterPart(product, "name", -2).Substring(1);
+            var productId = GetParameterPart(product, "name", -2).Split('_')[1];
             var policy = product["resources"]
                 .FirstOrDefault(rr => rr["type"].Value<string>() == ProductPolicyResourceType);
             if (policy?["properties"] == null)
@@ -443,9 +443,9 @@ namespace APIManagementTemplate
             };
         }
 
-        private GeneratedTemplate GenerateProduct(JToken product, JObject parsedTemplate, bool separatePolicyFile, bool apiStandalone)
+        private GeneratedTemplate GenerateProduct(JToken product, JObject parsedTemplate, bool separatePolicyFile, bool apiStandalone, bool listApiInProduct)
         {
-            var productId = GetParameterPart(product, "name", -2).Substring(1);
+            var productId = GetParameterPart(product, "name", -2).Split('_')[1];
             GeneratedTemplate generatedTemplate = new GeneratedTemplate
             {
                 Directory = $"product-{productId}",
@@ -460,9 +460,19 @@ namespace APIManagementTemplate
             template.parameters = GetParameters(parsedTemplate["parameters"], product);
             template.resources.Add(JObject.FromObject(product));
             generatedTemplate.Content = JObject.FromObject(template);
+            if (!apiStandalone && listApiInProduct)
+                ListApiInProduct(generatedTemplate.Content);
             if (apiStandalone)
                 RemoveProductAPIs(generatedTemplate.Content);
             return generatedTemplate;
+        }
+
+        private void ListApiInProduct(JObject content)
+        {
+            //get names of apis
+            var apiNames = content.SelectTokens($"$..resources[?(@.type=='{ProductAPIResourceType}')].name");
+
+            RemoveProductAPIs(content);
         }
 
         private void RemoveProductAPIs(JObject content)

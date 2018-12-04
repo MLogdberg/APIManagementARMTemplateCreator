@@ -20,6 +20,9 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false, HelpMessage = "Generate templates for APIs that can be deployed standalone (without the rest of the resources)")]
         public bool ApiStandalone = true;
 
+        [Parameter(Mandatory = false, HelpMessage = "If true only the names of the API will be added as array parameter (does not work if ApiStandalone is true)")]
+        public bool ListApiInProduct = true;
+
         [Parameter(Mandatory = false, HelpMessage = "The output directory")]
         public string OutputDirectory = ".";
 
@@ -42,7 +45,7 @@ namespace APIManagementTemplate
         {
             if (!string.IsNullOrEmpty(DebugTemplateFile))
                 File.WriteAllText(DebugTemplateFile, ARMTemplate);
-            var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone, SeparatePolicyFile, GenerateParameterFiles, ReplaceListSecretsWithParameter);
+            var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone, SeparatePolicyFile, GenerateParameterFiles, ReplaceListSecretsWithParameter, ListApiInProduct);
             foreach (GeneratedTemplate template in templates)
             {
                 string filename = $@"{OutputDirectory}\{template.FileName}";
