@@ -1,0 +1,106 @@
+{
+    "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.Web/sites/myfunctions",
+    "name": "myfunctions",
+    "type": "Microsoft.Web/sites",
+    "kind": "functionapp",
+    "location": "West Europe",
+    "properties": {
+        "name": "myfunctions",
+        "state": "Running",
+        "hostNames": [ "myfunctions.azurewebsites.net" ],
+        "webSpace": "PreDemoTest-WestEuropewebspace",
+        "selfLink": "https://waws-prod-am2-201.api.azurewebsites.windows.net:454/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/webspaces/PreDemoTest-WestEuropewebspace/sites/myfunctions",
+        "repositorySiteName": "myfunctions",
+        "owner": null,
+        "usageState": "Normal",
+        "enabled": true,
+        "adminEnabled": true,
+        "enabledHostNames": [ "myfunctions.azurewebsites.net", "myfunctions.scm.azurewebsites.net" ],
+        "siteProperties": {
+            "metadata": null,
+            "properties": [
+                {
+                    "name": "LinuxFxVersion",
+                    "value": ""
+                },
+                {
+                    "name": "WindowsFxVersion",
+                    "value": null
+                }
+            ],
+            "appSettings": null
+        },
+        "availabilityState": "Normal",
+        "sslCertificates": null,
+        "csrs": [],
+        "cers": null,
+        "siteMode": null,
+        "hostNameSslStates": [
+            {
+                "name": "myfunctions.azurewebsites.net",
+                "sslState": "Disabled",
+                "ipBasedSslResult": null,
+                "virtualIP": null,
+                "thumbprint": null,
+                "toUpdate": null,
+                "toUpdateIpBasedSsl": null,
+                "ipBasedSslState": "NotConfigured",
+                "hostType": "Standard"
+            },
+            {
+                "name": "myfunctions.scm.azurewebsites.net",
+                "sslState": "Disabled",
+                "ipBasedSslResult": null,
+                "virtualIP": null,
+                "thumbprint": null,
+                "toUpdate": null,
+                "toUpdateIpBasedSsl": null,
+                "ipBasedSslState": "NotConfigured",
+                "hostType": "Repository"
+            }
+        ],
+        "computeMode": null,
+        "serverFarm": null,
+        "serverFarmId": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.Web/serverfarms/WestEuropePlan",
+        "reserved": false,
+        "isXenon": false,
+        "lastModifiedTimeUtc": "2018-11-13T12:54:34.7033333",
+        "storageRecoveryDefaultState": "Running",
+        "contentAvailabilityState": "Normal",
+        "runtimeAvailabilityState": "Normal",
+        "siteConfig": null,
+        "deploymentId": "myfunctions",
+        "trafficManagerHostNames": null,
+        "sku": "Dynamic",
+        "scmSiteAlsoStopped": false,
+        "targetSwapSlot": null,
+        "hostingEnvironment": null,
+        "hostingEnvironmentProfile": null,
+        "clientAffinityEnabled": false,
+        "clientCertEnabled": false,
+        "hostNamesDisabled": false,
+        "domainVerificationIdentifiers": null,
+        "kind": "functionapp",
+        "outboundIpAddresses": "23.97.214.177,51.144.176.157,40.91.223.118,168.63.99.196,52.136.230.110",
+        "possibleOutboundIpAddresses": "23.97.214.177,51.144.176.157,40.91.223.118,168.63.99.196,52.136.230.110,23.97.161.87,52.136.228.122,52.232.107.63",
+        "containerSize": 1536,
+        "dailyMemoryTimeQuota": 0,
+        "suspendedTill": null,
+        "siteDisabledReason": 0,
+        "functionExecutionUnitsCache": null,
+        "maxNumberOfWorkers": null,
+        "homeStamp": "waws-prod-am2-201",
+        "cloningInfo": null,
+        "hostingEnvironmentId": null,
+        "tags": null,
+        "resourceGroup": "PreDemoTest",
+        "defaultHostName": "myfunctions.azurewebsites.net",
+        "slotSwapStatus": null,
+        "httpsOnly": false
+    },
+    "identity": {
+        "type": "SystemAssigned",
+        "tenantId": "0500d3be-8181-4063-963b-96b4dcd4d323",
+        "principalId": "b1c9c675-63ef-4a2c-aae2-fb048fd16970"
+    }
+}

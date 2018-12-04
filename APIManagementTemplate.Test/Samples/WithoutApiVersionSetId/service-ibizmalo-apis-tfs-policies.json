@@ -1,5 +1,13 @@
 {
-  "value": [
-  ],
-  "nextLink": ""
+    "value": [
+        {
+            "id": "/subscriptions/032501fb-82d6-4618-9fda-0a32a3a63c08/resourceGroups/common-apim-itest/providers/Microsoft.ApiManagement/service/common-apim-itest/apis/echo-api/policies/policy",
+            "type": "Microsoft.ApiManagement/service/apis/policies",
+            "name": "policy",
+            "properties": {
+                "policyContent": "<!--\r\n    IMPORTANT:\r\n    - Policy elements can appear only within the <inbound>, <outbound>, <backend> section elements.\r\n    - To apply a policy to the incoming request (before it is forwarded to the backend service), place a corresponding policy element within the <inbound> section element.\r\n    - To apply a policy to the outgoing response (before it is sent back to the caller), place a corresponding policy element within the <outbound> section element.\r\n    - To add a policy, place the cursor at the desired insertion point and select a policy from the sidebar.\r\n    - To remove a policy, delete the corresponding policy statement from the policy document.\r\n    - Position the <base> element within a section element to inherit all policies from the corresponding section element in the enclosing scope.\r\n    - Remove the <base> element to prevent inheriting policies from the corresponding section element in the enclosing scope.\r\n    - Policies are applied in the order of their appearance, from the top down.\r\n    - Comments within policy elements are not supported and may disappear. Place your comments between policy elements or at a higher level scope.\r\n-->\r\n<policies>\r\n  <inbound>\r\n    <base />\r\n    <authentication-certificate thumbprint=\"CCA33558DEC546C6A3E52F90DE7B0884\" />\r\n    <set-backend-service base-url=\"https://api.apis.guru/v2/\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n  <on-error>\r\n    <base />\r\n  </on-error>\r\n</policies>"
+            }
+        }
+    ],
+    "nextLink": ""
 }

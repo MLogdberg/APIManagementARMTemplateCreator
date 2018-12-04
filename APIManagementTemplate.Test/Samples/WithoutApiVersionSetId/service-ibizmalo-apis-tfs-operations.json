@@ -1,5 +1,29 @@
 {
   "value": [
+    {
+        "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/tfs/operations/Customer_GetCustomerInfo",
+        "type": "Microsoft.ApiManagement/service/apis/operations",
+        "name": "Customer_GetCustomerInfo",
+        "properties": {
+            "displayName": "Customer_GetCustomerInfo",
+            "method": "POST",
+            "urlTemplate": "/api/Customer",
+            "templateParameters": [],
+            "description": null,
+            "request": {
+                "queryParameters": [],
+                "headers": [],
+                "representations": [
+                    {
+                        "contentType": "application/json",
+                        "sample": "{\r\n  \"NationalIdentityNumber\": \"196512141234\"\r\n}",
+                        "schemaId": "5b7572981142a50298c7f4a6",
+                        "typeName": "GetCustomerRequest"
+                    }
+                ]
+            }
+        }
+    }
   ],
   "nextLink": ""
 }

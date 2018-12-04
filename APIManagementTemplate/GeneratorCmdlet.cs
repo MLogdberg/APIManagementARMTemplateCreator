@@ -46,9 +46,18 @@ namespace APIManagementTemplate
 
         [Parameter(Mandatory = false,HelpMessage = "Set to 'true' when all environment-specific parameters are defined as properties")]
         public bool ParametrizePropertiesOnly = false;
-        
-        [Parameter(Mandatory = false,HelpMessage = "If set, result from rest interface will be saved to this folder")]
+
+        [Parameter(Mandatory = false,HelpMessage = "Set to 'true' to replace the base-url of <set-backend-service> with a property")]
+        public bool ReplaceSetBackendServiceBaseUrlWithProperty = false;
+
+        [Parameter(Mandatory = false,HelpMessage = "If the parameter for the service name always should be called apimServiceName or depend on the name of the service")]
+        public bool FixedServiceNameParameter = false;
+
+        [Parameter(Mandatory = false, HelpMessage = "If set, result from rest interface will be saved to this folder")]
         public string DebugOutPutFolder = "";
+
+        [Parameter(Mandatory = false,HelpMessage = "Filter API version")]
+        public string ApiVersion = "";
 
         [Parameter(Mandatory = false, HelpMessage = "Piped input from armclient", ValueFromPipeline = true)]
         public string ClaimsDump;
@@ -76,7 +85,7 @@ namespace APIManagementTemplate
 
             try
             {
-                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector);
+                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter,ApiVersion);
                 JObject result = generator.GenerateTemplate().Result;
                 WriteObject(result.ToString());
             }

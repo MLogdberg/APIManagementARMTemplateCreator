@@ -1,0 +1,34 @@
+{
+    "value": [
+        {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/loggers/appInsights",
+            "type": "Microsoft.ApiManagement/service/loggers",
+            "name": "appInsights",
+            "properties": {
+                "loggerType": "applicationInsights",
+                "description": "Application insights logger",
+                "credentials": {
+                    "instrumentationKey": "{{Logger-Credentials-5b5dbaa35a635f22ac9db432}}"
+                },
+                "isBuffered": true,
+                "resourceId": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/microsoft.insights/components/appInsights"
+            }
+        },
+        {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/loggers/bpst-apim-l-6a12e",
+            "type": "Microsoft.ApiManagement/service/loggers",
+            "name": "bpst-apim-l-6a12e",
+            "properties": {
+                "loggerType": "azureEventHub",
+                "description": "BPST Template Logger",
+                "credentials": {
+                    "connectionString": "Endpoint=sb://bpst-apim-ns-123is.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=35LFJ32IFSns2jfsasdf32FS2F2fSWTW2/iFwfsd3MM=",
+                    "name": "bpst-apim-eh-234ad"
+                },
+                "isBuffered": true,
+                "resourceId": null
+            }
+        }
+    ],
+    "nextLink": ""
+}
