@@ -329,6 +329,8 @@ namespace APIManagementTemplate.Test
             var codes = query.Value<JArray>("code");
             Assert.AreEqual(1, codes.Count);
             Assert.AreEqual("{{myfunctions-key}}", codes[0].Value<string>());
+            Assert.AreEqual("[concat('https://',toLower(parameters('myfunctions_siteName')),'.azurewebsites.net/api')]", 
+                backend["properties"]?.Value<string>("url"));
         }
 
         [TestMethod]

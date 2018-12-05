@@ -443,7 +443,8 @@ namespace APIManagementTemplate.Models
                     var paramsitename = AddParameter(name + "_siteName", "string", sitename);
                     aid.ReplaceValueAfter("sites", "',parameters('" + paramsitename + "')");
                     resource["properties"]["description"] = $"[parameters('{paramsitename}')]";
-                    resource["properties"]["url"] = $"[concat('https://',toLower(parameters('{paramsitename}')),'.azurewebsites.net/')]";
+                    string path = GetPathFromUrl(resource["properties"]?.Value<string>("url"));
+                    resource["properties"]["url"] = $"[concat('https://',toLower(parameters('{paramsitename}')),'.azurewebsites.net/{path}')]";
                     retval = new Property()
                     {
                         type = Property.PropertyType.Function,
@@ -479,6 +480,15 @@ namespace APIManagementTemplate.Models
 
             return retval;
         }
+
+        private string GetPathFromUrl(string url)
+        {
+            if (String.IsNullOrWhiteSpace(url))
+                return String.Empty;
+            var uri = new Uri(url);
+            return uri.PathAndQuery.Substring(1);
+        }
+
         public ResourceTemplate AddVersionSet(JObject restObject)
         {
             if (restObject == null)
