@@ -428,7 +428,8 @@ namespace APIManagementTemplate
 
         private GeneratedTemplate GenerateProductPolicy(JToken product)
         {
-            var productId = GetParameterPart(product, "name", -2).Split('_')[1];
+            string productId = GetProductId(product);
+
             var policy = product["resources"]
                 .FirstOrDefault(rr => rr["type"].Value<string>() == ProductPolicyResourceType);
             if (policy?["properties"] == null)
@@ -443,9 +444,20 @@ namespace APIManagementTemplate
             };
         }
 
+        private static string GetProductId(JToken product)
+        {
+            var productId = GetParameterPart(product, "name", -2);
+
+            //check for product is already parameterized
+            if(productId.StartsWith("product_") && productId.EndsWith("_name"))
+                return productId.Split('_')[1];
+            else
+                return productId.Substring(1);            
+        }
+
         private GeneratedTemplate GenerateProduct(JToken product, JObject parsedTemplate, bool separatePolicyFile, bool apiStandalone, bool listApiInProduct)
         {
-            var productId = GetParameterPart(product, "name", -2).Split('_')[1];
+            var productId = GetProductId(product);
             GeneratedTemplate generatedTemplate = new GeneratedTemplate
             {
                 Directory = $"product-{productId}",
@@ -468,10 +480,7 @@ namespace APIManagementTemplate
         }
 
         private void ListApiInProduct(JObject content)
-        {
-            //var productApis = content.SelectTokens($"$..resources[?(@.type=='{ProductAPIResourceType}')]");
-            
-
+        {    
             var parameterObject = content.SelectToken($"$.parameters") as JObject;
             //get products
             var products = content.SelectTokens($"$..resources[?(@.type=='{ProductResourceType}')]").ToList();
