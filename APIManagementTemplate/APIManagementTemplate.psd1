@@ -12,7 +12,7 @@
 RootModule = 'APIManagementTemplate.dll'
 
 # Version number of this module.
-ModuleVersion = '1.2.2'
+ModuleVersion = '1.3.5'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
