@@ -31,7 +31,7 @@ namespace APIManagementTemplate.Test
         {
             _templatesGenerator = new TemplatesGenerator();
             _sourceTemplate = Utils.GetEmbededFileContent("APIManagementTemplate.Test.SamplesTemplate.template.json");
-            _generatedTemplates = _templatesGenerator.Generate(_sourceTemplate, true, true, true);
+            _generatedTemplates = _templatesGenerator.Generate(_sourceTemplate, true, true, true, true);
         }
 
         [TestMethod]
@@ -67,6 +67,19 @@ namespace APIManagementTemplate.Test
             Assert.IsTrue(_generatedTemplates.Any(x =>
                 x.FileName == ProductStarterFilename &&
                 x.Directory == @"product-starter"));
+        }
+
+        [TestMethod]
+        public void TestResultContains_ProductStarterWithoutAPI()
+        {
+            var product = _generatedTemplates.First(x => x.FileName == ProductStarterFilename && x.Directory == @"product-starter");
+            Assert.IsNotNull(product);
+
+            var apis = product.Content.SelectTokens($"$..resources[?(@.type=='Microsoft.ApiManagement/service/products/apis')]");
+
+            Assert.AreEqual(0, apis.Count());
+
+
         }
 
         [TestMethod]
@@ -164,7 +177,7 @@ namespace APIManagementTemplate.Test
         private static void AssertFileLink(JToken policy, string path)
         {
             JToken properties = policy["properties"];
-            Assert.AreEqual("rawxml-link", properties.Value<string>("contentFormat"));
+            Assert.AreEqual("xml-link", properties.Value<string>("contentFormat"));
             Assert.AreEqual(
                 $"[concat(parameters('repoBaseUrl'), '{path}', parameters('{TemplatesGenerator.TemplatesStorageAccountSASToken}'))]",
                 properties.Value<string>("policyContent"));
@@ -188,7 +201,7 @@ namespace APIManagementTemplate.Test
             var template = _generatedTemplates.Single(x => x.FileName == ProductStarterFilename);
             var parameter = template.Content["parameters"][TemplatesGenerator.TemplatesStorageAccountSASToken];
             Assert.IsNotNull(parameter);
-            Assert.AreEqual("string", parameter.Value<string>("type"));
+            Assert.AreEqual("securestring", parameter.Value<string>("type"));
             Assert.AreEqual(String.Empty, parameter.Value<string>("defaultValue"));
         }
 
@@ -236,6 +249,23 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
+        public void TestResultContainsAPIFor_EchoV1WithProductAPI()
+        {
+            var template = _generatedTemplates.Single(x => x.FileName == EchoFilename);
+
+            var productApi = template.Content.SelectToken("$.resources[?(@.type=='Microsoft.ApiManagement/service/products/apis')]");
+            Assert.IsNotNull(productApi);
+
+            Assert.AreEqual("[concat(parameters('service_PreDemoTest_name'), '/', 'starter', '/', 'echo-api')]", productApi.Value<string>("name"));
+
+            var dependsOn = productApi.Value<JArray>("dependsOn").Values<string>();
+            Assert.AreEqual(1, dependsOn.Count());
+
+            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_PreDemoTest_name'),'echo-api')]", 
+                dependsOn.First());
+        }
+
+        [TestMethod]
         public void TestResultContainsAPIMasterFileFor_Httpbin()
         {
             var api = _generatedTemplates.Single(x => x.Directory == "api-Versioned-HTTP-bin-API" && x.FileName == "api-Versioned-HTTP-bin-API.master.template.json");
@@ -257,6 +287,24 @@ namespace APIManagementTemplate.Test
             Assert.IsNotNull(serviceNameParameter);
             Assert.AreEqual("PreDemoTest", serviceNameParameter.Value["value"].Value<string>());
         }
+        [TestMethod]
+        public void TestResultContainsMasterParametersFileForVersionedHttpBin()
+        {
+            var parameterTemplate = _generatedTemplates.Single(x => x.Directory == "api-Versioned-HTTP-bin-API" && x.FileName == "api-Versioned-HTTP-bin-API.master.parameters.json");
+            var parameters = parameterTemplate.Content.SelectToken("$.parameters");
+            Assert.AreNotEqual(0, parameters.Count());
+
+            var echoApiIsCurrent = parameters.Cast<JProperty>().FirstOrDefault(x => x.Name == "httpBinAPI_isCurrent");
+
+            Assert.IsNotNull(echoApiIsCurrent);
+            Assert.AreEqual(JTokenType.Boolean, echoApiIsCurrent.Value["value"].Type);
+            Assert.AreEqual(true, echoApiIsCurrent.Value["value"].Value<bool>());
+
+            Assert.IsNull(parameters.Cast<JProperty>().FirstOrDefault(x => x.Name == "repoBaseUrl"));
+            Assert.IsNull(parameters.Cast<JProperty>().FirstOrDefault(x => x.Name == "apimServiceName"));
+
+            // echo-api_isCurrent
+        }
 
         [TestMethod]
         public void TestResultContainsApiMasterParametersFile_ForHttpBin()
@@ -275,6 +323,34 @@ namespace APIManagementTemplate.Test
         public void TestResultContains_Service()
         {
             Assert.IsTrue(_generatedTemplates.Any(x => x.FileName == ServiceFilename && x.Directory == String.Empty));
+        }
+
+
+        [TestMethod]
+        public void TestResultContains_PropertyForMyFunctionsKeyWithoutListSecrets()
+        {
+            GeneratedTemplate serviceTemplate = _generatedTemplates.Single(x => x.FileName == ServiceFilename && x.Directory == String.Empty);
+
+            var property = serviceTemplate.Content.SelectTokens("$..resources[?(@.type=='Microsoft.ApiManagement/service/properties')]")
+                .SingleOrDefault(x => x["name"].Value<string>().Contains("myfunctions-key"));
+            Assert.IsNotNull(property);
+
+            var value = property["properties"].Value<string>("value");
+            Assert.IsFalse(value.StartsWith("[listsecrets("));
+
+            Assert.AreEqual("[parameters('myfunctions-key')]", value);
+        }
+
+        [TestMethod]
+        public void TestResultContains_ParameterForMyFunctionsKey()
+        {
+            GeneratedTemplate serviceTemplate = _generatedTemplates.Single(x => x.FileName == ServiceFilename && x.Directory == String.Empty);
+
+            var parameter = serviceTemplate.Content.SelectToken("$.parameters.myfunctions-key");
+            Assert.IsNotNull(parameter);
+
+            Assert.AreEqual("securestring", parameter.Value<string>("type"));
+            Assert.AreEqual("", parameter.Value<string>("defaultValue"));
         }
 
         [TestMethod]

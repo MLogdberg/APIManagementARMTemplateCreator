@@ -43,6 +43,7 @@ Example when user is connected to multitenants:
 | ParametrizePropertiesOnly | If parameters only should be created for properties such as names of apim services or logic apps and not names of groups, apis or products | false |
 | ReplaceSetBackendServiceBaseUrlWithProperty | If the base-url of <set-backend-service> with should be replaced with a property instead of a parameter. If this is false you will not be able to set SeparatePolicyFile=true for Write-APIManagementTemplates when you have set-backend-service with base-url-attribute in a policy | false |
 | FixedServiceNameParameter | True if the parameter for the name of the service should have a fixed name (apimServiceName). Otherwise the parameter name will depend on the name of the service (service_PreDemoTest_name)| false |
+| CreateApplicationInsightsInstance | If an Application Insights instance should be created when used by a logger. Otherwise you need to provide the instrumentation key of an existing Application Insights instance as a parameter| false |
 | DebugOutPutFolder | If set, result from rest interface will be saved to this folder | false |
 | ApiVersion | If set, api result will be filtered based on this value i.e: v2 | false |
 | ClaimsDump | A dump of claims piped in from `armclient` - should not be manually set | false |
@@ -64,5 +65,6 @@ Use Write-APIManagementTemplates generate many small ARM templates (as suggested
 | SeparatePolicyFile | If the policies should be written to a separate xml file | false | false | 
 | MergeTemplates | If the template already exists in the output directory, it will be merged with the new result. | false | false | 
 | GenerateParameterFiles | If parameter files should be generated | false | false | 
+| ReplaceListSecretsWithParameter | If the key to an Azure Function should be defined in a parameter instead of calling listsecrets | false | false |
 | DebugTemplateFile | If set, the input ARM template is written to this file | false | |
 | ARMTemplate | The ARM template piped from Get-APIManagementTemplate - should not be manually set | false | |

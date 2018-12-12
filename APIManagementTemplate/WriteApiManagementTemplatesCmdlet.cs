@@ -32,6 +32,9 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false, HelpMessage = "If parameter files should be generated")]
         public bool GenerateParameterFiles = false;
 
+        [Parameter(Mandatory = false, HelpMessage = "If the key to an Azure Function should be defined in a parameter instead of calling listsecrets")]
+        public bool ReplaceListSecretsWithParameter = false;
+
         [Parameter(Mandatory = false, HelpMessage = "If set, the input template is written to this file ")]
         public string DebugTemplateFile = "";
 
@@ -39,7 +42,7 @@ namespace APIManagementTemplate
         {
             if (!string.IsNullOrEmpty(DebugTemplateFile))
                 File.WriteAllText(DebugTemplateFile, ARMTemplate);
-            var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone, SeparatePolicyFile, GenerateParameterFiles);
+            var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone, SeparatePolicyFile, GenerateParameterFiles, ReplaceListSecretsWithParameter);
             foreach (GeneratedTemplate template in templates)
             {
                 string filename = $@"{OutputDirectory}\{template.FileName}";
@@ -53,11 +56,7 @@ namespace APIManagementTemplate
                 if (File.Exists(filename) && MergeTemplates && template.Type == ContentType.Json)
                 {
                     JObject oldTemplate = JObject.Parse(File.ReadAllText(filename));
-                    oldTemplate.Merge(template.Content, new JsonMergeSettings
-                    {
-                        MergeArrayHandling = MergeArrayHandling.Union
-                    });
-                    template.Content = oldTemplate;
+                    template.Content = TemplateMerger.Merge(oldTemplate, template.Content);
                 }
                 File.WriteAllText(filename, template.Type == ContentType.Json ? template.Content.ToString() : template.XmlContent);
             }
