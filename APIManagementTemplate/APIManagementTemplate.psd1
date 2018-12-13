@@ -12,7 +12,7 @@
 RootModule = 'APIManagementTemplate.dll'
 
 # Version number of this module.
-ModuleVersion = '1.3.1'
+ModuleVersion = '1.3.3'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -21,13 +21,13 @@ ModuleVersion = '1.3.1'
 GUID = 'c160333e-a6d8-4cd8-8413-84e1389fe9db'
 
 # Author of this module
-Author = 'Mattias LÃ¶gdberg'
+Author = 'Mattias Lögdberg'
 
 # Company or vendor of this module
 CompanyName = 'Unknown'
 
 # Copyright statement for this module
-Copyright = '(c) 2018 Mattias LÃ¶gdberg'
+Copyright = '(c) 2018 Mattias Lögdberg'
 
 # Description of the functionality provided by this module
 Description = 'Extract Azure API Management to ARM templates'

@@ -40,8 +40,9 @@ namespace APIManagementTemplate.Models
 
         private bool parametrizePropertiesOnly { get; set; }
         private bool fixedServiceNameParameter { get; set; }
+        private bool referenceApplicationInsightsInstrumentationKey { get; set; }
 
-        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false)
+        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false)
         {
             parameters = new JObject();
             variables = new JObject();
@@ -50,6 +51,7 @@ namespace APIManagementTemplate.Models
 
             this.parametrizePropertiesOnly = parametrizePropertiesOnly;
             this.fixedServiceNameParameter = fixedServiceNameParameter;
+            this.referenceApplicationInsightsInstrumentationKey = referenceApplicationInsightsInstrumentationKey;
         }
 
         public static DeploymentTemplate FromString(string template)
@@ -714,6 +716,33 @@ namespace APIManagementTemplate.Models
             return resource;
             //this.resources.Add(resource);
         }
+
+        public JObject AddApplicationInsightsInstance(JObject restObject)
+        {
+            var obj = new ResourceTemplate
+            {
+                comments = "Generated for resource " + restObject.Value<string>("id"),
+                type = "Microsoft.Insights/components",
+            };
+            var rid = new AzureResourceId(restObject.Value<string>("id"));
+            var servicename = rid.ValueAfter("service");
+            string name = restObject.Value<string>("name");
+            obj.name = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_applicationInsights", "string", name));
+            var resource = JObject.FromObject(obj);
+            resource["location"] = WrapParameterName($"{GetServiceName(servicename, false)}_location");
+            resource["apiVersion"] = "2015-05-01";
+            resource["kind"] = "other";
+            resource["properties"] = JObject.FromObject(new { Application_Type =  "other" });
+            if (APIMInstanceAdded)
+            {
+                resource["dependsOn"] = new JArray
+                {
+                    $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]"
+                };
+            }
+            return  resource;
+        }
+
         public JObject CreateServiceResource(JObject restObject, string resourceType, bool addResource)
         {
             var obj = new ResourceTemplate
@@ -726,7 +755,11 @@ namespace APIManagementTemplate.Models
             obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
             var name= restObject.Value<string>("name");
             var resourceTypeShort = GetResourceTypeShort(resourceType);
-            name = parametrizePropertiesOnly ? $"'{name}'" : $"parameters('{AddParameter($"{resourceTypeShort}_{name}_name", "string", name)}')";
+            bool applicationInsightsLogger = IsApplicationInsightsLogger(restObject);
+            if (applicationInsightsLogger && referenceApplicationInsightsInstrumentationKey)
+                name = $"parameters('{AddParameter($"{GetServiceName(servicename, false)}_applicationInsights", "string", name)}')";
+            else
+                name = parametrizePropertiesOnly ? $"'{name}'" : $"parameters('{AddParameter($"{resourceTypeShort}_{name}_name", "string", name)}')";
             obj.AddName(name);
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
@@ -743,6 +776,15 @@ namespace APIManagementTemplate.Models
             }
                 
             return resource;
+        }
+
+        private bool IsApplicationInsightsLogger(JObject restObject)
+        {
+            if (restObject.Value<string>("type") != "Microsoft.ApiManagement/service/loggers")
+                return false;
+            if (restObject["properties"]?["loggerType"]?.Value<string>() != "applicationInsights")
+                return false;
+            return true;
         }
 
         private string GetResourceTypeShort(string resourceType)
@@ -770,13 +812,28 @@ namespace APIManagementTemplate.Models
         public JObject CreateLogger(JObject restObject, bool addResource)
         {
             var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/loggers", addResource);
-            var loggerName = new AzureResourceId(restObject.Value<string>("id")).ValueAfter("loggers");
+            var azureResourceId = new AzureResourceId(restObject.Value<string>("id"));
+            var loggerName = azureResourceId.ValueAfter("loggers");
+            var serviceName = azureResourceId.ValueAfter("service");
             var credentials = resource["properties"]?["credentials"];
             if (credentials != null)
             {
                 if (credentials.Value<string>("connectionString") != null)
                 {
                     credentials["connectionString"] = WrapParameterName(AddParameter($"logger_{loggerName}_connectionString", "securestring", String.Empty));
+                }
+                var loggerType = resource["properties"]?["loggerType"]?.Value<string>() ?? string.Empty;
+                if (referenceApplicationInsightsInstrumentationKey && loggerType == "applicationInsights" && credentials.Value<string>("instrumentationKey") != null)
+                {
+                    string parameter = AddParameter($"{GetServiceName(serviceName, false)}_applicationInsights", "string", loggerName);
+                    credentials["instrumentationKey"] = $"[reference(resourceId('Microsoft.Insights/components', parameters('{parameter}')), '2014-04-01').InstrumentationKey]";
+                    var dependsOn = resource.Value<JArray>("dependsOn") ?? new JArray();
+                    dependsOn.Add($"[resourceId('Microsoft.Insights/components',parameters('{GetServiceName(serviceName, false)}_applicationInsights'))]");
+                    resource["dependsOn"] = dependsOn;
+                    if (resource["properties"] is JObject properties)
+                    {
+                        properties.Remove("resourceId");
+                    }
                 }
                 if (credentials.Value<string>("name") != null)
                 {
