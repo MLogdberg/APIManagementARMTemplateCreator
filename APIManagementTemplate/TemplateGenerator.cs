@@ -70,6 +70,12 @@ namespace APIManagementTemplate
                     var policyTemplateResource = template.CreatePolicy(policy);
                     apimTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
                 }
+                var identityProviders = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/identityProviders");
+                foreach (JObject identityProvider in (identityProviders == null ? new JArray() : identityProviders.Value<JArray>("value")))
+                {
+                    var identityProviderResource = template.CreateIdentityProvider(identityProvider, false);
+                    apimTemplateResource.Value<JArray>("resources").Add(identityProviderResource);
+                }
                 var loggers = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/loggers");
                 foreach (JObject logger in (loggers == null ? new JArray() : loggers.Value<JArray>("value")))
                 {

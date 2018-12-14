@@ -852,6 +852,22 @@ namespace APIManagementTemplate.Models
             }
             return resource;
         }
+        public JObject CreateIdentityProvider(JObject restObject, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/identityProviders", addResource);
+            var properties= resource["properties"];
+            var name = restObject.Value<string>("name");
+            if (properties?.Value<string>("clientId") != null)
+            {
+                properties["clientId"] = WrapParameterName(AddParameter($"identityProvider_{name}_clientId", "string", properties.Value<string>("clientId")));
+            }
+            if (properties?.Value<string>("clientSecret") != null)
+            {
+                properties["clientSecret"] = WrapParameterName(AddParameter($"identityProvider_{name}_clientSecret", "securestring", String.Empty));
+            }
+
+            return resource;
+        }
 
         public JObject CreateOpenIDConnectProvider(JObject restObject, bool addResource)
         {
