@@ -41,8 +41,9 @@ namespace APIManagementTemplate.Models
         private bool parametrizePropertiesOnly { get; set; }
         private bool fixedServiceNameParameter { get; set; }
         private bool referenceApplicationInsightsInstrumentationKey { get; set; }
+        private readonly bool parameterizeBackendFunctionKey;
 
-        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false)
+        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false)
         {
             parameters = new JObject();
             variables = new JObject();
@@ -52,6 +53,7 @@ namespace APIManagementTemplate.Models
             this.parametrizePropertiesOnly = parametrizePropertiesOnly;
             this.fixedServiceNameParameter = fixedServiceNameParameter;
             this.referenceApplicationInsightsInstrumentationKey = referenceApplicationInsightsInstrumentationKey;
+            this.parameterizeBackendFunctionKey = parameterizeBackendFunctionKey;
         }
 
         public static DeploymentTemplate FromString(string template)
@@ -444,12 +446,17 @@ namespace APIManagementTemplate.Models
                     aid.ReplaceValueAfter("sites", "',parameters('" + paramsitename + "')");
                     resource["properties"]["description"] = $"[parameters('{paramsitename}')]";
                     resource["properties"]["url"] = $"[concat('https://',toLower(parameters('{paramsitename}')),'.azurewebsites.net/')]";
+                    string backendFunctionKeyParamName = parameterizeBackendFunctionKey ? AddParameter($"{sitename}-key", "string", "") : null;
+
                     retval = new Property()
                     {
                         type = Property.PropertyType.Function,
                         name = sitename.ToLower(),
-                        extraInfo = $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key"
+                        extraInfo = parameterizeBackendFunctionKey
+                        ? $"parameters('{backendFunctionKeyParamName}')"
+                        : $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key"
                     };
+                    
                     var code = (resource["properties"]?["credentials"]?["query"]?.Value<JArray>("code") ?? new JArray()).FirstOrDefault();
                     if (code != null)
                     {
