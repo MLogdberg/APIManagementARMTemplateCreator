@@ -1,4 +1,4 @@
-﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -65,6 +65,9 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false, HelpMessage = "Piped input from armclient", ValueFromPipeline = true)]
         public string ClaimsDump;
 
+        [Parameter(Mandatory = false, HelpMessage = "Set to 'true' if you want the backend function key to be parameterized.")]
+        public bool ParameterizeBackendFunctionKey = false;
+
         protected override void ProcessRecord()
         {
             AzureResourceCollector resourceCollector = new AzureResourceCollector();
@@ -88,7 +91,7 @@ namespace APIManagementTemplate
 
             try
             {
-                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter, CreateApplicationInsightsInstance, ApiVersion);
+                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter, CreateApplicationInsightsInstance, ApiVersion, ParameterizeBackendFunctionKey);
                 JObject result = generator.GenerateTemplate().Result;
                 WriteObject(result.ToString());
             }
