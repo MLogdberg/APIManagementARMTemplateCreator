@@ -404,7 +404,7 @@ namespace APIManagementTemplate.Models
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.name = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/' ,'{name}')]";
+            obj.name = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/' ,'{AddParameter($"{name}_sitename", "string", "")}')]";
             obj.type = type;
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
@@ -483,9 +483,10 @@ namespace APIManagementTemplate.Models
 
             if (APIMInstanceAdded)
             {
-                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
-                resource["dependsOn"] = dependsOn;
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");                
             }
+
+            resource["dependsOn"] = dependsOn;
 
             if (this.resources.Where(rr => rr.Value<string>("name") == obj.name).Count() == 0)
                 this.resources.Add(resource);
