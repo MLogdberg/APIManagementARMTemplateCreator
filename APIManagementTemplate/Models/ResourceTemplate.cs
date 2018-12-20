@@ -20,6 +20,11 @@ namespace APIManagementTemplate.Models
             return String.Join(",", names);
         }
 
+        public string GetResourceId(string serviceNameParamName, string apiNameParamName)
+        {
+            return $"[resourceId('{type}', {serviceNameParamName}, {apiNameParamName})]";
+        }
+
         public string comments { get; set; }
         public string type { get; set; }
         public string name
@@ -42,9 +47,10 @@ namespace APIManagementTemplate.Models
         {
             get
             {
-                return "2017-03-01";
+                return "2018-06-01-preview";
             }
         }
+
         public JObject properties { get; set; }
 
         public IList<JObject> resources { get; set; }

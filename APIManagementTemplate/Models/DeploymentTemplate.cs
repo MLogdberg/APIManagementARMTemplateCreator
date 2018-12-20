@@ -119,7 +119,7 @@ namespace APIManagementTemplate.Models
             }
             return realParameterName;
         }
-       
+
         public string AddVariable(string variablename, string value)
         {
             string realVariableName = variablename;
@@ -159,6 +159,12 @@ namespace APIManagementTemplate.Models
         {
             return "[parameters('" + paramname + "')]";
         }
+
+        public string WrapParameterNameWithoutBrackets(string paramname)
+        {
+            return "parameters('" + paramname + "')";
+        }
+
         public string RemoveWrapParameter(string parameterstring)
         {
             return parameterstring.Replace("[parameters('", "").Replace("')]", "");
@@ -242,7 +248,7 @@ namespace APIManagementTemplate.Models
 
             string name = restObject.Value<string>("name");
             string type = restObject.Value<string>("type");
-            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));            
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
 
             var obj = new ResourceTemplate();
@@ -256,7 +262,7 @@ namespace APIManagementTemplate.Models
             AddParameterFromObject((JObject)resource["properties"], "serviceUrl", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "apiVersion", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "isCurrent", "bool", name);
-            
+
             if (APIMInstanceAdded)
             {
                 resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]" });
@@ -347,7 +353,7 @@ namespace APIManagementTemplate.Models
             {
                 dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
             }
-            foreach(var schema in schemalist)
+            foreach (var schema in schemalist)
             {
                 dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis/schemas', parameters('{GetServiceName(servicename)}'),{apiname},'{schema}')]");
             }
@@ -384,7 +390,7 @@ namespace APIManagementTemplate.Models
             return ll;
         }
 
-        public Property AddBackend(JObject restObject,JObject azureResource )
+        public Property AddBackend(JObject restObject, JObject azureResource)
         {
             Property retval = null;
             if (restObject == null)
@@ -412,7 +418,7 @@ namespace APIManagementTemplate.Models
                 var rgparamname = AddParameter(name + "_resourceGroup", "string", aid.ResourceGroupName);
                 aid.ResourceGroupName = "',parameters('" + rgparamname + "'),'";
                 if (resourceid.Contains("providers/Microsoft.Logic/workflows")) //Logic App
-                {    
+                {
                     var laname = aid.ValueAfter("workflows");
                     var logicappname = AddParameter(name + "_logicAppName", "string", laname);
                     aid.ReplaceValueAfter("workflows", "',parameters('" + logicappname + "')");
@@ -422,14 +428,14 @@ namespace APIManagementTemplate.Models
                     string triggername = "manual";
                     foreach (var trigger in triggerObject)
                     {
-                        if(trigger.Value.Value<string>("type") == "Request" && trigger.Value.Value<string>("kind") == "Http")
+                        if (trigger.Value.Value<string>("type") == "Request" && trigger.Value.Value<string>("kind") == "Http")
                         {
                             triggername = trigger.Key;
                         }
                     }
-                        //need to get the Logic App triggers and find the HTTP one....
+                    //need to get the Logic App triggers and find the HTTP one....
 
-                    string listcallbackref = $"listCallbackUrl(resourceId(parameters('{rgparamname}'), 'Microsoft.Logic/workflows/triggers', parameters('{logicappname}'), '{triggername}'), '2017-07-01')";                    
+                    string listcallbackref = $"listCallbackUrl(resourceId(parameters('{rgparamname}'), 'Microsoft.Logic/workflows/triggers', parameters('{logicappname}'), '{triggername}'), '2017-07-01')";
 
                     resource["properties"]["url"] = $"[substring({listcallbackref}.basePath,0,add(10,indexOf({listcallbackref}.basePath,'/triggers/')))]";
                     retval = new Property()
@@ -456,7 +462,7 @@ namespace APIManagementTemplate.Models
                         ? $"parameters('{backendFunctionKeyParamName}')"
                         : $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key"
                     };
-                    
+
                     var code = (resource["properties"]?["credentials"]?["query"]?.Value<JArray>("code") ?? new JArray()).FirstOrDefault();
                     if (code != null)
                     {
@@ -500,7 +506,7 @@ namespace APIManagementTemplate.Models
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");            
+            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
             obj.AddName($"'{name}'");
 
             obj.type = type;
@@ -627,7 +633,7 @@ namespace APIManagementTemplate.Models
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')"); 
+            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
             obj.AddName($"'{name}'");
 
             obj.type = type;
@@ -639,9 +645,9 @@ namespace APIManagementTemplate.Models
             {
                 resource["properties"]["value"] = WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "value", secret ? "securestring" : "string", secret ? "secretvalue" : resource["properties"]["value"]));
             }
-                
 
-            
+
+
             //AddParameterFromObject((JObject)resource["properties"], "value", secret ? "securestring" : "string", restObject["properties"].Value<string>("displayName"));
 
             var dependsOn = new JArray();
@@ -668,7 +674,7 @@ namespace APIManagementTemplate.Models
             string apiname = "";
             string operationname = "";
             bool servicePolicy = false;
-            
+
             name = $"'{name}'";
 
 
@@ -739,7 +745,7 @@ namespace APIManagementTemplate.Models
             resource["location"] = WrapParameterName($"{GetServiceName(servicename, false)}_location");
             resource["apiVersion"] = "2015-05-01";
             resource["kind"] = "other";
-            resource["properties"] = JObject.FromObject(new { Application_Type =  "other" });
+            resource["properties"] = JObject.FromObject(new { Application_Type = "other" });
             if (APIMInstanceAdded)
             {
                 resource["dependsOn"] = new JArray
@@ -747,7 +753,7 @@ namespace APIManagementTemplate.Models
                     $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]"
                 };
             }
-            return  resource;
+            return resource;
         }
 
         public JObject CreateServiceResource(JObject restObject, string resourceType, bool addResource)
@@ -760,13 +766,9 @@ namespace APIManagementTemplate.Models
             var rid = new AzureResourceId(restObject.Value<string>("id"));
             var servicename = rid.ValueAfter("service");
             obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
-            var name= restObject.Value<string>("name");
+            var name = restObject.Value<string>("name");
             var resourceTypeShort = GetResourceTypeShort(resourceType);
-            bool applicationInsightsLogger = IsApplicationInsightsLogger(restObject);
-            if (applicationInsightsLogger && referenceApplicationInsightsInstrumentationKey)
-                name = $"parameters('{AddParameter($"{GetServiceName(servicename, false)}_applicationInsights", "string", name)}')";
-            else
-                name = parametrizePropertiesOnly ? $"'{name}'" : $"parameters('{AddParameter($"{resourceTypeShort}_{name}_name", "string", name)}')";
+            name = parametrizePropertiesOnly ? $"'{name}'" : $"parameters('{AddParameter($"{resourceTypeShort}_{name}_name", "string", name)}')";
             obj.AddName(name);
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
@@ -778,10 +780,10 @@ namespace APIManagementTemplate.Models
             resource["dependsOn"] = dependsOn;
             if (addResource)
             {
-                if(resources.All(x => x.Value<string>("name") != resource.Value<string>("name")))
+                if (resources.All(x => x.Value<string>("name") != resource.Value<string>("name")))
                     resources.Add(resource);
             }
-                
+
             return resource;
         }
 
@@ -814,6 +816,51 @@ namespace APIManagementTemplate.Models
             };
             resource["properties"] = JObject.FromObject(properties);
             return resource;
+        }
+
+        public ResourceTemplate AddLogger(string servicename)
+        {
+            string serviceNameParam = WrapParameterNameWithoutBrackets(GetServiceName(servicename));
+            string loggerNameParam = WrapParameterNameWithoutBrackets(AddParameter("api-logger-name", "string", ""));
+            string appInsightsRgNameParam = WrapParameterNameWithoutBrackets(AddParameter("app-insights-resourceGroup", "string", ""));
+            string appInsightsNameParam = WrapParameterNameWithoutBrackets(AddParameter("app-insights-name", "string", ""));
+
+            var loggerTemplate = new ResourceTemplate
+            {
+                type = "Microsoft.ApiManagement/service/loggers",
+                name = $"[concat({serviceNameParam}, '/', {loggerNameParam})]",
+                properties = JObject.FromObject(new
+                {
+                    loggerType = "applicationInsights",
+                    credentials = new { instrumentationKey = $"[reference(resourceId({appInsightsRgNameParam}, 'Microsoft.Insights/components', {appInsightsNameParam}), '2014-04-01').InstrumentationKey]" },
+                    isBuffered = true
+                })
+            };
+
+            resources.Add(JObject.FromObject(loggerTemplate));
+
+            return loggerTemplate;
+        }
+
+        public JObject CreateDiagnostics(string servicename, string apiNameParam)
+        {
+            string serviceNameParam = WrapParameterNameWithoutBrackets(GetServiceName(servicename));
+            string loggerNameParam = WrapParameterNameWithoutBrackets(AddParameter("api-logger-name", "string", ""));
+
+            var diagnosticsTemplate = new ResourceTemplate
+            {
+                type = "Microsoft.ApiManagement/service/apis/diagnostics",
+                name = "diagnostics",
+                properties = JObject.FromObject(new
+                {
+                    enabled = true,
+                    enableHttpCorrelationHeaders = true,
+                    loggerId = $"[resourceId('Microsoft.ApiManagement/service/loggers', {serviceNameParam}, {loggerNameParam})]"
+                }),
+                dependsOn = new JArray($"[resourceId('Microsoft.ApiManagement/service/apis', {serviceNameParam}, {WrapParameterNameWithoutBrackets(apiNameParam)})]")
+            };
+
+            return JObject.FromObject(diagnosticsTemplate);
         }
 
         public JObject CreateLogger(JObject restObject, bool addResource)
@@ -870,7 +917,7 @@ namespace APIManagementTemplate.Models
                 if (prop == null)
                     return string.Empty;
             }
-            return prop.Value<string>()??String.Empty;
+            return prop.Value<string>() ?? String.Empty;
         }
 
         public JObject CreateBackend(JObject restObject)

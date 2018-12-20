@@ -18,12 +18,10 @@ namespace APIManagementTemplate
 {
     public class TemplateGenerator
     {
-
         private string subscriptionId;
         private string resourceGroup;
         private string servicename;
         private string apiFilters;
-
 
         private bool exportPIManagementInstance;
         private bool exportGroups;
@@ -34,7 +32,10 @@ namespace APIManagementTemplate
         private bool createApplicationInsightsInstance;
         private string apiVersion;
         private readonly bool parameterizeBackendFunctionKey;
-        IResourceCollector resourceCollector;
+        private IResourceCollector resourceCollector;
+
+        public List<Property> identifiedProperties = new List<Property>();
+        public List<JObject> openidConnectProviders = null;
 
         public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false)
         {
@@ -72,18 +73,6 @@ namespace APIManagementTemplate
                     var policyTemplateResource = template.CreatePolicy(policy);
                     apimTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
                 }
-                var loggers = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/loggers");
-                foreach (JObject logger in (loggers == null ? new JArray() : loggers.Value<JArray>("value")))
-                {
-                    bool isApplicationInsightsLogger = (logger["properties"]?["loggerType"]?.Value<string>() ?? string.Empty) == "applicationInsights";
-                    if (createApplicationInsightsInstance && isApplicationInsightsLogger)
-                        apimTemplateResource.Value<JArray>("resources").Add(template.AddApplicationInsightsInstance(logger));
-
-                    if (!createApplicationInsightsInstance || !isApplicationInsightsLogger)
-                        HandleProperties(logger.Value<string>("name"), "Logger", logger["properties"].ToString());
-                    var loggerTemplateResource = template.CreateLogger(logger, false);
-                    apimTemplateResource.Value<JArray>("resources").Add(loggerTemplateResource);
-                }
             }
 
             var apis = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
@@ -102,6 +91,8 @@ namespace APIManagementTemplate
                     string apiversionsetid = apiTemplateResource["properties"].Value<string>("apiVersionSetId");
                     if (!string.IsNullOrEmpty(apiversionsetid))
                     {
+                        Console.WriteLine("Adding API Version Set");
+
                         AzureResourceId aiapiversion = new AzureResourceId(apiInstance["properties"].Value<string>("apiVersionSetId"));
 
                         var versionsetResource = template.AddVersionSet(await resourceCollector.GetResource(apiversionsetid));
@@ -112,6 +103,19 @@ namespace APIManagementTemplate
                             apiTemplateResource.Value<JArray>("dependsOn").Add(resourceid);
                         }
                     }
+
+                    string apiNameParamName = template.AddParameter($"api_{apiObject.Value<string>("name")}_name", "string", "");
+                    var logger = template.AddLogger(servicename);
+
+                    string loggerResourceId = logger.GetResourceId(
+                        template.WrapParameterNameWithoutBrackets(template.GetServiceName(servicename)),
+                        template.WrapParameterNameWithoutBrackets(apiNameParamName));
+
+                    apiTemplateResource.Value<JArray>("dependsOn").Add(loggerResourceId);
+
+                    var diagnostics = template.CreateDiagnostics(servicename, apiNameParamName);
+                    apiTemplateResource.Value<JArray>("resources").Add(diagnostics);
+                    
                     string openidProviderId = GetOpenIdProviderId(apiTemplateResource);
                     if (!String.IsNullOrWhiteSpace(openidProviderId))
                     {
@@ -131,7 +135,9 @@ namespace APIManagementTemplate
                     var operations = await resourceCollector.GetResource(id + "/operations");
                     foreach (JObject operation in (operations == null ? new JArray() : operations.Value<JArray>("value")))
                     {
+
                         var opId = operation.Value<string>("id");
+                        Console.WriteLine($"Adding operation - {opId}");
 
                         var operationInstance = await resourceCollector.GetResource(opId);
                         var operationTemplateResource = template.CreateOperation(operationInstance);
@@ -305,7 +311,7 @@ namespace APIManagementTemplate
                         foreach (var apiName in identifiedProperty.apis)
                         {
                             var apiTemplate = template.resources.Where(rr => rr.Value<string>("name") == apiName).FirstOrDefault();
-                            if(apiTemplate != null)
+                            if (apiTemplate != null)
                                 apiTemplate.Value<JArray>("dependsOn").Add(resourceid);
                         }
                     }
@@ -343,7 +349,7 @@ namespace APIManagementTemplate
             if (apiTemplateResource == null || !apiTemplateResource["properties"].HasValues ||
                 !apiTemplateResource["properties"]["authenticationSettings"].HasValues ||
                 !apiTemplateResource["properties"]["authenticationSettings"]["openid"].HasValues ||
-                apiTemplateResource["properties"]["authenticationSettings"]["openid"]["openidProviderId"] == null )
+                apiTemplateResource["properties"]["authenticationSettings"]["openid"]["openidProviderId"] == null)
                 return string.Empty;
             JToken openIdProviderId = apiTemplateResource?["properties"]["authenticationSettings"]["openid"]["openidProviderId"];
             return openIdProviderId.Value<string>();
@@ -356,7 +362,7 @@ namespace APIManagementTemplate
             if (backendInstance["properties"]["resourceId"] != null)
             {
                 string version = "2018-02-01";
-                if(backendInstance["properties"].Value<string>("resourceId").Contains("Microsoft.Logic"))
+                if (backendInstance["properties"].Value<string>("resourceId").Contains("Microsoft.Logic"))
                 {
                     version = "2017-07-01";
                 }
@@ -399,7 +405,6 @@ namespace APIManagementTemplate
             return startname;
         }
 
-
         public void PolicyHandleProperties(JObject policy, string apiname, string operationName)
         {
             var policyContent = policy["properties"].Value<string>("policyContent");
@@ -431,9 +436,6 @@ namespace APIManagementTemplate
                 match = match.NextMatch();
             }
         }
-
-        public List<Property> identifiedProperties = new List<Property>();
-        public List<JObject> openidConnectProviders = null;
 
         public bool PolicyHandeAzureResources(JObject policy, string apiname, DeploymentTemplate template)
         {
@@ -513,10 +515,11 @@ namespace APIManagementTemplate
                         string functionResourceGroup = logicAppNameMatch.Groups["resourceGroupName"].Value;*/
                     }
                 }
-
             }
+
             return commentMatch.Success;
         }
+
         public void PolicyHandeBackendUrl(JObject policy, string apiname, DeploymentTemplate template)
         {
             var policyContent = policy["properties"].Value<string>("policyContent");
@@ -542,8 +545,8 @@ namespace APIManagementTemplate
                         {
                             id = $"{serviceId}/properties/{paramname}",
                             type = "Microsoft.ApiManagement/service/properties",
-                            name= paramname,
-                            properties = new 
+                            name = paramname,
+                            properties = new
                             {
                                 displayName = paramname,
                                 value = $"[parameters('{paramname}')]",
@@ -557,9 +560,7 @@ namespace APIManagementTemplate
                         policy["properties"]["policyContent"] = CreatePolicyContentReplaceBaseUrl(backendService, policyContent, $"parameters('{paramname}')");
                     }
                 }
-
             }
-
         }
 
         private static string GetIdFromPolicy(JObject policy)
@@ -571,7 +572,6 @@ namespace APIManagementTemplate
             return comment.Substring(comment.IndexOf("/subscriptions/", StringComparison.InvariantCulture));
         }
 
-
         private string CreatePolicyContentReplaceBaseUrl(XElement backendService, string policyContent, string replaceText)
         {
             var baseUrl = backendService.Attribute("base-url");
@@ -582,6 +582,7 @@ namespace APIManagementTemplate
             }
             return policyContent;
         }
+
         private string CreatePolicyContentReplaceBaseUrlWithProperty(XElement backendService, string policyContent, string parameterName)
         {
             var baseUrl = backendService.Attribute("base-url");
@@ -591,9 +592,5 @@ namespace APIManagementTemplate
             }
             return policyContent;
         }
-
     }
-
-
-
 }
