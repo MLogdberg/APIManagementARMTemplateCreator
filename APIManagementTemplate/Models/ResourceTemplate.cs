@@ -47,7 +47,10 @@ namespace APIManagementTemplate.Models
         {
             get
             {
-                return "2018-06-01-preview";
+                if (type.EndsWith("policies"))
+                    return "2018-06-01-preview";
+
+                return "2017-03-01";
             }
         }
 
