@@ -850,8 +850,8 @@ namespace APIManagementTemplate.Models
 
             var diagnosticsTemplate = new ResourceTemplate
             {
-                type = "Microsoft.ApiManagement/service/apis/diagnostics",
-                name = "diagnostics",
+                type = "diagnostics",
+                name = "applicationInsights",
                 properties = JObject.FromObject(new
                 {
                     enabled = true,
