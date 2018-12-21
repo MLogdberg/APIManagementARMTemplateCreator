@@ -1,0 +1,15 @@
+{
+    "value": [
+        {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/identityProviders/Microsoft",
+            "type": "Microsoft.ApiManagement/service/identityProviders",
+            "name": "Microsoft",
+            "properties": {
+                "clientId": "08de6f9f-6ac8-4b4d-ab31-d2234a3e5557",
+                "clientSecret": "SuperSecretClientSecret!",
+                "type": "microsoft"
+            }
+        }
+    ],
+    "nextLink": ""
+}

@@ -1,12 +1,12 @@
+param([string] $version, [string] $apikey)
+
 $binPath = Join-Path $PSScriptRoot "bin\Release"
 $modulePath = Join-Path $PSScriptRoot "bin\APIManagementTemplate"
 
 $manifestPath = Join-Path $PSScriptRoot "APIManagementTemplate.psd1"
 $manifest = Test-ModuleManifest -Path $manifestPath
 
-Write-Host "Module version needs to be incremented before publishing. Current version is $($manifest.Version)"
-
-Update-ModuleManifest -Path $manifestPath -CmdletsToExport '*' -ModuleVersion (Read-Host "New module version: ")
+Update-ModuleManifest -Path $manifestPath -CmdletsToExport '*' -ModuleVersion $version
 
 Write-Host "Preparing module"
 
@@ -16,6 +16,6 @@ Copy-Item (Join-Path $PSScriptRoot "APIManagementTemplate.psd1") (Join-Path $mod
 
 Write-Host "Publishing module"
 
-Publish-Module -Path $modulePath -Repository PSGallery -NuGetApiKey (Read-Host "NuGetApiKey (from https://powershellgallery.com/account): ")
+Publish-Module -Path $modulePath -Repository PSGallery -NuGetApiKey $apikey
 
 Remove-Item $modulePath -Force -Recurse

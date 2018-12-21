@@ -445,7 +445,8 @@ namespace APIManagementTemplate.Models
                     var paramsitename = AddParameter(name + "_siteName", "string", sitename);
                     aid.ReplaceValueAfter("sites", "',parameters('" + paramsitename + "')");
                     resource["properties"]["description"] = $"[parameters('{paramsitename}')]";
-                    resource["properties"]["url"] = $"[concat('https://',toLower(parameters('{paramsitename}')),'.azurewebsites.net/')]";
+                    string path = GetPathFromUrl(resource["properties"]?.Value<string>("url"));
+                    resource["properties"]["url"] = $"[concat('https://',toLower(parameters('{paramsitename}')),'.azurewebsites.net/{path}')]";
 
                     retval = new Property()
                     {
@@ -485,6 +486,15 @@ namespace APIManagementTemplate.Models
 
             return retval;
         }
+
+        private string GetPathFromUrl(string url)
+        {
+            if (String.IsNullOrWhiteSpace(url))
+                return String.Empty;
+            var uri = new Uri(url);
+            return uri.PathAndQuery.Substring(1);
+        }
+
         public ResourceTemplate AddVersionSet(JObject restObject)
         {
             if (restObject == null)
@@ -846,6 +856,22 @@ namespace APIManagementTemplate.Models
                     credentials["name"] = WrapParameterName(AddParameter($"logger_{loggerName}_credentialName", "string", GetDefaultValue(resource, "credentials", "name")));
                 }
             }
+            return resource;
+        }
+        public JObject CreateIdentityProvider(JObject restObject, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/identityProviders", addResource);
+            var properties= resource["properties"];
+            var name = restObject.Value<string>("name");
+            if (properties?.Value<string>("clientId") != null)
+            {
+                properties["clientId"] = WrapParameterName(AddParameter($"identityProvider_{name}_clientId", "string", properties.Value<string>("clientId")));
+            }
+            if (properties?.Value<string>("clientSecret") != null)
+            {
+                properties["clientSecret"] = WrapParameterName(AddParameter($"identityProvider_{name}_clientSecret", "securestring", String.Empty));
+            }
+
             return resource;
         }
 
