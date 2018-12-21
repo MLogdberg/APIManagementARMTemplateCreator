@@ -446,14 +446,13 @@ namespace APIManagementTemplate.Models
                     aid.ReplaceValueAfter("sites", "',parameters('" + paramsitename + "')");
                     resource["properties"]["description"] = $"[parameters('{paramsitename}')]";
                     resource["properties"]["url"] = $"[concat('https://',toLower(parameters('{paramsitename}')),'.azurewebsites.net/')]";
-                    string backendFunctionKeyParamName = parameterizeBackendFunctionKey ? AddParameter($"{sitename}-key", "string", "") : null;
 
                     retval = new Property()
                     {
                         type = Property.PropertyType.Function,
                         name = sitename.ToLower(),
                         extraInfo = parameterizeBackendFunctionKey
-                        ? $"parameters('{backendFunctionKeyParamName}')"
+                        ? $"parameters('{AddParameter($"{sitename}-key", "string", "")}')"
                         : $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key"
                     };
                     
