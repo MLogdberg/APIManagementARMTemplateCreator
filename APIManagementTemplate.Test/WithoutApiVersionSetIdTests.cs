@@ -20,6 +20,7 @@ namespace APIManagementTemplate.Test
         private const string SchemaResourceType = "Microsoft.ApiManagement/service/apis/schemas";
         private const string BackendResourceType = "Microsoft.ApiManagement/service/backends";
         private const string OpenIdConnectProviderResourceType = "Microsoft.ApiManagement/service/openidConnectProviders";
+        private const string IdentityProviderResourceType = "Microsoft.ApiManagement/service/identityProviders";
         private const string CertificateResourceType = "Microsoft.ApiManagement/service/certificates";
         private const string OperationResourceType = "Microsoft.ApiManagement/service/apis/operations";
         private const string OperationPolicyResourceType = "Microsoft.ApiManagement/service/apis/operations/policies";
@@ -329,6 +330,8 @@ namespace APIManagementTemplate.Test
             var codes = query.Value<JArray>("code");
             Assert.AreEqual(1, codes.Count);
             Assert.AreEqual("{{myfunctions-key}}", codes[0].Value<string>());
+            Assert.AreEqual("[concat('https://',toLower(parameters('myfunctions_siteName')),'.azurewebsites.net/api')]", 
+                backend["properties"]?.Value<string>("url"));
         }
 
         [TestMethod]
@@ -388,6 +391,26 @@ namespace APIManagementTemplate.Test
                 properties.Value<string>("clientId"));
             Assert.AreEqual("[parameters('openidConnectProvider_myOpenIdProvider_clientSecret')]",
                 properties.Value<string>("clientSecret"));
+        }
+
+        [TestMethod]
+        public void TestServiceContainsIdentityProvider()
+        {
+            var openIdConnectProvider = GetSubResourceFromTemplate(ServiceResourceType, IdentityProviderResourceType)
+                .FirstOrDefault();
+            Assert.IsNotNull(openIdConnectProvider);
+
+            Assert.AreEqual("microsoft", openIdConnectProvider["properties"].Value<string>("type"));
+            Assert.AreEqual("[parameters('identityProvider_Microsoft_clientId')]", openIdConnectProvider["properties"].Value<string>("clientId"));
+            Assert.AreEqual("[parameters('identityProvider_Microsoft_clientSecret')]", openIdConnectProvider["properties"].Value<string>("clientSecret"));
+        }
+
+        [TestMethod]
+        public void TestContainsParametersForIdentityProvider()
+        {
+            var template = GetTemplate(true, false);
+            AssertParameter(template, "identityProvider_Microsoft_clientId", "08de6f9f-6ac8-4b4d-ab31-d2234a3e5557", "string");
+            AssertParameter(template, "identityProvider_Microsoft_clientSecret", String.Empty, "securestring");
         }
 
         [TestMethod]

@@ -237,6 +237,7 @@
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\sites-myfunctions.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-certificates.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-openidConnectProviders.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-identityProviders.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />
