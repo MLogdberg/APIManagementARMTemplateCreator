@@ -225,6 +225,15 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
+        public void TestServiceContainsPropertyForEnvironment()
+        {
+            var template = GetTemplate();
+            var property = template.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/properties')]")
+                .SingleOrDefault(x => x.Value<string>("name").Contains("environment"));
+            Assert.IsNotNull(property);
+        }
+
+        [TestMethod]
         public void TestProductContainsPolicyThatDependsOnProduct()
         {
             var policy = GetSubResourceFromTemplate(ProductResourceType, ProductPolicyResourceType, false).First();

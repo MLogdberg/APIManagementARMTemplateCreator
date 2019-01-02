@@ -1,6 +1,17 @@
 {
     "value": [
         {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/environment",
+            "type": "Microsoft.ApiManagement/service/properties",
+            "name": "environment",
+            "properties": {
+                "displayName": "environment",
+                "value": "itest",
+                "tags": null,
+                "secret": false
+            }
+        },
+        {
             "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/5b5dbaa35a635f22ac9db431",
             "type": "Microsoft.ApiManagement/service/properties",
             "name": "5b5dbaa35a635f22ac9db431",

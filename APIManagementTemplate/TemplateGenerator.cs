@@ -69,6 +69,7 @@ namespace APIManagementTemplate
                 {
                     var policyTemplateResource = template.CreatePolicy(policy);
                     apimTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
+                    PolicyHandleProperties(policy, "Global", "Global");
                 }
                 var identityProviders = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/identityProviders");
                 foreach (JObject identityProvider in (identityProviders == null ? new JArray() : identityProviders.Value<JArray>("value")))
