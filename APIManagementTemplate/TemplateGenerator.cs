@@ -64,37 +64,24 @@ namespace APIManagementTemplate
             {
                 var apim = await resourceCollector.GetResource(GetAPIMResourceIDString());
                 var apimTemplateResource = template.AddAPIManagementInstance(apim);
-                var policies = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/policies");
-                foreach (JObject policy in (policies == null ? new JArray() : policies.Value<JArray>("value")))
+                await AddServiceResource(apimTemplateResource, "/policies", policy =>
                 {
-                    var policyTemplateResource = template.CreatePolicy(policy);
-                    apimTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
                     PolicyHandleProperties(policy, "Global", "Global");
-                }
-                var identityProviders = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/identityProviders");
-                foreach (JObject identityProvider in (identityProviders == null ? new JArray() : identityProviders.Value<JArray>("value")))
-                {
-                    var identityProviderResource = template.CreateIdentityProvider(identityProvider, false);
-                    apimTemplateResource.Value<JArray>("resources").Add(identityProviderResource);
-                }
-                var loggers = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/loggers");
-                foreach (JObject logger in (loggers == null ? new JArray() : loggers.Value<JArray>("value")))
+                    return template.CreatePolicy(policy);
+                });
+                await AddServiceResource(apimTemplateResource, "/identityProviders",
+                    identityProvider => template.CreateIdentityProvider(identityProvider, false));
+                var loggers = await AddServiceResource(apimTemplateResource, "/loggers", logger =>
                 {
                     bool isApplicationInsightsLogger = (logger["properties"]?["loggerType"]?.Value<string>() ?? string.Empty) == "applicationInsights";
                     if (createApplicationInsightsInstance && isApplicationInsightsLogger)
                         apimTemplateResource.Value<JArray>("resources").Add(template.AddApplicationInsightsInstance(logger));
-
                     if (!createApplicationInsightsInstance || !isApplicationInsightsLogger)
                         HandleProperties(logger.Value<string>("name"), "Logger", logger["properties"].ToString());
-                    var loggerTemplateResource = template.CreateLogger(logger, false);
-                    apimTemplateResource.Value<JArray>("resources").Add(loggerTemplateResource);
-                }
-                var diagnostics = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/diagnostics", "", "2018-06-01-preview");
-                foreach (JObject diagnostic in (diagnostics == null ? new JArray() : diagnostics.Value<JArray>("value")))
-                {
-                    var diagnosticResource = template.CreateDiagnostic(diagnostic, loggers == null ? new JArray() : loggers.Value<JArray>("value"), false);
-                    apimTemplateResource.Value<JArray>("resources").Add(diagnosticResource);
-                }
+                    return template.CreateLogger(logger, false);
+                });
+                await AddServiceResource(apimTemplateResource, "/diagnostics",
+                    diagnostic => template.CreateDiagnostic(diagnostic, loggers == null ? new JArray() : loggers.Value<JArray>("value"), false));
             }
 
             var apis = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
@@ -325,6 +312,17 @@ namespace APIManagementTemplate
 
             return JObject.FromObject(template);
 
+        }
+
+        private async Task<JObject> AddServiceResource(JObject apimTemplateResource, string resourceName, Func<JObject, JObject> createResource)
+        {
+            var resources = await resourceCollector.GetResource(GetAPIMResourceIDString() + resourceName);
+            foreach (JObject resource in (resources == null ? new JArray() : resources.Value<JArray>("value")))
+            {
+                var newResource = createResource(resource);
+                apimTemplateResource.Value<JArray>("resources").Add(newResource);
+            }
+            return resources;
         }
 
         private string GetServiceName(string serviceName)
