@@ -769,13 +769,7 @@ namespace APIManagementTemplate.Models
             var rid = new AzureResourceId(restObject.Value<string>("id"));
             var servicename = rid.ValueAfter("service");
             obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
-            var name= restObject.Value<string>("name");
-            var resourceTypeShort = GetResourceTypeShort(resourceType);
-            bool applicationInsightsLogger = IsApplicationInsightsLogger(restObject);
-            if (applicationInsightsLogger && referenceApplicationInsightsInstrumentationKey)
-                name = $"parameters('{AddParameter($"{GetServiceName(servicename, false)}_applicationInsights", "string", name)}')";
-            else
-                name = parametrizePropertiesOnly ? $"'{name}'" : $"parameters('{AddParameter($"{resourceTypeShort}_{name}_name", "string", name)}')";
+            string name = GetServiceResourceName(restObject, resourceType);
             obj.AddName(name);
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
@@ -792,6 +786,20 @@ namespace APIManagementTemplate.Models
             }
                 
             return resource;
+        }
+
+        private string GetServiceResourceName(JObject restObject, string resourceType)
+        {
+            var rid = new AzureResourceId(restObject.Value<string>("id"));
+            var servicename = rid.ValueAfter("service");
+            var name = restObject.Value<string>("name");
+            var resourceTypeShort = GetResourceTypeShort(resourceType);
+            bool applicationInsightsLogger = IsApplicationInsightsLogger(restObject);
+            if (applicationInsightsLogger && referenceApplicationInsightsInstrumentationKey)
+                name = $"parameters('{AddParameter($"{GetServiceName(servicename, false)}_applicationInsights", "string", name)}')";
+            else
+                name = parametrizePropertiesOnly ? $"'{name}'" : $"parameters('{AddParameter($"{resourceTypeShort}_{name}_name", "string", name)}')";
+            return name;
         }
 
         private bool IsApplicationInsightsLogger(JObject restObject)
@@ -871,7 +879,32 @@ namespace APIManagementTemplate.Models
             {
                 properties["clientSecret"] = WrapParameterName(AddParameter($"identityProvider_{name}_clientSecret", "securestring", String.Empty));
             }
-
+            return resource;
+        }
+        public JObject CreateDiagnostic(JObject restObject, JArray loggers, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/diagnostics", addResource);
+            var properties= resource["properties"];
+            var name = restObject.Value<string>("name");
+            var loggerId = restObject["properties"]?.Value<string>("loggerId") ?? String.Empty;
+            var logger = loggers.FirstOrDefault(x => x.Value<string>("id") == loggerId);
+            resource["apiVersion"] = "2018-06-01-preview";
+            if (logger != null)
+            {
+                var rid = new AzureResourceId(restObject.Value<string>("id"));
+                var servicename = rid.ValueAfter("service");
+                JObject loggerObject = JObject.FromObject(logger);
+                var loggerName = GetServiceResourceName(loggerObject, "Microsoft.ApiManagement/service/loggers");
+                string loggerResource = $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), {loggerName})]";
+                properties["loggerId"] = loggerResource;
+                resource.Value<JArray>("dependsOn").Add(loggerResource);
+                resource["properties"]["alwaysLog"] = WrapParameterName(AddParameter($"diagnostic_{name}_alwaysLog", "string", GetDefaultValue(resource, "alwaysLog")));
+                resource["properties"]["sampling"]["percentage"] = WrapParameterName(AddParameter($"diagnostic_{name}_samplingPercentage", "string", GetDefaultValue(resource, "sampling", "percentage")));
+                if (IsApplicationInsightsLogger(loggerObject))
+                {
+                    resource["properties"]["enableHttpCorrelationHeaders"] = WrapParameterName(AddParameter($"diagnostic_{name}_enableHttpCorrelationHeaders", "string", GetDefaultValue(resource, "enableHttpCorrelationHeaders")));
+                }
+            }
             return resource;
         }
 
