@@ -89,6 +89,12 @@ namespace APIManagementTemplate
                     var loggerTemplateResource = template.CreateLogger(logger, false);
                     apimTemplateResource.Value<JArray>("resources").Add(loggerTemplateResource);
                 }
+                var diagnostics = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/diagnostics", "", "2018-06-01-preview");
+                foreach (JObject diagnostic in (diagnostics == null ? new JArray() : diagnostics.Value<JArray>("value")))
+                {
+                    var diagnosticResource = template.CreateDiagnostic(diagnostic, loggers == null ? new JArray() : loggers.Value<JArray>("value"), false);
+                    apimTemplateResource.Value<JArray>("resources").Add(diagnosticResource);
+                }
             }
 
             var apis = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));

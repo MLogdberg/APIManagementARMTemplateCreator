@@ -26,6 +26,7 @@ namespace APIManagementTemplate.Test
         private const string OperationPolicyResourceType = "Microsoft.ApiManagement/service/apis/operations/policies";
         private const string ApiPolicyResourceType = "Microsoft.ApiManagement/service/apis/policies";
         private const string ApplicationInsightsResourceType = "Microsoft.Insights/components";
+        private const string DiagnosticsResourceType = "Microsoft.ApiManagement/service/diagnostics";
 
         private IResourceCollector collector;
 
@@ -108,7 +109,7 @@ namespace APIManagementTemplate.Test
         {
             IEnumerable<JToken> loggers = GetSubResourceFromTemplate(ServiceResourceType, LoggerResourceType, true);
 
-            Assert.AreEqual(2, loggers.Count());
+            Assert.AreEqual(3, loggers.Count());
 
             var logger = loggers.First(x => x.Value<string>("name").Contains("applicationInsights"));
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/',parameters('service_ibizmalo_applicationInsights'))]",
@@ -136,7 +137,7 @@ namespace APIManagementTemplate.Test
         {
             IEnumerable<JToken> loggers = GetSubResourceFromTemplate(ServiceResourceType, LoggerResourceType, false);
 
-            Assert.AreEqual(2, loggers.Count());
+            Assert.AreEqual(3, loggers.Count());
 
             var logger = loggers.First(x => x.Value<string>("name").Contains("appInsights"));
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/','appInsights')]",
@@ -156,7 +157,7 @@ namespace APIManagementTemplate.Test
         {
             IEnumerable<JToken> loggers = GetSubResourceFromTemplate(ServiceResourceType, LoggerResourceType, false);
 
-            Assert.AreEqual(2, loggers.Count());
+            Assert.AreEqual(3, loggers.Count());
 
             var logger = loggers.First(x => x.Value<string>("name").Contains("bpst-apim-l-6a12e"));
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/','bpst-apim-l-6a12e')]",
@@ -173,9 +174,9 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual("[parameters('logger_bpst-apim-l-6a12e_connectionString')]", credentials.Value<string>("connectionString"));
         }
 
-        private IEnumerable<JToken> GetSubResourceFromTemplate(string resourceType, string subResourceType, bool createApplicationInsightsInstance = false)
+        private IEnumerable<JToken> GetSubResourceFromTemplate(string resourceType, string subResourceType, bool createApplicationInsightsInstance = false, bool parametrizePropertiesOnly = true)
         {
-            JToken resource = GetResourceFromTemplate(resourceType, createApplicationInsightsInstance);
+            JToken resource = GetResourceFromTemplate(resourceType, createApplicationInsightsInstance, parametrizePropertiesOnly);
             return resource.Value<JArray>("resources").Where(x => x.Value<string>("type") == subResourceType);
         }
 
@@ -415,6 +416,51 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
+        public void TestServiceContainsDiagnosticsForApplicationInsightsWhenCreateApplicationInsightsInstanceIsFalse()
+        {
+            AssertDiagnostic(false, true, "'appInsights'", "'appInsights'");
+        }
+
+        [TestMethod]
+        public void TestServiceContainsDiagnosticsForApplicationInsightsWhenCreateApplicationInsightsInstanceIsFalseAndParameterizePropertiesOnlyIsFalse()
+        {
+            AssertDiagnostic(false, false, "parameters('diagnostic_appInsights_name')", "parameters('logger_appInsights_name')");
+        }
+
+        [TestMethod]
+        public void TestServiceContainsDiagnosticsForApplicationInsightsWhenCreateApplicationInsightsInstanceIsTrue()
+        {
+            AssertDiagnostic(true, true, "'appInsights'", "parameters('service_ibizmalo_applicationInsights')");
+        }
+
+        [TestMethod]
+        public void TestServiceContainsDiagnosticsForAzureMonitor()
+        {
+            var diagnostic = GetSubResourceFromTemplate(ServiceResourceType, DiagnosticsResourceType).Skip(1).SingleOrDefault();
+            Assert.IsNotNull(diagnostic);
+            Assert.AreEqual($"[concat(parameters('service_ibizmalo_name'),'/','azuremonitor')]", diagnostic.Value<string>("name"));
+            Assert.AreEqual($"[parameters('diagnostic_azuremonitor_alwaysLog')]", diagnostic["properties"].Value<string>("alwaysLog"));
+            Assert.AreEqual($"[parameters('diagnostic_azuremonitor_samplingPercentage')]", diagnostic["properties"]["sampling"].Value<string>("percentage"));
+        }
+
+
+        private void AssertDiagnostic(bool createApplicationInsightsInstance, bool parametrizePropertiesOnly, string name, string loggerName)
+        {
+            var diagnostics = GetSubResourceFromTemplate(ServiceResourceType, DiagnosticsResourceType, createApplicationInsightsInstance, parametrizePropertiesOnly)
+                .FirstOrDefault();
+            Assert.IsNotNull(diagnostics);
+            Assert.AreEqual("[parameters('diagnostic_appInsights_alwaysLog')]", diagnostics["properties"].Value<string>("alwaysLog"));
+            Assert.AreEqual($"[concat(parameters('service_ibizmalo_name'),'/',{name})]", diagnostics.Value<string>("name"));
+            Assert.AreEqual($"2018-06-01-preview", diagnostics.Value<string>("apiVersion"));
+            var loggerResource =
+                $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('service_ibizmalo_name'), {loggerName})]";
+            Assert.AreEqual(loggerResource, diagnostics["properties"].Value<string>("loggerId"));
+            var dependsOn = diagnostics.Value<JArray>("dependsOn");
+            Assert.AreEqual(2, dependsOn.Count);
+            Assert.AreEqual(loggerResource, dependsOn.Values<string>().Last());
+        }
+
+        [TestMethod]
         public void TestContainsParametersForIdentityProvider()
         {
             var template = GetTemplate(true, false);
@@ -429,6 +475,24 @@ namespace APIManagementTemplate.Test
             AssertParameter(template, "logger_bpst-apim-l-6a12e_connectionString", String.Empty, "securestring");
             AssertParameter(template, "logger_bpst-apim-l-6a12e_credentialName", "bpst-apim-eh-234ad", "string");
         }
+
+        [TestMethod]
+        public void TestServiceContainsParametersForApplicationInsightsDiagnostic()
+        {
+            var template = GetTemplate(true, false);
+            AssertParameter(template, "diagnostic_appInsights_samplingPercentage", "100", "string");
+            AssertParameter(template, "diagnostic_appInsights_alwaysLog", "allErrors", "string");
+            AssertParameter(template, "diagnostic_appInsights_enableHttpCorrelationHeaders", "True", "string");
+        }
+
+        [TestMethod]
+        public void TestServiceContainsParametersForAzureMonitorDiagnostic()
+        {
+            var template = GetTemplate(true, false);
+            AssertParameter(template, "diagnostic_azuremonitor_samplingPercentage", "100", "string");
+            AssertParameter(template, "diagnostic_azuremonitor_alwaysLog", "", "string");
+        }
+
 
         [TestMethod]
         public void TestContainsParametersForApplicationInsightsServiceName()
