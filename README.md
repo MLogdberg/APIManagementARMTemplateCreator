@@ -47,7 +47,7 @@ Example when user is connected to multitenants:
 | DebugOutPutFolder | If set, result from rest interface will be saved to this folder | false |
 | ApiVersion | If set, api result will be filtered based on this value i.e: v2 | false |
 | ClaimsDump | A dump of claims piped in from `armclient` - should not be manually set | false |
-
+| ParameterizeBackendFunctionKey | Set to 'true' if you want the backend function key to be parameterized, default false. | false |
 
 After extraction a parameters file can be created off the ARMTemplate.
 
