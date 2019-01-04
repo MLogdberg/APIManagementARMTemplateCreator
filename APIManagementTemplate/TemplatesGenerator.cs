@@ -598,9 +598,9 @@ namespace APIManagementTemplate
             string apiName = GetParameterPart(api, "name", -2);
             if (apiName.StartsWith("/"))
                 apiName = apiName.Substring(1, apiName.Length - 1);
-            var productApi = parsedTemplate.SelectTokens($"$..resources[?(@.type=='{ProductAPIResourceType}')]")
-                .FirstOrDefault(p => GetParameterPart(p, "name", -2) == apiName);
-            if (productApi != null)
+            var productApis = parsedTemplate.SelectTokens($"$..resources[?(@.type=='{ProductAPIResourceType}')]")
+                .Where(p => GetParameterPart(p, "name", -2) == apiName);
+            foreach (JToken productApi in productApis)
             {
                 var dependsOn = productApi.Value<JArray>("") ?? new JArray();
                 var serviceName = GetParameterPart(api, "name", -4);
