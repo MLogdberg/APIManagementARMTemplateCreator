@@ -12,9 +12,10 @@ namespace APIManagementTemplate.Test
     public class WithoutApiVersionSetIdTests
     {
         private const string ProductPolicyResourceType = "Microsoft.ApiManagement/service/products/policies";
+        private const string ProductGroupResourceType = "Microsoft.ApiManagement/service/products/groups";
         private const string ServicePolicyResourceType = "Microsoft.ApiManagement/service/policies";
         private const string ApiResourceType = "Microsoft.ApiManagement/service/apis";
-        private const string ProductResourceType = "Microsoft.ApiManagement/service/apis/products";
+        private const string ProductResourceType = "Microsoft.ApiManagement/service/products";
         private const string ServiceResourceType = "Microsoft.ApiManagement/service";
         private const string LoggerResourceType = "Microsoft.ApiManagement/service/loggers";
         private const string SchemaResourceType = "Microsoft.ApiManagement/service/apis/schemas";
@@ -74,6 +75,20 @@ namespace APIManagementTemplate.Test
             IEnumerable<JToken> policies = GetSubResourceFromTemplate(ProductResourceType, ProductPolicyResourceType, false);
 
             Assert.AreEqual(1, policies.Count());
+        }
+
+        [TestMethod]
+        public void TestProductContains1Group()
+        {
+            var template = GetTemplate(true, true, false, true, false);
+            var policyGroup = template.SelectToken($"$..resources[?(@.type=='{ProductGroupResourceType}')]");
+            Assert.IsNotNull(policyGroup);
+
+            Assert.AreEqual("[concat(parameters('apimServiceName'), '/', 'unlimited', '/', 'guests')]", policyGroup.Value<string>("name"));
+            JToken properties = policyGroup["properties"];
+            Assert.AreEqual("Guests", properties.Value<string>("displayName"));
+            Assert.AreEqual(true, properties.Value<bool>("builtIn"));
+            Assert.AreEqual("system", properties.Value<string>("type"));
         }
 
 
