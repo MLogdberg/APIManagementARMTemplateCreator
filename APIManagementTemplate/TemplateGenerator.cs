@@ -249,9 +249,12 @@ namespace APIManagementTemplate
                         var groups = await resourceCollector.GetResource(id + "/groups");
                         foreach (JObject group in (groups == null ? new JArray() : groups.Value<JArray>("value")))
                         {
-                            // Add group resource
-                            var groupObject = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/groups/" + group.Value<string>("name"));
-                            template.AddGroup(groupObject);
+                            if (group["properties"].Value<bool>("builtIn") == false)
+                            {
+                                // Add group resource
+                                var groupObject = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/groups/" + group.Value<string>("name"));
+                                template.AddGroup(groupObject);
+                            }
                             productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(group));
                             productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/groups', parameters('{GetServiceName(servicename)}'), '{group.Value<string>("name")}')]");
                         }

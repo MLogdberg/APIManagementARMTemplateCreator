@@ -242,10 +242,7 @@
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-products-unlimited-groups.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-products-unlimited-apis.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-products-unlimited-policies.json" />
-    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-groups-guests.json" />
-    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-groups-57cd81afe568130059020001.json" />
-    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-groups-57cd81afe568130059020002.json" />
-    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-groups-57cd81afe568130059020003.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-groups-office-services.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />
