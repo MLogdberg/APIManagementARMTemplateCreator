@@ -16,7 +16,17 @@
     "portalUrl": "https://ibizmalo.portal.azure-api.net",
     "managementApiUrl": "https://ibizmalo.management.azure-api.net",
     "scmUrl": "https://ibizmalo.scm.azure-api.net",
-    "hostnameConfigurations": [],
+    "hostnameConfigurations": [
+      {
+        "type": "Proxy",
+        "hostName": "https://ibizmalo.azure-api.net",
+        "encodedCertificate": null,
+        "keyVaultId": "https://ibizmalokeyvault.vault.azure.net/secrets/ibizmalo-azure-api-net",
+        "certificatePassword": null,
+        "negotiateClientCertificate": false,
+        "defaultSslBinding": true
+      }
+    ],
     "staticIps": [
       "52.174.17.245"
     ],

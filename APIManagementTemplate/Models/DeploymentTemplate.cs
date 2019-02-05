@@ -219,6 +219,24 @@ namespace APIManagementTemplate.Models
             resource["properties"]["publisherName"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_publisherName", "string", restObject["properties"].Value<string>("publisherName")));
             resource["properties"]["notificationSenderEmail"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_notificationSenderEmail", "string", restObject["properties"].Value<string>("notificationSenderEmail")));
             resource["properties"]["hostnameConfigurations"] = restObject["properties"]["hostnameConfigurations"];
+
+            for (int i = 0; i < restObject["properties"]["hostnameConfigurations"].Value<JArray>().Count; i++)
+            {
+                var hostType = restObject["properties"]["hostnameConfigurations"][i].Value<string>("type");
+                //check for custom hostname
+                if (!string.IsNullOrEmpty(restObject["properties"]["hostnameConfigurations"][i].Value<string>("hostName")))
+                {
+                    resource["properties"]["hostnameConfigurations"][i]["hostName"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_{hostType}_hostName", "string", restObject["properties"]["hostnameConfigurations"][i].Value<string>("hostName")));
+                }
+                //check for keyVaultId, then parameterize and remove cert properties.
+                if (!string.IsNullOrEmpty(restObject["properties"]["hostnameConfigurations"][i].Value<string>("keyVaultId")))
+                {
+                    resource["properties"]["hostnameConfigurations"][i]["keyVaultId"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_{hostType}_keyVaultId", "string", restObject["properties"]["hostnameConfigurations"][i].Value<string>("keyVaultId")));
+                    resource["properties"]["hostnameConfigurations"][i]["certificate"]?.Parent.Remove();
+                    resource["properties"]["hostnameConfigurations"][i]["encodedCertificate"]?.Parent.Remove();
+                    resource["properties"]["hostnameConfigurations"][i]["certificatePassword"]?.Parent.Remove();
+                }
+            }
             resource["properties"]["additionalLocations"] = restObject["properties"]["additionalLocations"];
             resource["properties"]["virtualNetworkConfiguration"] = restObject["properties"]["virtualNetworkConfiguration"];
             resource["properties"]["customProperties"] = restObject["properties"]["customProperties"];
