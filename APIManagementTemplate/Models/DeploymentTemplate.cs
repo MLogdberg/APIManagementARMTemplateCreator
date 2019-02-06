@@ -2,13 +2,8 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Security.Policy;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace APIManagementTemplate.Models
 {
@@ -119,7 +114,7 @@ namespace APIManagementTemplate.Models
             }
             return realParameterName;
         }
-       
+
         public string AddVariable(string variablename, string value)
         {
             string realVariableName = variablename;
@@ -212,6 +207,11 @@ namespace APIManagementTemplate.Models
             resource["sku"]["name"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_name", "string", restObject["sku"].Value<string>("name")));
             resource["sku"]["capacity"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_capacity", "string", restObject["sku"].Value<string>("capacity")));
             resource["location"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_location", "string", restObject.Value<string>("location")));
+            if (restObject["identity"]?["type"] != null)
+            {
+                resource["identity"] = new JObject();
+                resource["identity"]["type"] = restObject["identity"].Value<string>("type");
+            }
             resource["tags"] = restObject["tags"];
             resource["scale"] = null;
             resource["properties"] = new JObject();
@@ -260,7 +260,7 @@ namespace APIManagementTemplate.Models
 
             string name = restObject.Value<string>("name");
             string type = restObject.Value<string>("type");
-            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));            
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
 
             var obj = new ResourceTemplate();
@@ -274,7 +274,7 @@ namespace APIManagementTemplate.Models
             AddParameterFromObject((JObject)resource["properties"], "serviceUrl", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "apiVersion", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "isCurrent", "bool", name);
-            
+
             if (APIMInstanceAdded)
             {
                 resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]" });
@@ -365,7 +365,7 @@ namespace APIManagementTemplate.Models
             {
                 dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
             }
-            foreach(var schema in schemalist)
+            foreach (var schema in schemalist)
             {
                 dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis/schemas', parameters('{GetServiceName(servicename)}'),{apiname},'{schema}')]");
             }
@@ -402,7 +402,7 @@ namespace APIManagementTemplate.Models
             return ll;
         }
 
-        public Property AddBackend(JObject restObject,JObject azureResource )
+        public Property AddBackend(JObject restObject, JObject azureResource)
         {
             Property retval = null;
             if (restObject == null)
@@ -430,7 +430,7 @@ namespace APIManagementTemplate.Models
                 var rgparamname = AddParameter(name + "_resourceGroup", "string", aid.ResourceGroupName);
                 aid.ResourceGroupName = "',parameters('" + rgparamname + "'),'";
                 if (resourceid.Contains("providers/Microsoft.Logic/workflows")) //Logic App
-                {    
+                {
                     var laname = aid.ValueAfter("workflows");
                     var logicappname = AddParameter(name + "_logicAppName", "string", laname);
                     aid.ReplaceValueAfter("workflows", "',parameters('" + logicappname + "')");
@@ -440,14 +440,14 @@ namespace APIManagementTemplate.Models
                     string triggername = "manual";
                     foreach (var trigger in triggerObject)
                     {
-                        if(trigger.Value.Value<string>("type") == "Request" && trigger.Value.Value<string>("kind") == "Http")
+                        if (trigger.Value.Value<string>("type") == "Request" && trigger.Value.Value<string>("kind") == "Http")
                         {
                             triggername = trigger.Key;
                         }
                     }
-                        //need to get the Logic App triggers and find the HTTP one....
+                    //need to get the Logic App triggers and find the HTTP one....
 
-                    string listcallbackref = $"listCallbackUrl(resourceId(parameters('{rgparamname}'), 'Microsoft.Logic/workflows/triggers', parameters('{logicappname}'), '{triggername}'), '2017-07-01')";                    
+                    string listcallbackref = $"listCallbackUrl(resourceId(parameters('{rgparamname}'), 'Microsoft.Logic/workflows/triggers', parameters('{logicappname}'), '{triggername}'), '2017-07-01')";
 
                     resource["properties"]["url"] = $"[substring({listcallbackref}.basePath,0,add(10,indexOf({listcallbackref}.basePath,'/triggers/')))]";
                     retval = new Property()
@@ -474,7 +474,7 @@ namespace APIManagementTemplate.Models
                         ? $"parameters('{AddParameter($"{sitename}-key", "string", "")}')"
                         : $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key"
                     };
-                    
+
                     var code = (resource["properties"]?["credentials"]?["query"]?.Value<JArray>("code") ?? new JArray()).FirstOrDefault();
                     if (code != null)
                     {
@@ -527,7 +527,7 @@ namespace APIManagementTemplate.Models
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");            
+            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
             obj.AddName($"'{name}'");
 
             obj.type = type;
@@ -654,7 +654,7 @@ namespace APIManagementTemplate.Models
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')"); 
+            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
             obj.AddName($"'{name}'");
 
             obj.type = type;
@@ -666,9 +666,9 @@ namespace APIManagementTemplate.Models
             {
                 resource["properties"]["value"] = WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "value", secret ? "securestring" : "string", secret ? "secretvalue" : resource["properties"]["value"]));
             }
-                
 
-            
+
+
             //AddParameterFromObject((JObject)resource["properties"], "value", secret ? "securestring" : "string", restObject["properties"].Value<string>("displayName"));
 
             var dependsOn = new JArray();
@@ -695,7 +695,7 @@ namespace APIManagementTemplate.Models
             string apiname = "";
             string operationname = "";
             bool servicePolicy = false;
-            
+
             name = $"'{name}'";
 
 
@@ -766,7 +766,7 @@ namespace APIManagementTemplate.Models
             resource["location"] = WrapParameterName($"{GetServiceName(servicename, false)}_location");
             resource["apiVersion"] = "2015-05-01";
             resource["kind"] = "other";
-            resource["properties"] = JObject.FromObject(new { Application_Type =  "other" });
+            resource["properties"] = JObject.FromObject(new { Application_Type = "other" });
             if (APIMInstanceAdded)
             {
                 resource["dependsOn"] = new JArray
@@ -774,7 +774,7 @@ namespace APIManagementTemplate.Models
                     $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]"
                 };
             }
-            return  resource;
+            return resource;
         }
 
         public JObject CreateServiceResource(JObject restObject, string resourceType, bool addResource)
@@ -799,10 +799,10 @@ namespace APIManagementTemplate.Models
             resource["dependsOn"] = dependsOn;
             if (addResource)
             {
-                if(resources.All(x => x.Value<string>("name") != resource.Value<string>("name")))
+                if (resources.All(x => x.Value<string>("name") != resource.Value<string>("name")))
                     resources.Add(resource);
             }
-                
+
             return resource;
         }
 
@@ -887,7 +887,7 @@ namespace APIManagementTemplate.Models
         public JObject CreateIdentityProvider(JObject restObject, bool addResource)
         {
             var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/identityProviders", addResource);
-            var properties= resource["properties"];
+            var properties = resource["properties"];
             var name = restObject.Value<string>("name");
             if (properties?.Value<string>("clientId") != null)
             {
@@ -902,7 +902,7 @@ namespace APIManagementTemplate.Models
         public JObject CreateDiagnostic(JObject restObject, JArray loggers, bool addResource)
         {
             var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/diagnostics", addResource);
-            var properties= resource["properties"];
+            var properties = resource["properties"];
             var name = restObject.Value<string>("name");
             var loggerId = restObject["properties"]?.Value<string>("loggerId") ?? String.Empty;
             var logger = loggers.FirstOrDefault(x => x.Value<string>("id") == loggerId);
@@ -946,7 +946,7 @@ namespace APIManagementTemplate.Models
                 if (prop == null)
                     return string.Empty;
             }
-            return prop.Value<string>()??String.Empty;
+            return prop.Value<string>() ?? String.Empty;
         }
 
         public JObject CreateBackend(JObject restObject)
