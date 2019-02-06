@@ -15,6 +15,17 @@
             }
         },
         {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/loggers/azuremonitor",
+            "type": "Microsoft.ApiManagement/service/loggers",
+            "name": "azuremonitor",
+            "properties": {
+                "loggerType": "azureMonitor",
+                "description": null,
+                "isBuffered": true,
+                "resourceId": null
+            }
+        },
+        {
             "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/loggers/bpst-apim-l-6a12e",
             "type": "Microsoft.ApiManagement/service/loggers",
             "name": "bpst-apim-l-6a12e",

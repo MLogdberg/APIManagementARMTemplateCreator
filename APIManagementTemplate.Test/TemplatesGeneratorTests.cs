@@ -253,7 +253,8 @@ namespace APIManagementTemplate.Test
         {
             var template = _generatedTemplates.Single(x => x.FileName == EchoFilename);
 
-            var productApi = template.Content.SelectToken("$.resources[?(@.type=='Microsoft.ApiManagement/service/products/apis')]");
+            var productApis = template.Content.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/products/apis')]");
+            var productApi = productApis.FirstOrDefault();
             Assert.IsNotNull(productApi);
 
             Assert.AreEqual("[concat(parameters('service_PreDemoTest_name'), '/', 'starter', '/', 'echo-api')]", productApi.Value<string>("name"));
@@ -263,6 +264,17 @@ namespace APIManagementTemplate.Test
 
             Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_PreDemoTest_name'),'echo-api')]", 
                 dependsOn.First());
+        }
+
+        [TestMethod]
+        public void TestResultContainsAPIFor_EchoV1With2ProductAPI()
+        {
+            var template = _generatedTemplates.Single(x => x.FileName == EchoFilename);
+
+            var productApis = template.Content.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/products/apis')]");
+            Assert.AreEqual(2, productApis.Count());
+            Assert.IsTrue(productApis.Any(x => x.Value<string>("name") == "[concat(parameters('service_PreDemoTest_name'), '/', 'unlimited', '/', 'echo-api')]"));
+            Assert.IsTrue(productApis.Any(x => x.Value<string>("name") == "[concat(parameters('service_PreDemoTest_name'), '/', 'starter', '/', 'echo-api')]"));
         }
 
         [TestMethod]

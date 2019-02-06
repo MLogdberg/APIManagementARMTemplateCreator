@@ -1,0 +1,62 @@
+{
+    "value": [
+        {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/diagnostics/appInsights",
+            "type": "Microsoft.ApiManagement/service/diagnostics",
+            "name": "appInsights",
+            "properties": {
+                "alwaysLog": "allErrors",
+                "enableHttpCorrelationHeaders": true,
+                "loggerId": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/loggers/appInsights",
+                "sampling": {
+                    "samplingType": "fixed",
+                    "percentage": 100
+                },
+                "frontend": {
+                    "request": {
+                        "headers": [],
+                        "body": {
+                            "bytes": 0
+                        }
+                    },
+                    "response": {
+                        "headers": [],
+                        "body": {
+                            "bytes": 0
+                        }
+                    }
+                },
+                "backend": {
+                    "request": {
+                        "headers": [],
+                        "body": {
+                            "bytes": 0
+                        }
+                    },
+                    "response": {
+                        "headers": [],
+                        "body": {
+                            "bytes": 0
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/diagnostics/azuremonitor",
+            "type": "Microsoft.ApiManagement/service/diagnostics",
+            "name": "azuremonitor",
+            "properties": {
+                "alwaysLog": null,
+                "loggerId": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/loggers/azuremonitor",
+                "sampling": {
+                    "samplingType": "fixed",
+                    "percentage": 100
+                },
+                "frontend": null,
+                "backend": null
+            }
+        }
+    ],
+    "nextLink": ""
+}

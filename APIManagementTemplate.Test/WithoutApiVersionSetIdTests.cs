@@ -20,11 +20,13 @@ namespace APIManagementTemplate.Test
         private const string SchemaResourceType = "Microsoft.ApiManagement/service/apis/schemas";
         private const string BackendResourceType = "Microsoft.ApiManagement/service/backends";
         private const string OpenIdConnectProviderResourceType = "Microsoft.ApiManagement/service/openidConnectProviders";
+        private const string IdentityProviderResourceType = "Microsoft.ApiManagement/service/identityProviders";
         private const string CertificateResourceType = "Microsoft.ApiManagement/service/certificates";
         private const string OperationResourceType = "Microsoft.ApiManagement/service/apis/operations";
         private const string OperationPolicyResourceType = "Microsoft.ApiManagement/service/apis/operations/policies";
         private const string ApiPolicyResourceType = "Microsoft.ApiManagement/service/apis/policies";
         private const string ApplicationInsightsResourceType = "Microsoft.Insights/components";
+        private const string DiagnosticsResourceType = "Microsoft.ApiManagement/service/diagnostics";
 
         private IResourceCollector collector;
 
@@ -107,7 +109,7 @@ namespace APIManagementTemplate.Test
         {
             IEnumerable<JToken> loggers = GetSubResourceFromTemplate(ServiceResourceType, LoggerResourceType, true);
 
-            Assert.AreEqual(2, loggers.Count());
+            Assert.AreEqual(3, loggers.Count());
 
             var logger = loggers.First(x => x.Value<string>("name").Contains("applicationInsights"));
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/',parameters('service_ibizmalo_applicationInsights'))]",
@@ -135,7 +137,7 @@ namespace APIManagementTemplate.Test
         {
             IEnumerable<JToken> loggers = GetSubResourceFromTemplate(ServiceResourceType, LoggerResourceType, false);
 
-            Assert.AreEqual(2, loggers.Count());
+            Assert.AreEqual(3, loggers.Count());
 
             var logger = loggers.First(x => x.Value<string>("name").Contains("appInsights"));
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/','appInsights')]",
@@ -155,7 +157,7 @@ namespace APIManagementTemplate.Test
         {
             IEnumerable<JToken> loggers = GetSubResourceFromTemplate(ServiceResourceType, LoggerResourceType, false);
 
-            Assert.AreEqual(2, loggers.Count());
+            Assert.AreEqual(3, loggers.Count());
 
             var logger = loggers.First(x => x.Value<string>("name").Contains("bpst-apim-l-6a12e"));
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/','bpst-apim-l-6a12e')]",
@@ -172,9 +174,9 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual("[parameters('logger_bpst-apim-l-6a12e_connectionString')]", credentials.Value<string>("connectionString"));
         }
 
-        private IEnumerable<JToken> GetSubResourceFromTemplate(string resourceType, string subResourceType, bool createApplicationInsightsInstance = false)
+        private IEnumerable<JToken> GetSubResourceFromTemplate(string resourceType, string subResourceType, bool createApplicationInsightsInstance = false, bool parametrizePropertiesOnly = true)
         {
-            JToken resource = GetResourceFromTemplate(resourceType, createApplicationInsightsInstance);
+            JToken resource = GetResourceFromTemplate(resourceType, createApplicationInsightsInstance, parametrizePropertiesOnly);
             return resource.Value<JArray>("resources").Where(x => x.Value<string>("type") == subResourceType);
         }
 
@@ -220,6 +222,15 @@ namespace APIManagementTemplate.Test
             var template = GetTemplate(replaceSetBackendServiceBaseUrlAsProperty: true);
             var property = template.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/properties')]")
                 .SingleOrDefault(x => x.Value<string>("name").Contains("api_tfs_backendurl"));
+            Assert.IsNotNull(property);
+        }
+
+        [TestMethod]
+        public void TestServiceContainsPropertyForEnvironment()
+        {
+            var template = GetTemplate();
+            var property = template.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/properties')]")
+                .SingleOrDefault(x => x.Value<string>("name").Contains("environment"));
             Assert.IsNotNull(property);
         }
 
@@ -329,6 +340,8 @@ namespace APIManagementTemplate.Test
             var codes = query.Value<JArray>("code");
             Assert.AreEqual(1, codes.Count);
             Assert.AreEqual("{{myfunctions-key}}", codes[0].Value<string>());
+            Assert.AreEqual("[concat('https://',toLower(parameters('myfunctions_siteName')),'.azurewebsites.net/api')]", 
+                backend["properties"]?.Value<string>("url"));
         }
 
         [TestMethod]
@@ -391,12 +404,95 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
+        public void TestServiceContainsIdentityProvider()
+        {
+            var openIdConnectProvider = GetSubResourceFromTemplate(ServiceResourceType, IdentityProviderResourceType)
+                .FirstOrDefault();
+            Assert.IsNotNull(openIdConnectProvider);
+
+            Assert.AreEqual("microsoft", openIdConnectProvider["properties"].Value<string>("type"));
+            Assert.AreEqual("[parameters('identityProvider_Microsoft_clientId')]", openIdConnectProvider["properties"].Value<string>("clientId"));
+            Assert.AreEqual("[parameters('identityProvider_Microsoft_clientSecret')]", openIdConnectProvider["properties"].Value<string>("clientSecret"));
+        }
+
+        [TestMethod]
+        public void TestServiceContainsDiagnosticsForApplicationInsightsWhenCreateApplicationInsightsInstanceIsFalse()
+        {
+            AssertDiagnostic(false, true, "'appInsights'", "'appInsights'");
+        }
+
+        [TestMethod]
+        public void TestServiceContainsDiagnosticsForApplicationInsightsWhenCreateApplicationInsightsInstanceIsFalseAndParameterizePropertiesOnlyIsFalse()
+        {
+            AssertDiagnostic(false, false, "parameters('diagnostic_appInsights_name')", "parameters('logger_appInsights_name')");
+        }
+
+        [TestMethod]
+        public void TestServiceContainsDiagnosticsForApplicationInsightsWhenCreateApplicationInsightsInstanceIsTrue()
+        {
+            AssertDiagnostic(true, true, "'appInsights'", "parameters('service_ibizmalo_applicationInsights')");
+        }
+
+        [TestMethod]
+        public void TestServiceContainsDiagnosticsForAzureMonitor()
+        {
+            var diagnostic = GetSubResourceFromTemplate(ServiceResourceType, DiagnosticsResourceType).Skip(1).SingleOrDefault();
+            Assert.IsNotNull(diagnostic);
+            Assert.AreEqual($"[concat(parameters('service_ibizmalo_name'),'/','azuremonitor')]", diagnostic.Value<string>("name"));
+            Assert.AreEqual($"[parameters('diagnostic_azuremonitor_alwaysLog')]", diagnostic["properties"].Value<string>("alwaysLog"));
+            Assert.AreEqual($"[parameters('diagnostic_azuremonitor_samplingPercentage')]", diagnostic["properties"]["sampling"].Value<string>("percentage"));
+        }
+
+
+        private void AssertDiagnostic(bool createApplicationInsightsInstance, bool parametrizePropertiesOnly, string name, string loggerName)
+        {
+            var diagnostics = GetSubResourceFromTemplate(ServiceResourceType, DiagnosticsResourceType, createApplicationInsightsInstance, parametrizePropertiesOnly)
+                .FirstOrDefault();
+            Assert.IsNotNull(diagnostics);
+            Assert.AreEqual("[parameters('diagnostic_appInsights_alwaysLog')]", diagnostics["properties"].Value<string>("alwaysLog"));
+            Assert.AreEqual($"[concat(parameters('service_ibizmalo_name'),'/',{name})]", diagnostics.Value<string>("name"));
+            Assert.AreEqual($"2018-06-01-preview", diagnostics.Value<string>("apiVersion"));
+            var loggerResource =
+                $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('service_ibizmalo_name'), {loggerName})]";
+            Assert.AreEqual(loggerResource, diagnostics["properties"].Value<string>("loggerId"));
+            var dependsOn = diagnostics.Value<JArray>("dependsOn");
+            Assert.AreEqual(2, dependsOn.Count);
+            Assert.AreEqual(loggerResource, dependsOn.Values<string>().Last());
+        }
+
+        [TestMethod]
+        public void TestContainsParametersForIdentityProvider()
+        {
+            var template = GetTemplate(true, false);
+            AssertParameter(template, "identityProvider_Microsoft_clientId", "08de6f9f-6ac8-4b4d-ab31-d2234a3e5557", "string");
+            AssertParameter(template, "identityProvider_Microsoft_clientSecret", String.Empty, "securestring");
+        }
+
+        [TestMethod]
         public void TestContainsParametersForOpenIdConnectProvider()
         {
             var template = GetTemplate(true, false);
             AssertParameter(template, "logger_bpst-apim-l-6a12e_connectionString", String.Empty, "securestring");
             AssertParameter(template, "logger_bpst-apim-l-6a12e_credentialName", "bpst-apim-eh-234ad", "string");
         }
+
+        [TestMethod]
+        public void TestServiceContainsParametersForApplicationInsightsDiagnostic()
+        {
+            var template = GetTemplate(true, false);
+            AssertParameter(template, "diagnostic_appInsights_samplingPercentage", "100", "string");
+            AssertParameter(template, "diagnostic_appInsights_alwaysLog", "allErrors", "string");
+            AssertParameter(template, "diagnostic_appInsights_enableHttpCorrelationHeaders", "True", "string");
+        }
+
+        [TestMethod]
+        public void TestServiceContainsParametersForAzureMonitorDiagnostic()
+        {
+            var template = GetTemplate(true, false);
+            AssertParameter(template, "diagnostic_azuremonitor_samplingPercentage", "100", "string");
+            AssertParameter(template, "diagnostic_azuremonitor_alwaysLog", "", "string");
+        }
+
 
         [TestMethod]
         public void TestContainsParametersForApplicationInsightsServiceName()
