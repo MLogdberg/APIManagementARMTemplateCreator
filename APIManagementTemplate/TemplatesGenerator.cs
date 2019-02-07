@@ -473,9 +473,9 @@ namespace APIManagementTemplate
             template.parameters = GetParameters(parsedTemplate["parameters"], product);
             template.resources.Add(JObject.FromObject(product));
             generatedTemplate.Content = JObject.FromObject(template);
-            if (!apiStandalone && listApiInProduct)
+            if (listApiInProduct)
                 ListApiInProduct(generatedTemplate.Content);
-            if (apiStandalone)
+            if (!listApiInProduct && apiStandalone)
                 RemoveProductAPIs(generatedTemplate.Content);
             return generatedTemplate;
         }
@@ -490,10 +490,15 @@ namespace APIManagementTemplate
 
                 //get productName
                 var productName = product["name"].Value<string>();
-                
-                //get names of apis
-                var apiNames = product.SelectTokens($"$..[?(@.type=='{ProductAPIResourceType}')]").Select(a => Regex.Match(a["name"].Value<string>(), "(?<='api_)(.*)(?=_name')").Value);
+                var apimServiceName = Regex.Match(productName, "(?<=\\(')(.*)(?=('\\)),)").Value;
 
+                //get names of apis
+                var apiNames = product.SelectTokens($"$..[?(@.type=='{ProductAPIResourceType}')]").Select(a => Regex.Match(a["name"].Value<string>(), "(?<='api_)(.*)(?=_name')").Value).Where(n => n != string.Empty);
+
+                //if no apis in product skip
+                if (!apiNames.Any())                
+                    continue;
+                
                 //remove api specific parameters
                 var apiParameters = apiNames.Select(a => parameterObject.SelectToken($"api_{a}_name").Parent);
 
@@ -518,7 +523,7 @@ namespace APIManagementTemplate
                     new JProperty("type", "Microsoft.ApiManagement/service/products/apis"),
                     new JProperty("tags", new JObject(new JProperty("displayName", "ListOfApis"))),
                     new JProperty("apiVersion", "2017-03-01"),
-                    new JProperty("dependsOn", new JArray(productName.Replace("[concat(", "[resourceId('Microsoft.ApiManagement/service/products', "))),
+                    new JProperty("dependsOn", new JArray($"[resourceId('Microsoft.ApiManagement/service/products', parameters('{apimServiceName}'), parameters('{apisListParameterName}'))]")),
                     new JProperty("copy",
                         new JObject(new JProperty("name", "apicopy"),
                         new JProperty("count", $"[length(parameters('{apisListParameterName}'))]"))

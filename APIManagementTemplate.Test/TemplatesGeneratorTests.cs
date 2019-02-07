@@ -31,7 +31,7 @@ namespace APIManagementTemplate.Test
         {
             _templatesGenerator = new TemplatesGenerator();
             _sourceTemplate = Utils.GetEmbededFileContent("APIManagementTemplate.Test.SamplesTemplate.template.json");
-            _generatedTemplates = _templatesGenerator.Generate(_sourceTemplate, true, true, true, true, true);
+            _generatedTemplates = _templatesGenerator.Generate(_sourceTemplate, true, true, true, true, false);
         }
 
         [TestMethod]
