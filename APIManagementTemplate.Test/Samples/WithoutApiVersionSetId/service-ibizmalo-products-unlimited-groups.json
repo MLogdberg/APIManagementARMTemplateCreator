@@ -1,0 +1,54 @@
+{
+    "value": [
+        {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/products/unlimited/groups/administrators",
+            "type": "Microsoft.ApiManagement/service/products/groups",
+            "name": "administrators",
+            "properties": {
+                "displayName": "Administrators",
+                "description": "Administrators is a built-in group. Its membership is managed by the system. Microsoft Azure subscription administrators fall into this group.",
+                "builtIn": true,
+                "type": "system",
+                "externalId": null
+            }
+        },
+        {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/products/unlimited/groups/developers",
+            "type": "Microsoft.ApiManagement/service/products/groups",
+            "name": "developers",
+            "properties": {
+                "displayName": "Developers",
+                "description": "Developers is a built-in group. Its membership is managed by the system. Signed-in users fall into this group.",
+                "builtIn": true,
+                "type": "system",
+                "externalId": null
+            }
+        },
+        {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/products/unlimited/groups/guests",
+            "type": "Microsoft.ApiManagement/service/products/groups",
+            "name": "guests",
+            "properties": {
+                "displayName": "Guests",
+                "description": "Guests is a built-in group. Its membership is managed by the system. Unauthenticated users visiting the developer portal fall into this group.",
+                "builtIn": true,
+                "type": "system",
+                "externalId": null
+            }
+        },
+        {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/products/unlimited/groups/office-services",
+            "type": "Microsoft.ApiManagement/service/products/groups",
+            "name": "office-services",
+            "properties": {
+                "displayName": "Office Services",
+                "description": null,
+                "builtIn": false,
+                "type": "custom",
+                "externalId": null
+            }
+
+        }
+    ],
+    "nextLink": ""
+}

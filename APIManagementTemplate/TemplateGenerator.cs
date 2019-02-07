@@ -228,8 +228,6 @@ namespace APIManagementTemplate
                 foreach (JObject productObject in (products == null ? new JArray() : products.Value<JArray>("value")))
                 {
                     var id = productObject.Value<string>("id");
-                    var productInstance = await resourceCollector.GetResource(id);
-
                     var productApis = await resourceCollector.GetResource(id + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
 
                     // Skip product if not related to an API in the filter.
@@ -256,9 +254,9 @@ namespace APIManagementTemplate
                                 // Add group resource
                                 var groupObject = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/groups/" + group.Value<string>("name"));
                                 template.AddGroup(groupObject);
-                                productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(group));
-                                productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/groups', parameters('{GetServiceName(servicename)}'), '{group.Value<string>("name")}')]");
                             }
+                            productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(group));
+                            productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/groups', parameters('{GetServiceName(servicename)}'), '{group.Value<string>("name")}')]");
                         }
                         var policies = await resourceCollector.GetResource(id + "/policies");
                         foreach (JObject policy in (policies == null ? new JArray() : policies.Value<JArray>("value")))
@@ -305,7 +303,7 @@ namespace APIManagementTemplate
                         foreach (var apiName in identifiedProperty.apis)
                         {
                             var apiTemplate = template.resources.Where(rr => rr.Value<string>("name") == apiName).FirstOrDefault();
-                            if(apiTemplate != null)
+                            if (apiTemplate != null)
                                 apiTemplate.Value<JArray>("dependsOn").Add(resourceid);
                         }
                     }
@@ -354,7 +352,7 @@ namespace APIManagementTemplate
             if (apiTemplateResource == null || !apiTemplateResource["properties"].HasValues ||
                 !apiTemplateResource["properties"]["authenticationSettings"].HasValues ||
                 !apiTemplateResource["properties"]["authenticationSettings"]["openid"].HasValues ||
-                apiTemplateResource["properties"]["authenticationSettings"]["openid"]["openidProviderId"] == null )
+                apiTemplateResource["properties"]["authenticationSettings"]["openid"]["openidProviderId"] == null)
                 return string.Empty;
             JToken openIdProviderId = apiTemplateResource?["properties"]["authenticationSettings"]["openid"]["openidProviderId"];
             return openIdProviderId.Value<string>();
@@ -367,7 +365,7 @@ namespace APIManagementTemplate
             if (backendInstance["properties"]["resourceId"] != null)
             {
                 string version = "2018-02-01";
-                if(backendInstance["properties"].Value<string>("resourceId").Contains("Microsoft.Logic"))
+                if (backendInstance["properties"].Value<string>("resourceId").Contains("Microsoft.Logic"))
                 {
                     version = "2017-07-01";
                 }
@@ -553,8 +551,8 @@ namespace APIManagementTemplate
                         {
                             id = $"{serviceId}/properties/{paramname}",
                             type = "Microsoft.ApiManagement/service/properties",
-                            name= paramname,
-                            properties = new 
+                            name = paramname,
+                            properties = new
                             {
                                 displayName = paramname,
                                 value = $"[parameters('{paramname}')]",

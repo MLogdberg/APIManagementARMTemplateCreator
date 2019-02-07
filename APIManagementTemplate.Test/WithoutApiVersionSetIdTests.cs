@@ -12,9 +12,11 @@ namespace APIManagementTemplate.Test
     public class WithoutApiVersionSetIdTests
     {
         private const string ProductPolicyResourceType = "Microsoft.ApiManagement/service/products/policies";
+        private const string ProductGroupResourceType = "Microsoft.ApiManagement/service/products/groups";
+        private const string GroupResourceType = "Microsoft.ApiManagement/service/groups";
         private const string ServicePolicyResourceType = "Microsoft.ApiManagement/service/policies";
         private const string ApiResourceType = "Microsoft.ApiManagement/service/apis";
-        private const string ProductResourceType = "Microsoft.ApiManagement/service/apis/products";
+        private const string ProductResourceType = "Microsoft.ApiManagement/service/products";
         private const string ServiceResourceType = "Microsoft.ApiManagement/service";
         private const string LoggerResourceType = "Microsoft.ApiManagement/service/loggers";
         private const string SchemaResourceType = "Microsoft.ApiManagement/service/apis/schemas";
@@ -74,6 +76,37 @@ namespace APIManagementTemplate.Test
             IEnumerable<JToken> policies = GetSubResourceFromTemplate(ProductResourceType, ProductPolicyResourceType, false);
 
             Assert.AreEqual(1, policies.Count());
+        }
+
+        [TestMethod]
+        public void TestProductContains4Groups()
+        {
+            var template = GetTemplate(true, true, false, true, false);
+            var productGroups = template.SelectTokens($"$..resources[?(@.type=='{ProductGroupResourceType}')]");
+            Assert.IsNotNull(productGroups);
+
+            Assert.AreEqual(4, productGroups.Count());
+            var productGroup = productGroups.SingleOrDefault(x => x.Value<string>("name").Contains("office-services"));
+            Assert.IsNotNull(productGroup);
+            Assert.AreEqual("[concat(parameters('apimServiceName'), '/', 'unlimited', '/', 'office-services')]", productGroup.Value<string>("name"));
+            JToken properties = productGroup["properties"];
+            Assert.AreEqual("Office Services", properties.Value<string>("displayName"));
+            Assert.AreEqual(false, properties.Value<bool>("builtIn"));
+            Assert.AreEqual("custom", properties.Value<string>("type"));
+        }
+
+        [TestMethod]
+        public void TestContains1Group()
+        {
+            var template = GetTemplate(true, true, false, true, false);
+            var policyGroup = template.SelectToken($"$..resources[?(@.type=='{GroupResourceType}')]");
+            Assert.IsNotNull(policyGroup);
+
+            Assert.AreEqual("[concat(parameters('apimServiceName'), '/office-services')]", policyGroup.Value<string>("name"));
+            JToken properties = policyGroup["properties"];
+            Assert.AreEqual("Office Services", properties.Value<string>("displayName"));
+            Assert.AreEqual(false, properties.Value<bool>("builtIn"));
+            Assert.AreEqual("custom", properties.Value<string>("type"));
         }
 
 

@@ -239,6 +239,10 @@
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-openidConnectProviders.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-identityProviders.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-diagnostics.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-products-unlimited-groups.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-products-unlimited-apis.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-products-unlimited-policies.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-groups-office-services.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />

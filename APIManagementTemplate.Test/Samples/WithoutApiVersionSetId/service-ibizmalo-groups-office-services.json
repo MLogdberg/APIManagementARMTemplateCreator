@@ -1,0 +1,12 @@
+{
+    "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/groups/office-services",
+    "type": "Microsoft.ApiManagement/service/groups",
+    "name": "office-services",
+    "properties": {
+        "displayName": "Office Services",
+        "description": null,
+        "builtIn": false,
+        "type": "custom",
+        "externalId": null
+    }
+}
