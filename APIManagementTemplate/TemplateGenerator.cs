@@ -1,18 +1,11 @@
+using APIManagementTemplate.Models;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Management;
-using System.Management.Automation;
-using APIManagementTemplate.Models;
-using Newtonsoft.Json.Linq;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using System.Windows.Forms;
-using System.Net;
-using System.IO;
-using System.Xml.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace APIManagementTemplate
 {
@@ -27,6 +20,7 @@ namespace APIManagementTemplate
 
         private bool exportPIManagementInstance;
         private bool exportGroups;
+        private bool exportCertificates;
         private bool exportProducts;
         private bool parametrizePropertiesOnly;
         private bool replaceSetBackendServiceBaseUrlAsProperty;
@@ -36,12 +30,13 @@ namespace APIManagementTemplate
         private readonly bool parameterizeBackendFunctionKey;
         IResourceCollector resourceCollector;
 
-        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false)
+        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportCertificates = true)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
             this.resourceGroup = resourceGroup;
             this.apiFilters = apiFilters;
+            this.exportCertificates = exportCertificates;
             this.exportGroups = exportGroups;
             this.exportProducts = exportProducts;
             this.exportPIManagementInstance = exportPIManagementInstance;
@@ -165,7 +160,7 @@ namespace APIManagementTemplate
                                 //add dependeOn
                                 apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
                             }
-                            await AddCertificate(policy, template);
+                            if (exportCertificates) await AddCertificate(policy, template);
 
                             operationTemplateResource.Value<JArray>("resources").Add(pol);
                             //handle nextlink?
@@ -178,7 +173,8 @@ namespace APIManagementTemplate
                     {
                         //Handle SOAP Backend
                         var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>("policyContent"));
-                        await AddCertificate(policy, template);
+
+                        if (exportCertificates) await AddCertificate(policy, template);
                         PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
                         var policyTemplateResource = template.CreatePolicy(policy);
                         this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"), null);
