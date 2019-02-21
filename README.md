@@ -35,7 +35,7 @@ Example when user is connected to multitenants:
 | SubscriptionId | The Subscription id (guid)| true |
 | TenantName | Name of the Tenant i.e. contoso.onmicrosoft.com | false |
 | APIFilters | Filter for what API's to exort i.e: path eq 'api/v1/currencyconverter' or endswith(path,'currencyconverter') | false
-| ExportAuthroizationServers | Flag inidicating if Authroization servers should be exported, default true | false
+| ExportAuthorizationServers | Flag inidicating if Authorization servers should be exported, default true | false
 | ExportPIManagementInstance | Flag inidicating if the API Management instance should be exported, default true | false
 | ExportGroups | Flag inidicating if Groups should be exported, default true | false
 | ExportProducts | Flag inidicating if Products should be exported, default true | false
