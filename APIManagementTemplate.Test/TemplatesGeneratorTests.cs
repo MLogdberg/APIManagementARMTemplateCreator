@@ -295,9 +295,12 @@ namespace APIManagementTemplate.Test
             Assert.AreNotEqual(0, parameters.Count());
 
             var serviceNameParameter = parameters.Cast<JProperty>().FirstOrDefault(x => x.Name == "service_PreDemoTest_name");
-
             Assert.IsNotNull(serviceNameParameter);
             Assert.AreEqual("PreDemoTest", serviceNameParameter.Value["value"].Value<string>());
+
+            var subnetNameParameter = parameters.Cast<JProperty>().FirstOrDefault(x => x.Name == "service_PreDemoTest_virtualNetwork_subnetname");
+            Assert.IsNotNull(subnetNameParameter);
+            Assert.AreEqual(String.Empty, subnetNameParameter.Value["value"].Value<string>());
         }
         [TestMethod]
         public void TestResultContainsMasterParametersFileForVersionedHttpBin()
@@ -354,15 +357,41 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
-        public void TestResultContains_ParameterForMyFunctionsKey()
+        public void TestResultContains_VariableInServiceTemplate()
         {
             GeneratedTemplate serviceTemplate = _generatedTemplates.Single(x => x.FileName == ServiceFilename && x.Directory == String.Empty);
 
-            var parameter = serviceTemplate.Content.SelectToken("$.parameters.myfunctions-key");
+            var conf = serviceTemplate.Content["variables"]["virtualNetworkConfiguration"];
+            Assert.IsNotNull(conf);
+            Assert.IsNotNull(conf["subnetResourceId"]);
+            Assert.IsNotNull(conf["vnetid"]);
+            Assert.IsNotNull(conf["subnetname"]);
+        }
+
+        [TestMethod]
+        public void TestResultContains_VirtualNetworkConfigurationParameters()
+        {
+            AssertParameter("service_PreDemoTest_virtualNetwork_subnetResourceId", "string", "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.Network/virtualNetworks/Network/subnets/default");
+            AssertParameter("service_PreDemoTest_virtualNetwork_vnetid", "string", "00000000-0000-0000-0000-000000000000");
+            AssertParameter("service_PreDemoTest_virtualNetwork_subnetname", "string", "");
+        }
+
+        [TestMethod]
+        public void TestResultContains_ParameterForMyFunctionsKey()
+        {
+            AssertParameter("myfunctions-key", "securestring", "");
+        }
+
+        private void AssertParameter(string name, string type, string defaultValue)
+        {
+            GeneratedTemplate serviceTemplate =
+                _generatedTemplates.Single(x => x.FileName == ServiceFilename && x.Directory == String.Empty);
+
+            var parameter = serviceTemplate.Content.SelectToken($"$.parameters.{name}");
             Assert.IsNotNull(parameter);
 
-            Assert.AreEqual("securestring", parameter.Value<string>("type"));
-            Assert.AreEqual("", parameter.Value<string>("defaultValue"));
+            Assert.AreEqual(type, parameter.Value<string>("type"));
+            Assert.AreEqual(defaultValue, parameter.Value<string>("defaultValue"));
         }
 
         [TestMethod]

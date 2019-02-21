@@ -136,6 +136,44 @@ namespace APIManagementTemplate.Test
             var service = GetResourceFromTemplate(ServiceResourceType, false, fixedServiceNameParameter: true);
             Assert.AreEqual("[parameters('apimServiceName')]", service.Value<string>("name"));
         }
+        [TestMethod]
+        public void TestServiceHasCorrectVirtualNetworkType()
+        {
+            var service = GetResourceFromTemplate(ServiceResourceType, false, fixedServiceNameParameter: true);
+            Assert.AreEqual("[parameters('apimServiceName_virtualNetworkType')]", service["properties"].Value<string>("virtualNetworkType"));
+        }
+
+        [TestMethod]
+        public void TestServiceHasCorrectVirtualNetworkConfiguration()
+        {
+            var service = GetResourceFromTemplate(ServiceResourceType, false, fixedServiceNameParameter: true);
+            var configuration = service["properties"]["virtualNetworkConfiguration"];
+            Assert.IsNotNull(configuration);
+            Assert.AreEqual("[if(not(equals(parameters('apimServiceName_virtualNetworkType'), 'None')), variables('virtualNetworkConfiguration'), json('null'))]", configuration.Value<string>());
+        }
+
+        private JToken GetVirtualNetworkConfiguration()
+        {
+            var service = GetResourceFromTemplate(ServiceResourceType, false, fixedServiceNameParameter: true);
+            var configuration = service["properties"]["virtualNetworkConfiguration"];
+            Assert.IsNotNull(configuration);
+            return configuration;
+        }
+
+        [TestMethod]
+        public void TestServiceHasVariableForvirtualNetworkConfiguration()
+        {
+            var template = GetTemplate(fixedServiceNameParameter: true);
+            var variables = template["variables"];
+
+            Assert.IsNotNull(variables);
+            Assert.AreEqual(1, variables.Count());
+
+            Assert.IsNotNull(variables["virtualNetworkConfiguration"]);
+            Assert.AreEqual("[parameters('apimServiceName_virtualNetwork_subnetResourceId')]", variables["virtualNetworkConfiguration"].Value<string>("subnetResourceId"));
+            Assert.AreEqual("[parameters('apimServiceName_virtualNetwork_vnetid')]", variables["virtualNetworkConfiguration"].Value<string>("vnetid"));
+            Assert.AreEqual("[if(equals(parameters('apimServiceName_virtualNetwork_subnetname'), ''), json('null'), parameters('apimServiceName_virtualNetwork_subnetname'))]", variables["virtualNetworkConfiguration"].Value<string>("subnetname"));
+        }
 
         [TestMethod]
         public void TestServiceContainsAppInsightsLoggerWhenCreateApplicationInsightsInstanceIsTrue()
@@ -516,6 +554,15 @@ namespace APIManagementTemplate.Test
             AssertParameter(template, "diagnostic_appInsights_samplingPercentage", "100", "string");
             AssertParameter(template, "diagnostic_appInsights_alwaysLog", "allErrors", "string");
             AssertParameter(template, "diagnostic_appInsights_enableHttpCorrelationHeaders", "True", "string");
+        }
+        [TestMethod]
+        public void TestServiceContainsParametersVirtualNetwork()
+        {
+            var template = GetTemplate(true, false);
+            AssertParameter(template, "service_ibizmalo_virtualNetworkType", "External", "string");
+            AssertParameter(template, "service_ibizmalo_virtualNetwork_subnetResourceId", "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.Network/virtualNetworks/Network/subnets/default", "string");
+            AssertParameter(template, "service_ibizmalo_virtualNetwork_vnetid", "00000000-0000-0000-0000-000000000000", "string");
+            AssertParameter(template, "service_ibizmalo_virtualNetwork_subnetname", "", "string");
         }
 
         [TestMethod]
