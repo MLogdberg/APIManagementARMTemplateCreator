@@ -202,7 +202,19 @@ namespace APIManagementTemplate
                         apiTemplateResource.Value<JArray>("resources").Add(JObject.FromObject(schemaTemplate));
                     }
 
+                    //diagnostics
+                    var loggers = resourceCollector.GetResource(GetAPIMResourceIDString() + "/loggers").Result;
+                    var logger = loggers == null ? new JArray() : loggers.Value<JArray>("value");
+                    var diagnostics = await resourceCollector.GetResource(id + "/diagnostics", apiversion: "2018-06-01-preview");
+                    foreach (JObject diagnostic in diagnostics.Value<JArray>("value"))
+                    {
+                        var diagnosticTemplateResource = template.CreateApiDiagnostic(diagnostic, logger, false);
+                        apiTemplateResource.Value<JArray>("resources").Add(diagnosticTemplateResource);
+
+                    }
+
                     //handle nextlink?
+
                 }
             }
 

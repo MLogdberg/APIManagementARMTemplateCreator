@@ -899,6 +899,37 @@ namespace APIManagementTemplate.Models
             }
             return resource;
         }
+
+        public JObject CreateApiDiagnostic(JObject restObject, JArray loggers, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/apis/diagnostics", addResource);
+
+            var properties = resource["properties"];
+            var name = restObject.Value<string>("name");
+            var loggerId = restObject["properties"]?.Value<string>("loggerId") ?? String.Empty;
+            var logger = loggers.FirstOrDefault(x => x.Value<string>("id") == loggerId);
+            resource["apiVersion"] = "2018-06-01-preview";
+            if (logger != null)
+            {
+                var rid = new AzureResourceId(restObject.Value<string>("id"));
+                var servicename = rid.ValueAfter("service");
+                JObject loggerObject = JObject.FromObject(logger);
+                var loggerName = GetServiceResourceName(loggerObject, "Microsoft.ApiManagement/service/loggers");
+
+                resource["name"] = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/', parameters('{AddParameter($"api_{name}_name", "string", name)}'), '/', {loggerName})]";
+
+                string loggerResource = $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), {loggerName})]";
+                properties["loggerId"] = loggerResource;
+                resource.Value<JArray>("dependsOn").Add(loggerResource);
+                resource["properties"]["alwaysLog"] = WrapParameterName(AddParameter($"diagnostic_{name}_alwaysLog", "string", GetDefaultValue(resource, "alwaysLog")));
+                resource["properties"]["sampling"]["percentage"] = WrapParameterName(AddParameter($"diagnostic_{name}_samplingPercentage", "string", GetDefaultValue(resource, "sampling", "percentage")));
+                if (IsApplicationInsightsLogger(loggerObject))
+                {
+                    resource["properties"]["enableHttpCorrelationHeaders"] = WrapParameterName(AddParameter($"diagnostic_{name}_enableHttpCorrelationHeaders", "string", GetDefaultValue(resource, "enableHttpCorrelationHeaders")));
+                }
+            }
+            return resource;
+        }
         public JObject CreateDiagnostic(JObject restObject, JArray loggers, bool addResource)
         {
             var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/diagnostics", addResource);
