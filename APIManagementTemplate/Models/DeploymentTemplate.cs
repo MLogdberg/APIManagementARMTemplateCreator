@@ -872,16 +872,20 @@ namespace APIManagementTemplate.Models
                     var dependsOn = resource.Value<JArray>("dependsOn") ?? new JArray();
                     dependsOn.Add($"[resourceId('Microsoft.Insights/components',parameters('{GetServiceName(serviceName, false)}_applicationInsights'))]");
                     resource["dependsOn"] = dependsOn;
-                    if (resource["properties"] is JObject properties)
-                    {
-                        properties.Remove("resourceId");
-                    }
+
                 }
                 if (credentials.Value<string>("name") != null)
                 {
                     credentials["name"] = WrapParameterName(AddParameter($"logger_{loggerName}_credentialName", "string", GetDefaultValue(resource, "credentials", "name")));
                 }
             }
+
+            if (resource["properties"] is JObject properties)
+            {
+                //remove resourceId, because this is not used.
+                properties.Remove("resourceId");
+            }
+
             return resource;
         }
         public JObject CreateIdentityProvider(JObject restObject, bool addResource)
@@ -900,12 +904,13 @@ namespace APIManagementTemplate.Models
             return resource;
         }
 
-        public JObject CreateApiDiagnostic(JObject restObject, JArray loggers, bool addResource)
+        public JObject CreateApiDiagnostic(JObject restObject, JArray loggers, JObject apiObject, bool addResource)
         {
             var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/apis/diagnostics", addResource);
 
             var properties = resource["properties"];
             var name = restObject.Value<string>("name");
+            var apiname = apiObject.Value<string>("name");
             var loggerId = restObject["properties"]?.Value<string>("loggerId") ?? String.Empty;
             var logger = loggers.FirstOrDefault(x => x.Value<string>("id") == loggerId);
             resource["apiVersion"] = "2018-06-01-preview";
@@ -916,12 +921,14 @@ namespace APIManagementTemplate.Models
                 JObject loggerObject = JObject.FromObject(logger);
                 var loggerName = GetServiceResourceName(loggerObject, "Microsoft.ApiManagement/service/loggers");
 
-                resource["name"] = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/', parameters('{AddParameter($"api_{name}_name", "string", name)}'), '/', {loggerName})]";
+                resource["name"] = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/', parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}'), '/', parameters('{AddParameter($"diagnostics_{name}_name", "string", name)}'))]";
 
                 string loggerResource = $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), {loggerName})]";
                 properties["loggerId"] = loggerResource;
+
+                resource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'), parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}'))]");
                 resource.Value<JArray>("dependsOn").Add(loggerResource);
-                resource["properties"]["alwaysLog"] = WrapParameterName(AddParameter($"diagnostic_{name}_alwaysLog", "string", GetDefaultValue(resource, "alwaysLog")));
+                resource["properties"]["alwaysLog"] = WrapParameterName(AddParameter($"diagnostic_{name}_alwaysLog", "string", GetDefaultValue(resource, "alwaysLog") == String.Empty ? null : GetDefaultValue(resource, "alwaysLog")));
                 resource["properties"]["sampling"]["percentage"] = WrapParameterName(AddParameter($"diagnostic_{name}_samplingPercentage", "string", GetDefaultValue(resource, "sampling", "percentage")));
                 if (IsApplicationInsightsLogger(loggerObject))
                 {
