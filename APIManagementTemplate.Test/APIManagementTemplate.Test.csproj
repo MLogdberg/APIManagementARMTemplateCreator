@@ -243,6 +243,19 @@
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-products-unlimited-apis.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-products-unlimited-policies.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-groups-office-services.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-loggers.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-apis-maloapimtest-diagnostics.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-loggers.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-apis-malologicapptestrequest-diagnostics.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-loggers.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-apis-malologicapptestmanual-diagnostics.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-loggers.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-apis-custom-trigger-displayname-diagnostics.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-apis-maloapimtestclean-diagnostics.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-loggers.json" />
+    <EmbeddedResource Include="Samples\UrlHandling\service-apidev-apis-invoice-retrieval-api-diagnostics.json" />
+    <EmbeddedResource Include="Samples\UrlHandling\service-apidev-loggers.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-diagnostics.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />

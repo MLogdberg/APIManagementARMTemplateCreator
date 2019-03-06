@@ -69,7 +69,7 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual("2017-03-01", obj.Value<string>("apiVersion"));
 
             Assert.AreEqual("[concat(parameters('service_apidev_name'), '/' ,parameters('api_invoice-retrieval-api_name'))]", obj.Value<string>("name"));
-            Assert.AreEqual(2, obj["resources"].Count());
+            Assert.AreEqual(4, obj["resources"].Count());
             Assert.AreEqual(2, obj["dependsOn"].Count());
 
             var prop = obj["properties"];
