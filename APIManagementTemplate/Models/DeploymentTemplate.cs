@@ -947,20 +947,27 @@ namespace APIManagementTemplate.Models
             return resource;
         }
 
-        public JObject CreateApiDiagnostic(JObject restObject, JArray loggers, JObject apiObject, bool addResource)
+        public JObject CreateApiDiagnostic(JObject restObject, JArray loggers, bool addResource)
         {
             var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/apis/diagnostics", addResource);
 
             var properties = resource["properties"];
-            var name = restObject.Value<string>("name");
-            var apiname = apiObject.Value<string>("name");
+
+            string name = restObject.Value<string>("name");
+            string type = restObject.Value<string>("type");
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
+            string servicename = apiid.ValueAfter("service");
+            string apiname = apiid.ValueAfter("apis");
+            apiname = parametrizePropertiesOnly ? $"'{apiname}'" : $"parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}')";
+
             var loggerId = restObject["properties"]?.Value<string>("loggerId") ?? String.Empty;
             var logger = loggers.FirstOrDefault(x => x.Value<string>("id") == loggerId);
+            
+
             resource["apiVersion"] = "2018-06-01-preview";
             if (logger != null)
             {
                 var rid = new AzureResourceId(restObject.Value<string>("id"));
-                var servicename = rid.ValueAfter("service");
                 JObject loggerObject = JObject.FromObject(logger);
                 var loggerName = GetServiceResourceName(loggerObject, "Microsoft.ApiManagement/service/loggers");
 
@@ -980,6 +987,7 @@ namespace APIManagementTemplate.Models
             }
             return resource;
         }
+
         public JObject CreateDiagnostic(JObject restObject, JArray loggers, bool addResource)
         {
             var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/diagnostics", addResource);

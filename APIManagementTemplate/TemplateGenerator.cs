@@ -208,7 +208,7 @@ namespace APIManagementTemplate
                     var diagnostics = await resourceCollector.GetResource(id + "/diagnostics", apiversion: "2018-06-01-preview");
                     foreach (JObject diagnostic in diagnostics.Value<JArray>("value"))
                     {
-                        var diagnosticTemplateResource = template.CreateApiDiagnostic(diagnostic, logger, apiObject, false);
+                        var diagnosticTemplateResource = template.CreateApiDiagnostic(diagnostic, logger, false);
                         apiTemplateResource.Value<JArray>("resources").Add(diagnosticTemplateResource);
 
                     }
