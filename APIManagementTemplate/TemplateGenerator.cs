@@ -213,6 +213,14 @@ namespace APIManagementTemplate
 
                     }
 
+                    //tags
+                    var apiTags = await resourceCollector.GetResource(id + "/tags");
+                    foreach (JObject tag in (apiTags == null ? new JArray() : apiTags.Value<JArray>("value")))
+                    {
+                        var tagTemplate = template.CreateAPITag(tag);
+                        apiTemplateResource.Value<JArray>("resources").Add(JObject.FromObject(tagTemplate));
+                    }
+
                     //handle nextlink?
 
                 }

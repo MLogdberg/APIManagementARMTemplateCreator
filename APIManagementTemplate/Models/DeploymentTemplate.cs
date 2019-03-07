@@ -300,6 +300,37 @@ namespace APIManagementTemplate.Models
             return resource;
         }
 
+        public ResourceTemplate CreateAPITag(JObject restObject)
+        {
+            if (restObject == null)
+                return null;
+
+            string name = restObject.Value<string>("name");
+            string type = restObject.Value<string>("type");
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
+            string servicename = apiid.ValueAfter("service");
+            string apiname = apiid.ValueAfter("apis");
+            apiname = parametrizePropertiesOnly ? $"'{apiname}'" : $"parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}')";
+
+            var obj = new ResourceTemplate();
+            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
+            obj.AddName(apiname);
+            obj.AddName($"'{name}'");
+
+            obj.comments = "Generated for resource " + restObject.Value<string>("id");
+            obj.type = type;
+            obj.properties = restObject.Value<JObject>("properties");
+
+            if (APIMInstanceAdded)
+            {
+                obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
+                //resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]" });
+            }
+            obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'),{apiname})]");
+
+            return obj;
+        }
+
         public ResourceTemplate CreateAPISchema(JObject restObject)
         {
             if (restObject == null)
