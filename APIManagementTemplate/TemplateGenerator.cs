@@ -22,6 +22,7 @@ namespace APIManagementTemplate
         private bool exportGroups;
         private bool exportCertificates;
         private bool exportProducts;
+        private bool exportTags;
         private bool parametrizePropertiesOnly;
         private bool replaceSetBackendServiceBaseUrlAsProperty;
         private bool fixedServiceNameParameter;
@@ -30,7 +31,7 @@ namespace APIManagementTemplate
         private readonly bool parameterizeBackendFunctionKey;
         IResourceCollector resourceCollector;
 
-        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportCertificates = true)
+        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportCertificates = true, bool exportTags = false)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -39,6 +40,7 @@ namespace APIManagementTemplate
             this.exportCertificates = exportCertificates;
             this.exportGroups = exportGroups;
             this.exportProducts = exportProducts;
+            this.exportTags = exportTags;
             this.exportPIManagementInstance = exportPIManagementInstance;
             this.parametrizePropertiesOnly = parametrizePropertiesOnly;
             this.replaceSetBackendServiceBaseUrlAsProperty = replaceSetBackendServiceBaseUrlAsProperty;
@@ -79,6 +81,10 @@ namespace APIManagementTemplate
                 });
                 await AddServiceResource(apimTemplateResource, "/diagnostics",
                     diagnostic => template.CreateDiagnostic(diagnostic, loggers == null ? new JArray() : loggers.Value<JArray>("value"), false));
+
+                if (this.exportTags)
+                    await AddServiceResource(apimTemplateResource, "/tags",
+                    tags => template.CreateTags(tags, false));
             }
 
             var apis = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
@@ -208,17 +214,22 @@ namespace APIManagementTemplate
                     var diagnostics = await resourceCollector.GetResource(id + "/diagnostics", apiversion: "2018-06-01-preview");
                     foreach (JObject diagnostic in diagnostics.Value<JArray>("value"))
                     {
-                        var diagnosticTemplateResource = template.CreateApiDiagnostic(diagnostic, logger, false);
-                        apiTemplateResource.Value<JArray>("resources").Add(diagnosticTemplateResource);
-
+                            if (diagnostic.Value<string>("type") == "Microsoft.ApiManagement/service/apis/diagnostics")
+                            {
+                                var diagnosticTemplateResource = template.CreateApiDiagnostic(diagnostic, logger, false);
+                                apiTemplateResource.Value<JArray>("resources").Add(diagnosticTemplateResource);
+                            }
                     }
 
                     //tags
-                    var apiTags = await resourceCollector.GetResource(id + "/tags");
-                    foreach (JObject tag in (apiTags == null ? new JArray() : apiTags.Value<JArray>("value")))
+                    if (this.exportTags)
                     {
-                        var tagTemplate = template.CreateAPITag(tag);
-                        apiTemplateResource.Value<JArray>("resources").Add(JObject.FromObject(tagTemplate));
+                        var apiTags = await resourceCollector.GetResource(id + "/tags");
+                        foreach (JObject tag in (apiTags == null ? new JArray() : apiTags.Value<JArray>("value")))
+                        {
+                            var tagTemplate = template.CreateAPITag(tag);
+                            apiTemplateResource.Value<JArray>("resources").Add(JObject.FromObject(tagTemplate));
+                        }
                     }
 
                     //handle nextlink?

@@ -946,6 +946,13 @@ namespace APIManagementTemplate.Models
             }
             return resource;
         }
+        public JObject CreateTags(JObject restObject, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/tags", addResource);
+            var properties = resource["properties"];
+
+            return resource;
+        }
 
         public JObject CreateApiDiagnostic(JObject restObject, JArray loggers, bool addResource)
         {
