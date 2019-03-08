@@ -196,6 +196,27 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
+        public void TestResultContainsAPIFor_echoAPI_with_apiversion_as_20180601preview()
+        {
+            //Because of a "bug" in Azure the api property subscriptionRequired is generated for all apiversion
+            //even though it is only handled when deploying an api with apiversion 20180601preview or later
+            var template = _generatedTemplates.With(Filename.Echo);
+            var api = template.WithDirectResource(ResourceType.Api);
+            Assert.AreEqual("2018-06-01-preview", api.Value(Arm.ApiVersion));
+        }
+
+        [TestMethod]
+        public void TestResultContainsAPIFor_HttpBinV1_with_apiversion_as_20170301()
+        {
+            //Because of a "bug" in Azure the api property subscriptionRequired is generated for all apiversion
+            //even though it is only handled when deploying an api with apiversion 20180601preview or later
+            //An API without subscriptionRequired should keep the standard apiversion (20170301)
+            var apiTemplate = _generatedTemplates.With(Filename.HttpBinV1);
+            var api = apiTemplate.WithDirectResource(ResourceType.Api);
+            Assert.AreEqual("2017-03-01", api.Value(Arm.ApiVersion));
+        }
+
+        [TestMethod]
         public void TestResultContainsTemplatesStorageAccountSASTokenParameterForProduct()
         {
             var template = _generatedTemplates.Single(x => x.FileName == ProductStarterFilename);
