@@ -101,7 +101,11 @@ namespace APIManagementTemplate.Test
         [Description("templateLink")]
         TemplateLink,
         [Description("contentVersion")]
-        ContentVersion
+        ContentVersion,
+        [Description("copy")]
+        Copy,
+        [Description("count")]
+        Count
     }
 
     public enum Filename
@@ -128,6 +132,8 @@ namespace APIManagementTemplate.Test
         Groups,
         [Description("product-starter.template.json")]
         ProductStarter,
+        [Description("product-unlimited.template.json")]
+        ProductUnlimited,
         [Description("master.template.json")]
         MasterTemplate,
         [Description("api-Echo-API.create-resource.policy.xml")]

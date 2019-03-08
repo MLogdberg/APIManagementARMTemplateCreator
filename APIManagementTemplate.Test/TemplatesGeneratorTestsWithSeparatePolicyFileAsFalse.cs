@@ -11,15 +11,7 @@ namespace APIManagementTemplate.Test
     [TestClass]
     public class TemplatesGeneratorTestsWithSeparatePolicyFileAsFalse
     {
-        private const string HttpBinV1Filename = "api-Versioned-HTTP-bin-API.v1.template.json";
-        private const string HttpBinV2Filename = "api-Versioned-HTTP-bin-API.v2.template.json";
         private const string EchoFilename = "api-Echo-API.template.json";
-        private const string JPathAPI = "$.resources[?(@.type=='Microsoft.ApiManagement/service/apis')]";
-        private const string JPathParameters = "$.parameters.*";
-        private const string HttpBinVersionSetFilename = "api-Versioned-HTTP-bin-API.version-set.template.json";
-        private const string ServiceFilename = "service.template.json";
-        private const string ProductStarterFilename = "product-starter.template.json";
-        private const string MasterTemplateFilename = "master.template.json";
         private const string ApiEchoApiDirectory = "api-Echo-API";  
         private TemplatesGenerator _templatesGenerator;
         private string _sourceTemplate;
