@@ -11,5 +11,6 @@ namespace APIManagementTemplate
     {
         string Login(string tenantName);
         Task<JObject> GetResource(string resourceId, string suffix = "", string apiversion = "2017-03-01");
+        Task<JObject> GetResourceByURL(string url);
     }
 }

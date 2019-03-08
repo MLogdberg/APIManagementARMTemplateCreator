@@ -60,8 +60,10 @@
     <Compile Include="DeploymentTemplateTests.cs" />
     <Compile Include="FunctionAppMixedWithLogicAppTests.cs" />
     <Compile Include="TemplateMergerTests.cs" />
+    <Compile Include="TemplatesGeneratorTestsWithSwagger.cs" />
     <Compile Include="TemplatesGeneratorTestsWithSeparatePolicyFileAsFalse.cs" />
     <Compile Include="TemplatesGeneratorTests.cs" />
+    <Compile Include="TestExtensions.cs" />
     <Compile Include="WithoutApiVersionSetIdTests.cs" />
     <Compile Include="FunctionAppUneditedTests.cs" />
     <Compile Include="LogicAppCustomTriggerNameTest.cs" />
@@ -243,6 +245,9 @@
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-products-unlimited-apis.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-products-unlimited-policies.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-groups-office-services.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-format-swagger-link-export-true.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\apimgmtstsulap3tpjfi3ccv.blob.core.windows.net-api-export-tfs.json" />
+    <EmbeddedResource Include="SamplesTemplate\templateSwagger.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />

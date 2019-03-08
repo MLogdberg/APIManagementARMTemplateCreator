@@ -11,25 +11,6 @@ namespace APIManagementTemplate.Test
     [TestClass]
     public class WithoutApiVersionSetIdTests
     {
-        private const string ProductPolicyResourceType = "Microsoft.ApiManagement/service/products/policies";
-        private const string ProductGroupResourceType = "Microsoft.ApiManagement/service/products/groups";
-        private const string GroupResourceType = "Microsoft.ApiManagement/service/groups";
-        private const string ServicePolicyResourceType = "Microsoft.ApiManagement/service/policies";
-        private const string ApiResourceType = "Microsoft.ApiManagement/service/apis";
-        private const string ProductResourceType = "Microsoft.ApiManagement/service/products";
-        private const string ServiceResourceType = "Microsoft.ApiManagement/service";
-        private const string LoggerResourceType = "Microsoft.ApiManagement/service/loggers";
-        private const string SchemaResourceType = "Microsoft.ApiManagement/service/apis/schemas";
-        private const string BackendResourceType = "Microsoft.ApiManagement/service/backends";
-        private const string OpenIdConnectProviderResourceType = "Microsoft.ApiManagement/service/openidConnectProviders";
-        private const string IdentityProviderResourceType = "Microsoft.ApiManagement/service/identityProviders";
-        private const string CertificateResourceType = "Microsoft.ApiManagement/service/certificates";
-        private const string OperationResourceType = "Microsoft.ApiManagement/service/apis/operations";
-        private const string OperationPolicyResourceType = "Microsoft.ApiManagement/service/apis/operations/policies";
-        private const string ApiPolicyResourceType = "Microsoft.ApiManagement/service/apis/policies";
-        private const string ApplicationInsightsResourceType = "Microsoft.Insights/components";
-        private const string DiagnosticsResourceType = "Microsoft.ApiManagement/service/diagnostics";
-
         private IResourceCollector collector;
 
         [TestInitialize()]
@@ -41,30 +22,37 @@ namespace APIManagementTemplate.Test
 
         private JObject _template = null;
 
-        private JObject GetTemplate(bool exportProducts = false, bool parametrizePropertiesOnly = true, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false)
+        private JObject GetTemplate(bool exportProducts = false, bool parametrizePropertiesOnly = true,
+            bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false,
+            bool createApplicationInsightsInstance = false, bool exportSwaggerDefinition = false)
         {
             if (this._template != null)
                 return this._template;
             var generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest",
-                "maloapimtestclean", false, exportProducts, true, parametrizePropertiesOnly, this.collector, replaceSetBackendServiceBaseUrlAsProperty, fixedServiceNameParameter, createApplicationInsightsInstance);
+                "maloapimtestclean", false, exportProducts, true, parametrizePropertiesOnly, this.collector,
+                replaceSetBackendServiceBaseUrlAsProperty, fixedServiceNameParameter,
+                createApplicationInsightsInstance, exportSwaggerDefinition: exportSwaggerDefinition);
             this._template = generator.GenerateTemplate().GetAwaiter().GetResult();
             return this._template;
         }
 
 
-        private JToken GetResourceFromTemplate(string resourceType, bool createApplicationInsightsInstance = false, bool parametrizePropertiesOnly = true, bool fixedServiceNameParameter = false)
+        private JToken GetResourceFromTemplate(ResourceType resourceType, bool createApplicationInsightsInstance = false,
+            bool parametrizePropertiesOnly = true, bool fixedServiceNameParameter = false, bool exportSwaggerDefinition = false, bool replaceSetBackendServiceBaseUrlAsProperty=false)
         {
-            var template = GetTemplate(true, parametrizePropertiesOnly, fixedServiceNameParameter: fixedServiceNameParameter, createApplicationInsightsInstance: createApplicationInsightsInstance);
-            return template["resources"].FirstOrDefault(rr => rr["type"].Value<string>() == resourceType);
+            var template = GetTemplate(true, parametrizePropertiesOnly,
+                fixedServiceNameParameter: fixedServiceNameParameter,
+                createApplicationInsightsInstance: createApplicationInsightsInstance, exportSwaggerDefinition: exportSwaggerDefinition, replaceSetBackendServiceBaseUrlAsProperty:replaceSetBackendServiceBaseUrlAsProperty);
+            return template.WithDirectResource(resourceType);
         }
 
         [TestMethod]
         public void TestApiVersionSetIdForApiIsNotSet()
         {
-            JToken api = GetResourceFromTemplate(ApiResourceType, false);
+            JToken api = GetResourceFromTemplate(ResourceType.Api, false);
             Assert.IsNotNull(api);
 
-            var versionSetId = api["properties"]["apiVersionSetId"];
+            var versionSetId = api.Index(Arm.Properties).Value(Arm.ApiVersionSetId);
             Assert.IsNull(versionSetId);
         }
 
@@ -73,7 +61,8 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestProductContainsPolicy()
         {
-            IEnumerable<JToken> policies = GetSubResourceFromTemplate(ProductResourceType, ProductPolicyResourceType, false);
+            IEnumerable<JToken> policies =
+                GetSubResourceFromTemplate(ResourceType.Product, ResourceType.ProductPolicy, false);
 
             Assert.AreEqual(1, policies.Count());
         }
@@ -82,50 +71,52 @@ namespace APIManagementTemplate.Test
         public void TestProductContains4Groups()
         {
             var template = GetTemplate(true, true, false, true, false);
-            var productGroups = template.SelectTokens($"$..resources[?(@.type=='{ProductGroupResourceType}')]");
+            var productGroups = template.WithResources(ResourceType.ProductGroup);
             Assert.IsNotNull(productGroups);
 
             Assert.AreEqual(4, productGroups.Count());
-            var productGroup = productGroups.SingleOrDefault(x => x.Value<string>("name").Contains("office-services"));
+            var productGroup = productGroups.SingleOrDefault(x => x.Value(Arm.Name).Contains("office-services"));
             Assert.IsNotNull(productGroup);
-            Assert.AreEqual("[concat(parameters('apimServiceName'), '/', 'unlimited', '/', 'office-services')]", productGroup.Value<string>("name"));
-            JToken properties = productGroup["properties"];
-            Assert.AreEqual("Office Services", properties.Value<string>("displayName"));
-            Assert.AreEqual(false, properties.Value<bool>("builtIn"));
-            Assert.AreEqual("custom", properties.Value<string>("type"));
+            Assert.AreEqual("[concat(parameters('apimServiceName'), '/', 'unlimited', '/', 'office-services')]",
+                productGroup.Value(Arm.Name));
+            JToken properties = productGroup.Index(Arm.Properties);
+            Assert.AreEqual("Office Services", properties.Value(Arm.DisplayName));
+            Assert.AreEqual(false, properties.ValueWithType<bool>(Arm.BuiltIn));
+            Assert.AreEqual("custom", properties.Value(Arm.Type));
         }
 
         [TestMethod]
         public void TestContains1Group()
         {
             var template = GetTemplate(true, true, false, true, false);
-            var policyGroup = template.SelectToken($"$..resources[?(@.type=='{GroupResourceType}')]");
+            var policyGroup = template.WithResource(ResourceType.Group);
             Assert.IsNotNull(policyGroup);
 
-            Assert.AreEqual("[concat(parameters('apimServiceName'), '/office-services')]", policyGroup.Value<string>("name"));
-            JToken properties = policyGroup["properties"];
-            Assert.AreEqual("Office Services", properties.Value<string>("displayName"));
-            Assert.AreEqual(false, properties.Value<bool>("builtIn"));
-            Assert.AreEqual("custom", properties.Value<string>("type"));
+            Assert.AreEqual("[concat(parameters('apimServiceName'), '/office-services')]",
+                policyGroup.Value(Arm.Name));
+            JToken properties = policyGroup.Index(Arm.Properties);
+            Assert.AreEqual("Office Services", properties.Value(Arm.DisplayName));
+            Assert.AreEqual(false, properties.ValueWithType<bool>(Arm.BuiltIn));
+            Assert.AreEqual("custom", properties.Value(Arm.Type));
         }
 
 
         [TestMethod]
         public void TestContainsCertificate()
         {
-            JToken certificate = GetResourceFromTemplate(CertificateResourceType, false, true);
+            JToken certificate = GetResourceFromTemplate(ResourceType.Certificate, false, true);
             Assert.IsNotNull(certificate);
 
-            var properties = certificate["properties"];
+            var properties = certificate.Index(Arm.Properties);
             Assert.IsNotNull(properties);
 
-            var data = properties["data"];
+            var data = properties.Value(Arm.Data);
             Assert.IsNotNull(data);
-            Assert.AreEqual("[parameters('certificate_MyCertificate_data')]", data.Value<string>());
+            Assert.AreEqual("[parameters('certificate_MyCertificate_data')]", data);
 
-            var password = properties["password"];
+            var password = properties.Value(Arm.Password);
             Assert.IsNotNull(password);
-            Assert.AreEqual("[parameters('certificate_MyCertificate_password')]", password.Value<string>());
+            Assert.AreEqual("[parameters('certificate_MyCertificate_password')]", password);
 
             Assert.AreEqual(2, properties.Children().Count());
         }
@@ -133,130 +124,141 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestServiceNameParameterIsApimServiceNameWhenUseFixedServiceNameParameter()
         {
-            var service = GetResourceFromTemplate(ServiceResourceType, false, fixedServiceNameParameter: true);
-            Assert.AreEqual("[parameters('apimServiceName')]", service.Value<string>("name"));
+            var service = GetResourceFromTemplate(ResourceType.Service, false, fixedServiceNameParameter: true);
+            Assert.AreEqual("[parameters('apimServiceName')]", service.Value(Arm.Name));
         }
+
         [TestMethod]
         public void TestServiceHasCorrectVirtualNetworkType()
         {
-            var service = GetResourceFromTemplate(ServiceResourceType, false, fixedServiceNameParameter: true);
-            Assert.AreEqual("[parameters('apimServiceName_virtualNetworkType')]", service["properties"].Value<string>("virtualNetworkType"));
+            var service = GetResourceFromTemplate(ResourceType.Service, false, fixedServiceNameParameter: true);
+            Assert.AreEqual("[parameters('apimServiceName_virtualNetworkType')]",
+                service.Index(Arm.Properties).Value(Arm.VirtualNetworkType));
         }
 
         [TestMethod]
         public void TestServiceHasCorrectVirtualNetworkConfiguration()
         {
-            var service = GetResourceFromTemplate(ServiceResourceType, false, fixedServiceNameParameter: true);
-            var configuration = service["properties"]["virtualNetworkConfiguration"];
+            var service = GetResourceFromTemplate(ResourceType.Service, false, fixedServiceNameParameter: true);
+            var configuration = service.Index(Arm.Properties).Value(Arm.VirtualNetworkConfiguration);
             Assert.IsNotNull(configuration);
-            Assert.AreEqual("[if(not(equals(parameters('apimServiceName_virtualNetworkType'), 'None')), variables('virtualNetworkConfiguration'), json('null'))]", configuration.Value<string>());
-        }
-
-        private JToken GetVirtualNetworkConfiguration()
-        {
-            var service = GetResourceFromTemplate(ServiceResourceType, false, fixedServiceNameParameter: true);
-            var configuration = service["properties"]["virtualNetworkConfiguration"];
-            Assert.IsNotNull(configuration);
-            return configuration;
+            Assert.AreEqual(
+                "[if(not(equals(parameters('apimServiceName_virtualNetworkType'), 'None')), variables('virtualNetworkConfiguration'), json('null'))]",
+                configuration);
         }
 
         [TestMethod]
         public void TestServiceHasVariableForvirtualNetworkConfiguration()
         {
             var template = GetTemplate(fixedServiceNameParameter: true);
-            var variables = template["variables"];
+            var variables = template.Index(Arm.Variables);
 
             Assert.IsNotNull(variables);
             Assert.AreEqual(1, variables.Count());
 
-            Assert.IsNotNull(variables["virtualNetworkConfiguration"]);
-            Assert.AreEqual("[parameters('apimServiceName_virtualNetwork_subnetResourceId')]", variables["virtualNetworkConfiguration"].Value<string>("subnetResourceId"));
-            Assert.AreEqual("[parameters('apimServiceName_virtualNetwork_vnetid')]", variables["virtualNetworkConfiguration"].Value<string>("vnetid"));
-            Assert.AreEqual("[if(equals(parameters('apimServiceName_virtualNetwork_subnetname'), ''), json('null'), parameters('apimServiceName_virtualNetwork_subnetname'))]", variables["virtualNetworkConfiguration"].Value<string>("subnetname"));
+            var configuration = variables.Index(Arm.VirtualNetworkConfiguration);
+            Assert.IsNotNull(configuration);
+            Assert.AreEqual("[parameters('apimServiceName_virtualNetwork_subnetResourceId')]",
+                configuration.Value(Arm.SubnetResourceId));
+            Assert.AreEqual("[parameters('apimServiceName_virtualNetwork_vnetid')]",
+                configuration.Value(Arm.VnetId));
+            Assert.AreEqual(
+                "[if(equals(parameters('apimServiceName_virtualNetwork_subnetname'), ''), json('null'), parameters('apimServiceName_virtualNetwork_subnetname'))]",
+                configuration.Value(Arm.SubnetName));
         }
 
         [TestMethod]
         public void TestServiceContainsAppInsightsLoggerWhenCreateApplicationInsightsInstanceIsTrue()
         {
-            IEnumerable<JToken> loggers = GetSubResourceFromTemplate(ServiceResourceType, LoggerResourceType, true);
+            IEnumerable<JToken> loggers = GetSubResourceFromTemplate(ResourceType.Service, ResourceType.Logger, true);
 
             Assert.AreEqual(3, loggers.Count());
 
-            var logger = loggers.First(x => x.Value<string>("name").Contains("applicationInsights"));
-            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/',parameters('service_ibizmalo_applicationInsights'))]",
-                logger.Value<string>("name"));
-            Assert.AreEqual("Microsoft.ApiManagement/service/loggers", logger.Value<string>("type"));
-            var properties = logger["properties"] as JObject;
+            var logger = loggers.First(x => x.Value(Arm.Name).Contains("applicationInsights"));
+            Assert.AreEqual(
+                "[concat(parameters('service_ibizmalo_name'),'/',parameters('service_ibizmalo_applicationInsights'))]",
+                logger.Value(Arm.Name));
+            Assert.AreEqual("Microsoft.ApiManagement/service/loggers", logger.Value(Arm.Type));
+            var properties = logger.Index(Arm.Properties) as JObject;
             Assert.IsNotNull(properties);
-            Assert.AreEqual("applicationInsights", properties.Value<string>("loggerType"));
+            Assert.AreEqual("applicationInsights", properties.Value(Arm.LoggerType));
             var resourceId = properties.GetValue("resourceId");
             Assert.IsNull(resourceId);
 
-            var credentials = properties["credentials"];
+            var credentials = properties.Index(Arm.Credentials);
             Assert.IsNotNull(credentials);
 
-            Assert.AreEqual("[reference(resourceId('Microsoft.Insights/components', parameters('service_ibizmalo_applicationInsights')), '2014-04-01').InstrumentationKey]",
-                credentials.Value<string>("instrumentationKey"));
+            Assert.AreEqual(
+                "[reference(resourceId('Microsoft.Insights/components', parameters('service_ibizmalo_applicationInsights')), '2014-04-01').InstrumentationKey]",
+                credentials.Value(Arm.InstrumentationKey));
 
-            var dependsOn = logger.Value<JArray>("dependsOn");
-            Assert.AreEqual(2, dependsOn.Count);
-            Assert.AreEqual("[resourceId('Microsoft.Insights/components',parameters('service_ibizmalo_applicationInsights'))]", dependsOn.Values<string>().Last());
+            var dependsOn = logger.DependsOn();
+            Assert.AreEqual(2, dependsOn.Count());
+            Assert.AreEqual(
+                "[resourceId('Microsoft.Insights/components',parameters('service_ibizmalo_applicationInsights'))]",
+                dependsOn.Last());
 
         }
+
         [TestMethod]
         public void TestServiceContainsAppInsightsLoggerWhenCreateApplicationInsightsInstanceIsFalse()
         {
-            IEnumerable<JToken> loggers = GetSubResourceFromTemplate(ServiceResourceType, LoggerResourceType, false);
+            IEnumerable<JToken> loggers = GetSubResourceFromTemplate(ResourceType.Service, ResourceType.Logger, false);
 
             Assert.AreEqual(3, loggers.Count());
 
-            var logger = loggers.First(x => x.Value<string>("name").Contains("appInsights"));
+            var logger = loggers.First(x => x.Value(Arm.Name).Contains("appInsights"));
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/','appInsights')]",
-                logger.Value<string>("name"));
-            Assert.AreEqual("Microsoft.ApiManagement/service/loggers", logger.Value<string>("type"));
-            var properties = logger["properties"];
+                logger.Value(Arm.Name));
+            Assert.AreEqual("Microsoft.ApiManagement/service/loggers", logger.Value(Arm.Type));
+            var properties = logger.Index(Arm.Properties);
             Assert.IsNotNull(properties);
-            Assert.AreEqual("applicationInsights", properties.Value<string>("loggerType"));
+            Assert.AreEqual("applicationInsights", properties.Value(Arm.LoggerType));
 
-            var credentials = properties["credentials"];
+            var credentials = properties.Index(Arm.Credentials);
             Assert.IsNotNull(credentials);
 
-            Assert.AreEqual("{{Logger-Credentials-5b5dbaa35a635f22ac9db432}}", credentials.Value<string>("instrumentationKey"));
+            Assert.AreEqual("{{Logger-Credentials-5b5dbaa35a635f22ac9db432}}",
+                credentials.Value(Arm.InstrumentationKey));
         }
+
         [TestMethod]
         public void TestServiceContainsAzureEventhubLogger()
         {
-            IEnumerable<JToken> loggers = GetSubResourceFromTemplate(ServiceResourceType, LoggerResourceType, false);
+            IEnumerable<JToken> loggers = GetSubResourceFromTemplate(ResourceType.Service, ResourceType.Logger, false);
 
             Assert.AreEqual(3, loggers.Count());
 
-            var logger = loggers.First(x => x.Value<string>("name").Contains("bpst-apim-l-6a12e"));
+            var logger = loggers.First(x => x.Value(Arm.Name).Contains("bpst-apim-l-6a12e"));
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/','bpst-apim-l-6a12e')]",
-                logger.Value<string>("name"));
-            Assert.AreEqual("Microsoft.ApiManagement/service/loggers", logger.Value<string>("type"));
-            var properties = logger["properties"];
+                logger.Value(Arm.Name));
+            Assert.AreEqual("Microsoft.ApiManagement/service/loggers", logger.Value(Arm.Type));
+            var properties = logger.Index(Arm.Properties);
             Assert.IsNotNull(properties);
-            Assert.AreEqual("azureEventHub", properties.Value<string>("loggerType"));
+            Assert.AreEqual("azureEventHub", properties.Value(Arm.LoggerType));
 
-            var credentials = properties["credentials"];
+            var credentials = properties.Index(Arm.Credentials);
             Assert.IsNotNull(credentials);
 
-            Assert.AreEqual("[parameters('logger_bpst-apim-l-6a12e_credentialName')]", credentials.Value<string>("name"));
-            Assert.AreEqual("[parameters('logger_bpst-apim-l-6a12e_connectionString')]", credentials.Value<string>("connectionString"));
+            Assert.AreEqual("[parameters('logger_bpst-apim-l-6a12e_credentialName')]",
+                credentials.Value(Arm.Name));
+            Assert.AreEqual("[parameters('logger_bpst-apim-l-6a12e_connectionString')]",
+                credentials.Value(Arm.ConnectionString));
         }
 
-        private IEnumerable<JToken> GetSubResourceFromTemplate(string resourceType, string subResourceType, bool createApplicationInsightsInstance = false, bool parametrizePropertiesOnly = true)
+        private IEnumerable<JToken> GetSubResourceFromTemplate(ResourceType resourceType, ResourceType subResourceType,
+            bool createApplicationInsightsInstance = false, bool parametrizePropertiesOnly = true, bool exportSwaggerDefinition =false)
         {
-            JToken resource = GetResourceFromTemplate(resourceType, createApplicationInsightsInstance, parametrizePropertiesOnly);
-            return resource.Value<JArray>("resources").Where(x => x.Value<string>("type") == subResourceType);
+            JToken resource = GetResourceFromTemplate(resourceType, createApplicationInsightsInstance,
+                parametrizePropertiesOnly, exportSwaggerDefinition:exportSwaggerDefinition);
+            return resource.WithDirectResources(subResourceType);
         }
 
         [TestMethod]
         public void TestProductContainsPolicyWithCorrectName()
         {
-            var policy = GetSubResourceFromTemplate(ProductResourceType, ProductPolicyResourceType, false).First();
-
-            var name = policy.Value<string>("name");
+            var policy = GetSubResourceFromTemplate(ResourceType.Product, ResourceType.ProductPolicy, false).First();
+            var name = policy.Value(Arm.Name);
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', 'unlimited', '/', 'policy')]", name);
         }
 
@@ -264,23 +266,21 @@ namespace APIManagementTemplate.Test
         public void TestApiContainsPolicyReplacedSetBaseUrl()
         {
             var template = GetTemplate();
-            var apiPolicies = template.SelectTokens($"$..resources[?(@.type=='{ApiPolicyResourceType}')]");
+            var apiPolicies = template.WithResources(ResourceType.ApiPolicy);
             var policy = apiPolicies.FirstOrDefault();
             Assert.IsNotNull(policy);
-            var policyContent = policy["properties"]?.Value<string>("policyContent");
-
+            var policyContent = policy.Index(Arm.Properties)?.Value(Arm.PolicyContent);
             Assert.IsTrue(policyContent.StartsWith("[Concat('"));
-
         }
 
         [TestMethod]
         public void TestApiContainsPolicyReplacedSetBaseUrlAsPropertyWhenReplaceSetBaseUrlAsPropertyIsTrue()
         {
             var template = GetTemplate(replaceSetBackendServiceBaseUrlAsProperty: true);
-            var apiPolicies = template.SelectTokens($"$..resources[?(@.type=='{ApiPolicyResourceType}')]");
+            var apiPolicies = template.WithResources(ResourceType.ApiPolicy);
             var policy = apiPolicies.FirstOrDefault();
             Assert.IsNotNull(policy);
-            var policyContent = policy["properties"]?.Value<string>("policyContent");
+            var policyContent = policy.Index(Arm.Properties)?.Value(Arm.PolicyContent);
 
             Assert.IsFalse(policyContent.StartsWith("[Concat('"));
             Assert.IsTrue(policyContent.Contains("{{api_tfs_backendurl}}"));
@@ -291,8 +291,8 @@ namespace APIManagementTemplate.Test
         public void TestApiContainsPropertyWhenReplaceSetBaseUrlAsPropertyIsTrue()
         {
             var template = GetTemplate(replaceSetBackendServiceBaseUrlAsProperty: true);
-            var property = template.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/properties')]")
-                .SingleOrDefault(x => x.Value<string>("name").Contains("api_tfs_backendurl"));
+            var property = template.WithDirectResources(ResourceType.Property)
+                .SingleOrDefault(x => x.Value(Arm.Name).Contains("api_tfs_backendurl"));
             Assert.IsNotNull(property);
         }
 
@@ -300,29 +300,28 @@ namespace APIManagementTemplate.Test
         public void TestServiceContainsPropertyForEnvironment()
         {
             var template = GetTemplate();
-            var property = template.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/properties')]")
-                .SingleOrDefault(x => x.Value<string>("name").Contains("environment"));
+            var property = template.WithDirectResources(ResourceType.Property)
+                .SingleOrDefault(x => x.Value(Arm.Name).Contains("environment"));
             Assert.IsNotNull(property);
         }
 
         [TestMethod]
         public void TestProductContainsPolicyThatDependsOnProduct()
         {
-            var policy = GetSubResourceFromTemplate(ProductResourceType, ProductPolicyResourceType, false).First();
+            var policy = GetSubResourceFromTemplate(ResourceType.Product, ResourceType.ProductPolicy, false).First();
 
-            var dependsOn = policy.Value<JArray>("dependsOn");
+            var dependsOn = policy.DependsOn();
             Assert.IsTrue(dependsOn.Any(x =>
-                x.Value<string>() ==
-                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_ibizmalo_name'), 'unlimited')]"));
+                x == "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_ibizmalo_name'), 'unlimited')]"));
         }
 
         [TestMethod]
         public void TestServiceContainsPolicyWithCorrectName()
         {
-            var policy = GetSubResourceFromTemplate(ServiceResourceType, ServicePolicyResourceType, false).First();
+            var policy = GetSubResourceFromTemplate(ResourceType.Service, ResourceType.ServicePolicy, false).First();
 
             Assert.IsNotNull(policy);
-            var name = policy.Value<string>("name");
+            var name = policy.Value(Arm.Name);
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', 'policy')]", name);
         }
 
@@ -344,21 +343,21 @@ namespace APIManagementTemplate.Test
         public void TestServiceContainsPropertyForLogger()
         {
             var template = GetTemplate();
-            var property = template.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/properties')]")
-                .SingleOrDefault(x => x.Value<string>("name").Contains("5b5dbaa35a635f22ac9db431"));
+            var property = template.WithDirectResources(ResourceType.Property)
+                .SingleOrDefault(x => x.Value(Arm.Name).Contains("5b5dbaa35a635f22ac9db431"));
 
             Assert.IsNotNull(property);
-            var dependsOn = property.Value<JArray>("dependsOn");
-            var hasServiceDependency = dependsOn.Any(x => x.Value<string>() ==
+            var hasServiceDependency = property.DependsOn().Any(x => x ==
                                                           "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalo_name'))]");
             Assert.IsTrue(hasServiceDependency);
         }
+
         [TestMethod]
         public void TestServiceDoesNotContainPropertyForLoggerWhenCreateApplicationInsightsInstanceIsTrue()
         {
             var template = GetTemplate(createApplicationInsightsInstance: true);
-            var property = template.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/properties')]")
-                .SingleOrDefault(x => x.Value<string>("name").Contains("5b5dbaa35a635f22ac9db431"));
+            var property = template.WithResources(ResourceType.Property)
+                .SingleOrDefault(x => x.Value(Arm.Name).Contains("5b5dbaa35a635f22ac9db431"));
 
             Assert.IsNull(property);
         }
@@ -367,33 +366,33 @@ namespace APIManagementTemplate.Test
         public void TestServiceContainsPropertyForBackend()
         {
             var template = GetTemplate();
-            var property = template.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/properties')]")
-                .SingleOrDefault(x => x.Value<string>("name").Contains("myfunctions-key"));
+            var property = template.WithResources(ResourceType.Property)
+                .SingleOrDefault(x => x.Value(Arm.Name).Contains("myfunctions-key"));
 
             Assert.IsNotNull(property);
-            var dependsOn = property.Value<JArray>("dependsOn");
-            var hasServiceDependency = dependsOn.Any(x => x.Value<string>() ==
-                                                          "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalo_name'))]");
+            var dependsOn = property.DependsOn();
+            var hasServiceDependency = dependsOn.Any(x => x ==
+              "[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalo_name'))]");
             Assert.IsTrue(hasServiceDependency);
         }
 
         [TestMethod]
         public void TestServiceContainsPolicyWithCorrectDependsOn()
         {
-            var policy = GetSubResourceFromTemplate(ServiceResourceType, ServicePolicyResourceType, false).First();
+            var policy = GetSubResourceFromTemplate(ResourceType.Service, ResourceType.ServicePolicy, false).First();
 
             Assert.IsNotNull(policy);
-            var dependsOn = policy.Value<JArray>("dependsOn");
+            var dependsOn = policy.DependsOn();
             Assert.AreEqual(1, dependsOn.Count());
             Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalo_name'))]",
-                dependsOn[0]);
+                dependsOn.First());
         }
 
         [TestMethod]
         public void TestServiceContainsSchema()
         {
-            var schema = GetSubResourceFromTemplate(ApiResourceType, SchemaResourceType, false).First();
-            var name = schema.Value<string>("name");
+            var schema = GetSubResourceFromTemplate(ResourceType.Api, ResourceType.Schema, false).First();
+            var name = schema.Value(Arm.Name);
 
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/','tfs','/','5b7572981142a50298c7f4a6')]",
                 name);
@@ -402,88 +401,94 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestServiceContainsBackend()
         {
-            var backend = GetResourceFromTemplate(BackendResourceType, false, true);
-            var name = backend.Value<string>("name");
+            var backend = GetResourceFromTemplate(ResourceType.Backend, false, true);
+            var name = backend.Value(Arm.Name);
 
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/' ,'myfunctions')]", name);
-            var query = backend["properties"]?["credentials"]?["query"];
+            var query = backend.Index(Arm.Properties)?.Index(Arm.Credentials)?.Index(Arm.Query);
             Assert.IsNotNull(query);
-            var codes = query.Value<JArray>("code");
+            var codes = query.ValueWithType<JArray>(Arm.Code);
             Assert.AreEqual(1, codes.Count);
             Assert.AreEqual("{{myfunctions-key}}", codes[0].Value<string>());
-            Assert.AreEqual("[concat('https://',toLower(parameters('myfunctions_siteName')),'.azurewebsites.net/api')]", 
-                backend["properties"]?.Value<string>("url"));
+            Assert.AreEqual("[concat('https://',toLower(parameters('myfunctions_siteName')),'.azurewebsites.net/api')]",
+                backend["properties"]?.Value(Arm.Url));
         }
 
         [TestMethod]
         public void TestServiceContainsBackendWith2DependsOn()
         {
-            var backend = GetResourceFromTemplate(BackendResourceType, false, true);
-            var dependsOn = backend.Value<JArray>("dependsOn").Values<string>();
+            var backend = GetResourceFromTemplate(ResourceType.Backend, false, true);
+            var dependsOn = backend.DependsOn();
 
             Assert.AreEqual(2, dependsOn.Count());
-            Assert.IsTrue(dependsOn.Contains("[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_ibizmalo_name'),'myfunctions-key')]"));
+            Assert.IsTrue(dependsOn.Contains(
+                "[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_ibizmalo_name'),'myfunctions-key')]"));
         }
 
         [TestMethod]
         public void TestServiceContainsOpenIdConnectProvider()
         {
-            var openIdConnectProvider = GetResourceFromTemplate(OpenIdConnectProviderResourceType, false);
+            var openIdConnectProvider = GetResourceFromTemplate(ResourceType.OpenIdConnectProvider, false);
             Assert.IsNotNull(openIdConnectProvider);
 
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/','myOpenIdProvider')]",
-                openIdConnectProvider.Value<string>("name"));
+                openIdConnectProvider.Value(Arm.Name));
         }
 
         [TestMethod]
         public void TestServiceContainsApplicationInsightsInstanceWhenCreateApplicationInsightsInstanceIsTrue()
         {
-            var appInsightsInstance = GetSubResourceFromTemplate(ServiceResourceType, ApplicationInsightsResourceType, true).First();
+            var appInsightsInstance =
+                GetSubResourceFromTemplate(ResourceType.Service, ResourceType.ApplicationInsights, true).First();
 
             Assert.IsNotNull(appInsightsInstance);
 
-            Assert.AreEqual("[parameters('service_ibizmalo_applicationInsights')]", appInsightsInstance.Value<string>("name"));
-            Assert.AreEqual("[parameters('service_ibizmalo_location')]", appInsightsInstance.Value<string>("location"));
-            Assert.AreEqual("other", appInsightsInstance.Value<string>("kind"));
-            Assert.AreEqual("other", appInsightsInstance["properties"]?.Value<string>("Application_Type"));
-            var dependsOn = appInsightsInstance.Value<JArray>("dependsOn").Values<string>();
-            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalo_name'))]", dependsOn.SingleOrDefault());
-            Assert.AreEqual("2015-05-01", appInsightsInstance.Value<string>("apiVersion"));
+            Assert.AreEqual("[parameters('service_ibizmalo_applicationInsights')]",
+                appInsightsInstance.Value(Arm.Name));
+            Assert.AreEqual("[parameters('service_ibizmalo_location')]", appInsightsInstance.Value(Arm.Location));
+            Assert.AreEqual("other", appInsightsInstance.Value(Arm.Kind));
+            Assert.AreEqual("other", appInsightsInstance.Index(Arm.Properties)?.Value(Arm.ApplicationType));
+            var dependsOn = appInsightsInstance.DependsOn();
+            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalo_name'))]",
+                dependsOn.SingleOrDefault());
+            Assert.AreEqual("2015-05-01", appInsightsInstance.Value(Arm.ApiVersion));
 
         }
 
         [TestMethod]
         public void TestServiceContainsOpenIdConnectProviderWithParametrizePropertiesOnlyAsFalse()
         {
-            var openIdConnectProvider = GetResourceFromTemplate(OpenIdConnectProviderResourceType, false, false);
+            var openIdConnectProvider = GetResourceFromTemplate(ResourceType.OpenIdConnectProvider, false, false);
             Assert.IsNotNull(openIdConnectProvider);
 
             Assert.AreEqual(
                 "[concat(parameters('service_ibizmalo_name'),'/',parameters('openidConnectProvider_myOpenIdProvider_name'))]",
-                openIdConnectProvider.Value<string>("name"));
+                openIdConnectProvider.Value(Arm.Name));
 
-            var properties = openIdConnectProvider["properties"];
+            var properties = openIdConnectProvider.Index(Arm.Properties);
             Assert.IsNotNull(properties);
             Assert.AreEqual("[parameters('openidConnectProvider_myOpenIdProvider_displayname')]",
-                properties.Value<string>("displayName"));
+                properties.Value(Arm.DisplayName));
             Assert.AreEqual("[parameters('openidConnectProvider_myOpenIdProvider_metadataEndpoint')]",
-                properties.Value<string>("metadataEndpoint"));
+                properties.Value(Arm.MetadataEndpoint));
             Assert.AreEqual("[parameters('openidConnectProvider_myOpenIdProvider_clientId')]",
-                properties.Value<string>("clientId"));
+                properties.Value(Arm.ClientId));
             Assert.AreEqual("[parameters('openidConnectProvider_myOpenIdProvider_clientSecret')]",
-                properties.Value<string>("clientSecret"));
+                properties.Value(Arm.ClientSecret));
         }
 
         [TestMethod]
         public void TestServiceContainsIdentityProvider()
         {
-            var openIdConnectProvider = GetSubResourceFromTemplate(ServiceResourceType, IdentityProviderResourceType)
+            var openIdConnectProvider = GetSubResourceFromTemplate(ResourceType.Service, ResourceType.IdentityProvider)
                 .FirstOrDefault();
             Assert.IsNotNull(openIdConnectProvider);
 
-            Assert.AreEqual("microsoft", openIdConnectProvider["properties"].Value<string>("type"));
-            Assert.AreEqual("[parameters('identityProvider_Microsoft_clientId')]", openIdConnectProvider["properties"].Value<string>("clientId"));
-            Assert.AreEqual("[parameters('identityProvider_Microsoft_clientSecret')]", openIdConnectProvider["properties"].Value<string>("clientSecret"));
+            Assert.AreEqual("microsoft", openIdConnectProvider.Index(Arm.Properties).Value(Arm.Type));
+            Assert.AreEqual("[parameters('identityProvider_Microsoft_clientId')]",
+                openIdConnectProvider.Index(Arm.Properties).Value(Arm.ClientId));
+            Assert.AreEqual("[parameters('identityProvider_Microsoft_clientSecret')]",
+                openIdConnectProvider.Index(Arm.Properties).Value(Arm.ClientSecret));
         }
 
         [TestMethod]
@@ -493,9 +498,11 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
-        public void TestServiceContainsDiagnosticsForApplicationInsightsWhenCreateApplicationInsightsInstanceIsFalseAndParameterizePropertiesOnlyIsFalse()
+        public void
+            TestServiceContainsDiagnosticsForApplicationInsightsWhenCreateApplicationInsightsInstanceIsFalseAndParameterizePropertiesOnlyIsFalse()
         {
-            AssertDiagnostic(false, false, "parameters('diagnostic_appInsights_name')", "parameters('logger_appInsights_name')");
+            AssertDiagnostic(false, false, "parameters('diagnostic_appInsights_name')",
+                "parameters('logger_appInsights_name')");
         }
 
         [TestMethod]
@@ -507,35 +514,44 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestServiceContainsDiagnosticsForAzureMonitor()
         {
-            var diagnostic = GetSubResourceFromTemplate(ServiceResourceType, DiagnosticsResourceType).Skip(1).SingleOrDefault();
+            var diagnostic = GetSubResourceFromTemplate(ResourceType.Service, ResourceType.Diagnostics).Skip(1)
+                .SingleOrDefault();
             Assert.IsNotNull(diagnostic);
-            Assert.AreEqual($"[concat(parameters('service_ibizmalo_name'),'/','azuremonitor')]", diagnostic.Value<string>("name"));
-            Assert.AreEqual($"[parameters('diagnostic_azuremonitor_alwaysLog')]", diagnostic["properties"].Value<string>("alwaysLog"));
-            Assert.AreEqual($"[parameters('diagnostic_azuremonitor_samplingPercentage')]", diagnostic["properties"]["sampling"].Value<string>("percentage"));
+            Assert.AreEqual($"[concat(parameters('service_ibizmalo_name'),'/','azuremonitor')]",
+                diagnostic.Value(Arm.Name));
+            Assert.AreEqual($"[parameters('diagnostic_azuremonitor_alwaysLog')]",
+                diagnostic["properties"].Value(Arm.AlwaysLog));
+            Assert.AreEqual($"[parameters('diagnostic_azuremonitor_samplingPercentage')]",
+                diagnostic.Index(Arm.Properties).Index(Arm.Sampling).Value(Arm.Percentage));
         }
 
 
-        private void AssertDiagnostic(bool createApplicationInsightsInstance, bool parametrizePropertiesOnly, string name, string loggerName)
+        private void AssertDiagnostic(bool createApplicationInsightsInstance, bool parametrizePropertiesOnly,
+            string name, string loggerName)
         {
-            var diagnostics = GetSubResourceFromTemplate(ServiceResourceType, DiagnosticsResourceType, createApplicationInsightsInstance, parametrizePropertiesOnly)
+            var diagnostics = GetSubResourceFromTemplate(ResourceType.Service, ResourceType.Diagnostics,
+                    createApplicationInsightsInstance, parametrizePropertiesOnly)
                 .FirstOrDefault();
             Assert.IsNotNull(diagnostics);
-            Assert.AreEqual("[parameters('diagnostic_appInsights_alwaysLog')]", diagnostics["properties"].Value<string>("alwaysLog"));
-            Assert.AreEqual($"[concat(parameters('service_ibizmalo_name'),'/',{name})]", diagnostics.Value<string>("name"));
-            Assert.AreEqual($"2018-06-01-preview", diagnostics.Value<string>("apiVersion"));
+            Assert.AreEqual("[parameters('diagnostic_appInsights_alwaysLog')]",
+                diagnostics.Index(Arm.Properties).Value(Arm.AlwaysLog));
+            Assert.AreEqual($"[concat(parameters('service_ibizmalo_name'),'/',{name})]",
+                diagnostics.Value(Arm.Name));
+            Assert.AreEqual($"2018-06-01-preview", diagnostics.Value(Arm.ApiVersion));
             var loggerResource =
                 $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('service_ibizmalo_name'), {loggerName})]";
-            Assert.AreEqual(loggerResource, diagnostics["properties"].Value<string>("loggerId"));
-            var dependsOn = diagnostics.Value<JArray>("dependsOn");
-            Assert.AreEqual(2, dependsOn.Count);
-            Assert.AreEqual(loggerResource, dependsOn.Values<string>().Last());
+            Assert.AreEqual(loggerResource, diagnostics.Index(Arm.Properties).Value(Arm.LoggerId));
+            var dependsOn = diagnostics.DependsOn();
+            Assert.AreEqual(2, dependsOn.Count());
+            Assert.AreEqual(loggerResource, dependsOn.Last());
         }
 
         [TestMethod]
         public void TestContainsParametersForIdentityProvider()
         {
             var template = GetTemplate(true, false);
-            AssertParameter(template, "identityProvider_Microsoft_clientId", "08de6f9f-6ac8-4b4d-ab31-d2234a3e5557", "string");
+            AssertParameter(template, "identityProvider_Microsoft_clientId", "08de6f9f-6ac8-4b4d-ab31-d2234a3e5557",
+                "string");
             AssertParameter(template, "identityProvider_Microsoft_clientSecret", String.Empty, "securestring");
         }
 
@@ -555,13 +571,17 @@ namespace APIManagementTemplate.Test
             AssertParameter(template, "diagnostic_appInsights_alwaysLog", "allErrors", "string");
             AssertParameter(template, "diagnostic_appInsights_enableHttpCorrelationHeaders", "True", "string");
         }
+
         [TestMethod]
         public void TestServiceContainsParametersVirtualNetwork()
         {
             var template = GetTemplate(true, false);
             AssertParameter(template, "service_ibizmalo_virtualNetworkType", "External", "string");
-            AssertParameter(template, "service_ibizmalo_virtualNetwork_subnetResourceId", "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.Network/virtualNetworks/Network/subnets/default", "string");
-            AssertParameter(template, "service_ibizmalo_virtualNetwork_vnetid", "00000000-0000-0000-0000-000000000000", "string");
+            AssertParameter(template, "service_ibizmalo_virtualNetwork_subnetResourceId",
+                "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.Network/virtualNetworks/Network/subnets/default",
+                "string");
+            AssertParameter(template, "service_ibizmalo_virtualNetwork_vnetid", "00000000-0000-0000-0000-000000000000",
+                "string");
             AssertParameter(template, "service_ibizmalo_virtualNetwork_subnetname", "", "string");
         }
 
@@ -582,6 +602,46 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
+        public void TestAPIDoesNotContainOperationsWhenExportSwaggerDefinitionIsTrue()
+        {
+            var operations = GetSubResourceFromTemplate(ResourceType.Api, ResourceType.Operation, exportSwaggerDefinition:true);
+            Assert.AreEqual(0, operations.Count());
+        }
+
+        [TestMethod]
+        public void TestAPIContainSwaggerFileWhenExportSwaggerDefinitionIsTrue()
+        {
+            var api = GetResourceFromTemplate(ResourceType.Api, exportSwaggerDefinition:true);
+            Assert.IsNotNull(api);
+            var properties = api.Index(Arm.Properties);
+            Assert.AreEqual("swagger-json", properties.Value(Arm.ContentFormat));
+            var content = properties?.Value(Arm.ContentValue);
+            Assert.IsNotNull(content);
+            Assert.IsTrue(content.Contains("\"swagger\": \"2.0\","));
+        }
+
+        [TestMethod]
+        public void TestAPIContainSwaggerWithCorrectHostFileWhenExportSwaggerDefinitionIsTrue()
+        {
+            var api = GetResourceFromTemplate(ResourceType.Api, exportSwaggerDefinition:true);
+            Assert.IsNotNull(api);
+            var json =api.Index(Arm.Properties)?.Index(Arm.ContentValue).Value<string>();
+            var jobject = JObject.Parse(json);
+            Assert.AreEqual("ibizmalotest-backend.azure-api.net", jobject.Value(Arm.Host));
+            Assert.AreEqual("/tfsBackend", jobject.Value(Arm.BasePath));
+            var schemes = jobject.ValueWithType<JArray>(Arm.Schemes);
+            Assert.AreEqual(1, schemes.Count);
+            Assert.AreEqual("http", schemes.First().Value<string>());
+        }
+
+        [TestMethod]
+        public void TestAPIDoesNotContainSchemasWhenExportSwaggerDefinitionIsTrue()
+        {
+            var policies = GetSubResourceFromTemplate(ResourceType.Api, ResourceType.OperationPolicy, exportSwaggerDefinition:true);
+            Assert.AreNotEqual(0, policies.Count());
+        }
+
+        [TestMethod]
         public void TestContainsParametersForAzureEventHubLogger()
         {
             var template = GetTemplate(true, false);
@@ -594,10 +654,10 @@ namespace APIManagementTemplate.Test
 
         private static void AssertParameter(JObject template, string name, string defaultValue, string type)
         {
-            var parameter = template["parameters"][name];
+            var parameter = template.Index(Arm.Parameters)[name];
             Assert.IsNotNull(parameter);
-            Assert.AreEqual(type, parameter.Value<string>("type"));
-            Assert.AreEqual(defaultValue, parameter.Value<string>("defaultValue"));
+            Assert.AreEqual(type, parameter.Value(Arm.Type));
+            Assert.AreEqual(defaultValue, parameter.Value(Arm.DefaultValue));
         }
     }
 }

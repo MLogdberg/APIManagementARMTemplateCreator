@@ -40,6 +40,8 @@ Example when user is connected to multitenants:
 | ExportGroups | Flag inidicating if Groups should be exported, default true | false | true |
 | ExportProducts | Flag inidicating if Products should be exported, default true | false | true |
 | Token | An AAD Token to access the resources - should not include `Bearer`, only the token | false | |
+| ExportSwaggerDefinition | Export the API operations and schemas as a swagger/Open API 2.0 definition. If set to false then the operations and schemas of the API will be included as arm templates  | false | false |
+| Token | An AAD Token to access the resources - should not include `Bearer`, only the token | false | |
 | ParametrizePropertiesOnly | If parameters only should be created for properties such as names of apim services or logic apps and not names of groups, apis or products | false | false |
 | ReplaceSetBackendServiceBaseUrlWithProperty | If the base-url of <set-backend-service> with should be replaced with a property instead of a parameter. If this is false you will not be able to set SeparatePolicyFile=true for Write-APIManagementTemplates when you have set-backend-service with base-url-attribute in a policy | false | false |
 | FixedServiceNameParameter | True if the parameter for the name of the service should have a fixed name (apimServiceName). Otherwise the parameter name will depend on the name of the service (service_PreDemoTest_name)| false | false |
@@ -62,7 +64,8 @@ Use Write-APIManagementTemplates generate many small ARM templates (as suggested
 | --------- | ---------- | -------| --- |
 | ApiStandalone | If the APIs should be able to be deployed independently of the rest of the resources | false | true | 
 | OutputDirectory | The directory where the templates are written to | false | . | 
-| SeparatePolicyFile | If the policies should be written to a separate xml file | false | false | 
+| SeparatePolicyFile | If the policies should be written to a separate xml file. If set to false then the policies are included as a part of the arm templates | false | false | 
+| SeparateSwaggerFile | Swagger/Openapi definitions are written to a separate file. If set to false then the Swagger/Openapi definitions are included as part of the arm templates | false | false | 
 | MergeTemplates | If the template already exists in the output directory, it will be merged with the new result. | false | false | 
 | GenerateParameterFiles | If parameter files should be generated | false | false | 
 | ReplaceListSecretsWithParameter | If the key to an Azure Function should be defined in a parameter instead of calling listsecrets | false | false |
