@@ -957,11 +957,8 @@ namespace APIManagementTemplate.Models
         public JObject CreateApiDiagnostic(JObject restObject, JArray loggers, bool addResource)
         {
             var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/apis/diagnostics", addResource);
-
-            var properties = resource["properties"];
-
-            string name = restObject.Value<string>("name");
-            string type = restObject.Value<string>("type");
+            ResourceTemplate obj = restObject.ToObject<ResourceTemplate>();
+            obj.comments = resource.Value<string>("comments");
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
             string apiname = apiid.ValueAfter("apis");
@@ -969,30 +966,38 @@ namespace APIManagementTemplate.Models
 
             var loggerId = restObject["properties"]?.Value<string>("loggerId") ?? String.Empty;
             var logger = loggers.FirstOrDefault(x => x.Value<string>("id") == loggerId);
-            
 
-            resource["apiVersion"] = "2018-06-01-preview";
+
+
+            //redefine name
+            string name = obj.name;
+            obj.name = null;
+            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
+            obj.AddName(apiname);
+            obj.AddName($"parameters('{AddParameter($"diagnostics_{name}_name", "string", name)}')");
+
+            //resource["apiVersion"] = "2018-06-01-preview";
             if (logger != null)
             {
                 var rid = new AzureResourceId(restObject.Value<string>("id"));
                 JObject loggerObject = JObject.FromObject(logger);
                 var loggerName = GetServiceResourceName(loggerObject, "Microsoft.ApiManagement/service/loggers");
-
-                resource["name"] = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/', parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}'), '/', parameters('{AddParameter($"diagnostics_{name}_name", "string", name)}'))]";
-
                 string loggerResource = $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), {loggerName})]";
-                properties["loggerId"] = loggerResource;
 
-                resource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'), parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}'))]");
-                resource.Value<JArray>("dependsOn").Add(loggerResource);
-                resource["properties"]["alwaysLog"] = WrapParameterName(AddParameter($"diagnostic_{name}_alwaysLog", "string", GetDefaultValue(resource, "alwaysLog")), true);
-                resource["properties"]["sampling"]["percentage"] = WrapParameterName(AddParameter($"diagnostic_{name}_samplingPercentage", "string", GetDefaultValue(resource, "sampling", "percentage")));
+                obj.properties["loggerId"] = loggerResource;
+                obj.properties["alwaysLog"] = WrapParameterName(AddParameter($"diagnostic_{name}_alwaysLog", "string", GetDefaultValue(restObject, "alwaysLog")), true);
+
+                obj.properties["sampling"]["percentage"] = WrapParameterName(AddParameter($"diagnostic_{name}_samplingPercentage", "string", GetDefaultValue(restObject, "sampling", "percentage")));
+
+
+                obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'), {apiname})]");
+                obj.dependsOn.Add(loggerResource);
                 if (IsApplicationInsightsLogger(loggerObject))
                 {
-                    resource["properties"]["enableHttpCorrelationHeaders"] = WrapParameterName(AddParameter($"diagnostic_{name}_enableHttpCorrelationHeaders", "string", GetDefaultValue(resource, "enableHttpCorrelationHeaders")));
+                    obj.properties["enableHttpCorrelationHeaders"] = WrapParameterName(AddParameter($"diagnostic_{name}_enableHttpCorrelationHeaders", "string", GetDefaultValue(restObject, "enableHttpCorrelationHeaders")));
                 }
             }
-            return resource;
+            return JObject.FromObject(obj);
         }
 
         public JObject CreateDiagnostic(JObject restObject, JArray loggers, bool addResource)
