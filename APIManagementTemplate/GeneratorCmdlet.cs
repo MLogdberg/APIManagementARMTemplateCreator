@@ -44,7 +44,7 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false,HelpMessage = "Export the API Management Products")]
         public bool ExportProducts = true;
 
-        [Parameter(Mandatory = false,HelpMessage = "Export the API Management Tags")]
+        [Parameter(Mandatory = false,HelpMessage = "Export the API Management Tags and API Tags")]
         public bool ExportTags = false;
 
         [Parameter(Mandatory = false,HelpMessage = "A Bearer token value")]

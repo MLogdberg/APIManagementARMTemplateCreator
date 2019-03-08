@@ -39,6 +39,7 @@ Example when user is connected to multitenants:
 | ExportPIManagementInstance | Flag inidicating if the API Management instance should be exported, default true | false
 | ExportGroups | Flag inidicating if Groups should be exported, default true | false
 | ExportProducts | Flag inidicating if Products should be exported, default true | false
+| ExportTags | Flag inidicating if Tags should be exported | false
 | Token | An AAD Token to access the resources - should not include `Bearer`, only the token | false |
 | ParametrizePropertiesOnly | If parameters only should be created for properties such as names of apim services or logic apps and not names of groups, apis or products | false |
 | ReplaceSetBackendServiceBaseUrlWithProperty | If the base-url of <set-backend-service> with should be replaced with a property instead of a parameter. If this is false you will not be able to set SeparatePolicyFile=true for Write-APIManagementTemplates when you have set-backend-service with base-url-attribute in a policy | false |
@@ -48,6 +49,7 @@ Example when user is connected to multitenants:
 | ApiVersion | If set, api result will be filtered based on this value i.e: v2 | false |
 | ClaimsDump | A dump of claims piped in from `armclient` - should not be manually set | false |
 | ParameterizeBackendFunctionKey | Set to 'true' if you want the backend function key to be parameterized, default false. | false |
+| ListApiInProduct | If true only the names of the API will be added as array parameter (does not work if ApiStandalone is true) | false |
 
 After extraction a parameters file can be created off the ARMTemplate.
 
