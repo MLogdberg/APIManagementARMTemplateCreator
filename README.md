@@ -28,26 +28,25 @@ Example when user is connected to multitenants:
 
 ### Specifications
 
-| Parameter | Description | Required |Default |
-| --------- | ---------- | -------| --- |
-| APIManagement | Name of the API Management instance| true | |
-| ResourceGroup | The name of the Resource Group | true | |
-| SubscriptionId | The Subscription id (guid)| true | |
-| TenantName | Name of the Tenant i.e. contoso.onmicrosoft.com | false | |
-| APIFilters | Filter for what API's to exort i.e: path eq 'api/v1/currencyconverter' or endswith(path,'currencyconverter') | false | |
-| ExportAuthorizationServers | Flag inidicating if Authroization servers should be exported, default true | false | true | 
-| ExportPIManagementInstance | Flag inidicating if the API Management instance should be exported, default true | false | true |
-| ExportGroups | Flag inidicating if Groups should be exported, default true | false | true |
-| ExportProducts | Flag inidicating if Products should be exported, default true | false | true |
-| Token | An AAD Token to access the resources - should not include `Bearer`, only the token | false | |
+| Parameter | Description | Required |
+| --------- | ---------- | -------|
+| APIManagement | Name of the API Management instance| true |
+| ResourceGroup | The name of the Resource Group | true |
+| SubscriptionId | The Subscription id (guid)| true |
+| TenantName | Name of the Tenant i.e. contoso.onmicrosoft.com | false |
+| APIFilters | Filter for what API's to exort i.e: path eq 'api/v1/currencyconverter' or endswith(path,'currencyconverter') | false
+| ExportAuthorizationServers | Flag inidicating if Authorization servers should be exported, default true | false
+| ExportPIManagementInstance | Flag inidicating if the API Management instance should be exported, default true | false
+| ExportGroups | Flag inidicating if Groups should be exported, default true | false
+| ExportProducts | Flag inidicating if Products should be exported, default true | false
 | ExportSwaggerDefinition | Export the API operations and schemas as a swagger/Open API 2.0 definition. If set to false then the operations and schemas of the API will be included as arm templates  | false | false |
-| Token | An AAD Token to access the resources - should not include `Bearer`, only the token | false | |
-| ParametrizePropertiesOnly | If parameters only should be created for properties such as names of apim services or logic apps and not names of groups, apis or products | false | false |
-| ReplaceSetBackendServiceBaseUrlWithProperty | If the base-url of <set-backend-service> with should be replaced with a property instead of a parameter. If this is false you will not be able to set SeparatePolicyFile=true for Write-APIManagementTemplates when you have set-backend-service with base-url-attribute in a policy | false | false |
-| FixedServiceNameParameter | True if the parameter for the name of the service should have a fixed name (apimServiceName). Otherwise the parameter name will depend on the name of the service (service_PreDemoTest_name)| false | false |
-| CreateApplicationInsightsInstance | If an Application Insights instance should be created when used by a logger. Otherwise you need to provide the instrumentation key of an existing Application Insights instance as a parameter| false | false |
-| DebugOutPutFolder | If set, result from rest interface will be saved to this folder | false | |
-| ApiVersion | If set, api result will be filtered based on this value i.e: v2 | false | |
+| Token | An AAD Token to access the resources - should not include `Bearer`, only the token | false |
+| ParametrizePropertiesOnly | If parameters only should be created for properties such as names of apim services or logic apps and not names of groups, apis or products | false |
+| ReplaceSetBackendServiceBaseUrlWithProperty | If the base-url of <set-backend-service> with should be replaced with a property instead of a parameter. If this is false you will not be able to set SeparatePolicyFile=true for Write-APIManagementTemplates when you have set-backend-service with base-url-attribute in a policy | false |
+| FixedServiceNameParameter | True if the parameter for the name of the service should have a fixed name (apimServiceName). Otherwise the parameter name will depend on the name of the service (service_PreDemoTest_name)| false |
+| CreateApplicationInsightsInstance | If an Application Insights instance should be created when used by a logger. Otherwise you need to provide the instrumentation key of an existing Application Insights instance as a parameter| false |
+| DebugOutPutFolder | If set, result from rest interface will be saved to this folder | false |
+| ApiVersion | If set, api result will be filtered based on this value i.e: v2 | false |
 | ClaimsDump | A dump of claims piped in from `armclient` - should not be manually set | false |
 | ParameterizeBackendFunctionKey | Set to 'true' if you want the backend function key to be parameterized, default false. | false | false |
 
