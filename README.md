@@ -62,7 +62,7 @@ Use Write-APIManagementTemplates generate many small ARM templates (as suggested
 | Parameter | Description | Required | Default | 
 | --------- | ---------- | -------| --- |
 | ApiStandalone | If the APIs should be able to be deployed independently of the rest of the resources | false | true | 
-| ListApiInProduct | If true only the names of the API will be added as array parameter | false |
+| ListApiInProduct | If true only the names of the API will be added as array parameter | false | false |
 | OutputDirectory | The directory where the templates are written to | false | . | 
 | SeparatePolicyFile | If the policies should be written to a separate xml file | false | false | 
 | MergeTemplates | If the template already exists in the output directory, it will be merged with the new result. | false | false | 
