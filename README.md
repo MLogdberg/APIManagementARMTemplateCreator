@@ -49,7 +49,6 @@ Example when user is connected to multitenants:
 | ApiVersion | If set, api result will be filtered based on this value i.e: v2 | false |
 | ClaimsDump | A dump of claims piped in from `armclient` - should not be manually set | false |
 | ParameterizeBackendFunctionKey | Set to 'true' if you want the backend function key to be parameterized, default false. | false |
-| ListApiInProduct | If true only the names of the API will be added as array parameter (does not work if ApiStandalone is true) | false |
 
 After extraction a parameters file can be created off the ARMTemplate.
 
@@ -63,6 +62,7 @@ Use Write-APIManagementTemplates generate many small ARM templates (as suggested
 | Parameter | Description | Required | Default | 
 | --------- | ---------- | -------| --- |
 | ApiStandalone | If the APIs should be able to be deployed independently of the rest of the resources | false | true | 
+| ListApiInProduct | If true only the names of the API will be added as array parameter | false |
 | OutputDirectory | The directory where the templates are written to | false | . | 
 | SeparatePolicyFile | If the policies should be written to a separate xml file | false | false | 
 | MergeTemplates | If the template already exists in the output directory, it will be merged with the new result. | false | false | 
