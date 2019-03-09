@@ -281,12 +281,7 @@ namespace APIManagementTemplate.Models
             AddParameterFromObject((JObject)resource["properties"], "serviceUrl", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "apiVersion", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "isCurrent", "bool", name);
-
-            if (DateTime.Parse(obj.apiVersion.Replace("-preview", "")) < DateTime.Parse("2018-06-01"))
-            {
-                ((JObject)resource["properties"]).Remove("subscriptionRequired");
-            }
-
+            
             if (APIMInstanceAdded)
             {
                 resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]" });
