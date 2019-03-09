@@ -450,10 +450,10 @@ namespace APIManagementTemplate
             var productId = GetParameterPart(product, "name", -2);
 
             //check for product is already parameterized
-            if(productId.StartsWith("product_") && productId.EndsWith("_name"))
+            if (productId.StartsWith("product_") && productId.EndsWith("_name"))
                 return productId.Split('_')[1];
             else
-                return productId.Substring(1);            
+                return productId.Substring(1);
         }
 
         private GeneratedTemplate GenerateProduct(JToken product, JObject parsedTemplate, bool separatePolicyFile, bool apiStandalone, bool listApiInProduct)
@@ -481,7 +481,10 @@ namespace APIManagementTemplate
         }
 
         private void ListApiInProduct(JObject content)
-        {    
+        {
+
+            //ParametrizePropertiesOnly
+
             var parameterObject = content.SelectToken($"$.parameters") as JObject;
             //get products
             var products = content.SelectTokens($"$..resources[?(@.type=='{ProductResourceType}')]").ToList();
@@ -491,26 +494,36 @@ namespace APIManagementTemplate
                 //get productName
                 var productName = product["name"].Value<string>();
                 var apimServiceName = Regex.Match(productName, "(?<=\\(')(.*)(?=('\\)),)").Value;
+                string apisListParameterName;
 
-                //get names of apis
+                //get names of apis with ParametrizePropertiesOnly is false
                 var apiNames = product.SelectTokens($"$..[?(@.type=='{ProductAPIResourceType}')]").Select(a => Regex.Match(a["name"].Value<string>(), "(?<='api_)(.*)(?=_name')").Value).Where(n => n != string.Empty);
-
-                //if no apis in product skip
-                if (!apiNames.Any())                
-                    continue;
-                
-                //remove api specific parameters
-                var apiParameters = apiNames.Select(a => parameterObject.SelectToken($"api_{a}_name").Parent);
-
-                foreach (var api in apiParameters.ToArray())
+                if (apiNames.Any())
                 {
-                    api.Remove();
+                    apisListParameterName = $"apis_in_product_{Regex.Match(productName, "(?<='product_)(.*)(?=_name')").Value}";
+                    
+                    //remove api specific parameters
+                    var apiParameters = apiNames.Select(a => parameterObject.SelectToken($"api_{a}_name").Parent);
+                    foreach (var api in apiParameters.ToArray())
+                    {
+                        api.Remove();
+                    }
+                }
+                //get names of apis with ParametrizePropertiesOnly is true
+                else
+                {
+                    apiNames = product.SelectTokens($"$..[?(@.type=='{ProductAPIResourceType}')]").Select(a => Regex.Match(a["name"].Value<string>().Split('/').Last(), "(?<=(,(.*)'))(.*)(?=')").Value).Where(n => n != string.Empty);
+                    apisListParameterName = $"apis_in_product_{Regex.Match(productName, "(?<='/)(.*)(?=')").Value}";
                 }
 
+                //if no apis in product skip
+                if (!apiNames.Any())
+                    continue;
+
+
                 //add apilist parameter
-                var apisListParameterName = $"apis_in_product_{Regex.Match(productName, "(?<='product_)(.*)(?=_name')").Value}";
                 parameterObject.Add(
-                    new JProperty(apisListParameterName, 
+                    new JProperty(apisListParameterName,
                     new JObject(
                         new JProperty("type", "array"),
                         new JProperty("defaultValue", new JArray(apiNames))
