@@ -70,3 +70,19 @@ Use Write-APIManagementTemplates generate many small ARM templates (as suggested
 | ReplaceListSecretsWithParameter | If the key to an Azure Function should be defined in a parameter instead of calling listsecrets | false | false |
 | DebugTemplateFile | If set, the input ARM template is written to this file | false | |
 | ARMTemplate | The ARM template piped from Get-APIManagementTemplate - should not be manually set | false | |
+
+### Using OpenAPI/Swagger definition files
+It is possible to generate ARM templates that use Openapi/Swagger 2.0 definition files to describe the operations and schemas of your APIs.
+
+The advantage is that when there is a change in the backend API you just need to update the OpenAPI/Swagger definition file of your API. No need to modify the ARM templates of the operations and schemas by hand or to change the source API Management instance and then update the ARM templates with this tool.
+
+Use ExportSwaggerDefinition=$true as parameter to Get-APIManagementTemplate and SeparateSwaggerFile=$true as parameter to Write-APIManagementTemplates.
+
+Due to limitations in Azure it is not supported to use ExportSwaggerDefinition=$true without using SeparateSwaggerFile=$true.
+
+`armclient token 80d4fe69-xxxx-4dd2-a938-9250f1c8ab03 | Get-APIManagementTemplate -APIManagement MyApiManagementInstance -ResourceGroup myResourceGroup -SubscriptionId 80d4fe69-xxxx-4dd2-a938-9250f1c8ab03 -ParametrizePropertiesOnly $true -FixedServiceNameParameter $true -CreateApplicationInsightsInstance $true -ReplaceSetBackendServiceBaseUrlWithProperty $true -ExportSwaggerDefinition $true | Write-APIManagementTemplates -OutputDirectory C:\temp\templates -ApiStandalone $true -SeparatePolicyFile $true -SeparateSwaggerFile $true -MergeTemplates $true -GenerateParameterFiles $true  -ReplaceListSecretsWithParameter $true -ListApiInProduct $false`
+
+If you have a host property in your OpenAPI/Swagger definition it will override the serviceUrl property of your API. 
+So if you want to have different serviceUrls for different environments (for example test and production environments) you need to do one of the following two options
+* Write a policy that changes the backend url
+* Modify the OpenAPI/Swagger definition file so that it contains the correct url in host, basePath and schemes before you deploy it
