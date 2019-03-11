@@ -41,6 +41,9 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false,HelpMessage = "Export the API Management Products")]
         public bool ExportProducts = true;
 
+        [Parameter(Mandatory = false,HelpMessage = "Export the API operations and schemas as a swagger/Open API 2.0 definition")]
+        public bool ExportSwaggerDefinition = false;
+
         [Parameter(Mandatory = false,HelpMessage = "A Bearer token value")]
         public string Token = "";
 
@@ -91,7 +94,7 @@ namespace APIManagementTemplate
 
             try
             {
-                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter, CreateApplicationInsightsInstance, ApiVersion, ParameterizeBackendFunctionKey);
+                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter, CreateApplicationInsightsInstance, ApiVersion, ParameterizeBackendFunctionKey, ExportSwaggerDefinition);
                 JObject result = generator.GenerateTemplate().Result;
                 WriteObject(result.ToString());
             }

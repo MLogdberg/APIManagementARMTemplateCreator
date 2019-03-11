@@ -196,6 +196,27 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
+        public void TestResultContainsAPIFor_echoAPI_with_apiversion_as_20180601preview()
+        {
+            //Because of a "bug" in Azure the api property subscriptionRequired is generated for all apiversion
+            //even though it is only handled when deploying an api with apiversion 20180601preview or later
+            var template = _generatedTemplates.With(Filename.Echo);
+            var api = template.WithDirectResource(ResourceType.Api);
+            Assert.AreEqual("2018-06-01-preview", api.Value(Arm.ApiVersion));
+        }
+
+        [TestMethod]
+        public void TestResultContainsAPIFor_HttpBinV1_with_apiversion_as_20170301()
+        {
+            //Because of a "bug" in Azure the api property subscriptionRequired is generated for all apiversion
+            //even though it is only handled when deploying an api with apiversion 20180601preview or later
+            //An API without subscriptionRequired should keep the standard apiversion (20170301)
+            var apiTemplate = _generatedTemplates.With(Filename.HttpBinV1);
+            var api = apiTemplate.WithDirectResource(ResourceType.Api);
+            Assert.AreEqual("2017-03-01", api.Value(Arm.ApiVersion));
+        }
+
+        [TestMethod]
         public void TestResultContainsTemplatesStorageAccountSASTokenParameterForProduct()
         {
             var template = _generatedTemplates.Single(x => x.FileName == ProductStarterFilename);
@@ -295,9 +316,12 @@ namespace APIManagementTemplate.Test
             Assert.AreNotEqual(0, parameters.Count());
 
             var serviceNameParameter = parameters.Cast<JProperty>().FirstOrDefault(x => x.Name == "service_PreDemoTest_name");
-
             Assert.IsNotNull(serviceNameParameter);
             Assert.AreEqual("PreDemoTest", serviceNameParameter.Value["value"].Value<string>());
+
+            var subnetNameParameter = parameters.Cast<JProperty>().FirstOrDefault(x => x.Name == "service_PreDemoTest_virtualNetwork_subnetname");
+            Assert.IsNotNull(subnetNameParameter);
+            Assert.AreEqual(String.Empty, subnetNameParameter.Value["value"].Value<string>());
         }
         [TestMethod]
         public void TestResultContainsMasterParametersFileForVersionedHttpBin()
@@ -354,15 +378,41 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
-        public void TestResultContains_ParameterForMyFunctionsKey()
+        public void TestResultContains_VariableInServiceTemplate()
         {
             GeneratedTemplate serviceTemplate = _generatedTemplates.Single(x => x.FileName == ServiceFilename && x.Directory == String.Empty);
 
-            var parameter = serviceTemplate.Content.SelectToken("$.parameters.myfunctions-key");
+            var conf = serviceTemplate.Content["variables"]["virtualNetworkConfiguration"];
+            Assert.IsNotNull(conf);
+            Assert.IsNotNull(conf["subnetResourceId"]);
+            Assert.IsNotNull(conf["vnetid"]);
+            Assert.IsNotNull(conf["subnetname"]);
+        }
+
+        [TestMethod]
+        public void TestResultContains_VirtualNetworkConfigurationParameters()
+        {
+            AssertParameter("service_PreDemoTest_virtualNetwork_subnetResourceId", "string", "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.Network/virtualNetworks/Network/subnets/default");
+            AssertParameter("service_PreDemoTest_virtualNetwork_vnetid", "string", "00000000-0000-0000-0000-000000000000");
+            AssertParameter("service_PreDemoTest_virtualNetwork_subnetname", "string", "");
+        }
+
+        [TestMethod]
+        public void TestResultContains_ParameterForMyFunctionsKey()
+        {
+            AssertParameter("myfunctions-key", "securestring", "");
+        }
+
+        private void AssertParameter(string name, string type, string defaultValue)
+        {
+            GeneratedTemplate serviceTemplate =
+                _generatedTemplates.Single(x => x.FileName == ServiceFilename && x.Directory == String.Empty);
+
+            var parameter = serviceTemplate.Content.SelectToken($"$.parameters.{name}");
             Assert.IsNotNull(parameter);
 
-            Assert.AreEqual("securestring", parameter.Value<string>("type"));
-            Assert.AreEqual("", parameter.Value<string>("defaultValue"));
+            Assert.AreEqual(type, parameter.Value<string>("type"));
+            Assert.AreEqual(defaultValue, parameter.Value<string>("defaultValue"));
         }
 
         [TestMethod]
