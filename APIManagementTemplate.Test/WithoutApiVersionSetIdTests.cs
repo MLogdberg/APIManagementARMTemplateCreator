@@ -56,6 +56,16 @@ namespace APIManagementTemplate.Test
             Assert.IsNull(versionSetId);
         }
 
+        [TestMethod]
+        public void TestApiVersionForApiIs20180601preview()
+        {
+            JToken api = GetResourceFromTemplate(ResourceType.Api, false);
+            Assert.IsNotNull(api);
+
+            var apiVersion = api.Value(Arm.ApiVersion);
+            Assert.AreEqual("2018-06-01-preview", apiVersion);
+        }
+
 
 
         [TestMethod]
