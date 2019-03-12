@@ -17,7 +17,7 @@ namespace APIManagementTemplate.Models
         }
         public string GetResourceId()
         {
-            return String.Join(",", names);
+            return String.Join(", ", names);
         }
 
         public string comments { get; set; }
@@ -27,7 +27,7 @@ namespace APIManagementTemplate.Models
             get
             {
                 if (string.IsNullOrEmpty(_name))
-                    return "[concat(" + String.Join(",'/',", names) + ")]";
+                    return "[concat(" + String.Join(", '/', ", names) + ")]";
                 return _name;
             }
             set

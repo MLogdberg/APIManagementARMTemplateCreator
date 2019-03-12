@@ -572,7 +572,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestResultContainsMasterTemplateJsonWith_UnlimitedProduct()
         {
-            var deployment = AssertMasterTemplateDeployment("/product-unlimited","product-unlimited.template.json", false);
+            var deployment = AssertMasterTemplateDeployment("/product-unlimited", "product-unlimited.template.json", false);
             var dependsOn = deployment["dependsOn"];
             Assert.IsNotNull(dependsOn);
             Assert.AreEqual(1, dependsOn.Count());

@@ -186,7 +186,7 @@ namespace APIManagementTemplate.Test
 
             var logger = loggers.First(x => x.Value(Arm.Name).Contains("applicationInsights"));
             Assert.AreEqual(
-                "[concat(parameters('service_ibizmalo_name'),'/',parameters('service_ibizmalo_applicationInsights'))]",
+                "[concat(parameters('service_ibizmalo_name'), '/', parameters('service_ibizmalo_applicationInsights'))]",
                 logger.Value(Arm.Name));
             Assert.AreEqual("Microsoft.ApiManagement/service/loggers", logger.Value(Arm.Type));
             var properties = logger.Index(Arm.Properties) as JObject;
@@ -218,7 +218,7 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual(3, loggers.Count());
 
             var logger = loggers.First(x => x.Value(Arm.Name).Contains("appInsights"));
-            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/','appInsights')]",
+            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', 'appInsights')]",
                 logger.Value(Arm.Name));
             Assert.AreEqual("Microsoft.ApiManagement/service/loggers", logger.Value(Arm.Type));
             var properties = logger.Index(Arm.Properties);
@@ -240,7 +240,7 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual(3, loggers.Count());
 
             var logger = loggers.First(x => x.Value(Arm.Name).Contains("bpst-apim-l-6a12e"));
-            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/','bpst-apim-l-6a12e')]",
+            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', 'bpst-apim-l-6a12e')]",
                 logger.Value(Arm.Name));
             Assert.AreEqual("Microsoft.ApiManagement/service/loggers", logger.Value(Arm.Type));
             var properties = logger.Index(Arm.Properties);
@@ -404,7 +404,7 @@ namespace APIManagementTemplate.Test
             var schema = GetSubResourceFromTemplate(ResourceType.Api, ResourceType.Schema, false).First();
             var name = schema.Value(Arm.Name);
 
-            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/','tfs','/','5b7572981142a50298c7f4a6')]",
+            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', 'tfs', '/', '5b7572981142a50298c7f4a6')]",
                 name);
         }
 
@@ -441,7 +441,7 @@ namespace APIManagementTemplate.Test
             var openIdConnectProvider = GetResourceFromTemplate(ResourceType.OpenIdConnectProvider, false);
             Assert.IsNotNull(openIdConnectProvider);
 
-            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/','myOpenIdProvider')]",
+            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', 'myOpenIdProvider')]",
                 openIdConnectProvider.Value(Arm.Name));
         }
 
@@ -472,7 +472,7 @@ namespace APIManagementTemplate.Test
             Assert.IsNotNull(openIdConnectProvider);
 
             Assert.AreEqual(
-                "[concat(parameters('service_ibizmalo_name'),'/',parameters('openidConnectProvider_myOpenIdProvider_name'))]",
+                "[concat(parameters('service_ibizmalo_name'), '/', parameters('openidConnectProvider_myOpenIdProvider_name'))]",
                 openIdConnectProvider.Value(Arm.Name));
 
             var properties = openIdConnectProvider.Index(Arm.Properties);
@@ -527,7 +527,7 @@ namespace APIManagementTemplate.Test
             var diagnostic = GetSubResourceFromTemplate(ResourceType.Service, ResourceType.Diagnostics).Skip(1)
                 .SingleOrDefault();
             Assert.IsNotNull(diagnostic);
-            Assert.AreEqual($"[concat(parameters('service_ibizmalo_name'),'/','azuremonitor')]",
+            Assert.AreEqual($"[concat(parameters('service_ibizmalo_name'), '/', 'azuremonitor')]",
                 diagnostic.Value(Arm.Name));
             Assert.AreEqual($"[parameters('diagnostic_azuremonitor_alwaysLog')]",
                 diagnostic["properties"].Value(Arm.AlwaysLog));
@@ -545,7 +545,7 @@ namespace APIManagementTemplate.Test
             Assert.IsNotNull(diagnostics);
             Assert.AreEqual("[parameters('diagnostic_appInsights_alwaysLog')]",
                 diagnostics.Index(Arm.Properties).Value(Arm.AlwaysLog));
-            Assert.AreEqual($"[concat(parameters('service_ibizmalo_name'),'/',{name})]",
+            Assert.AreEqual($"[concat(parameters('service_ibizmalo_name'), '/', {name})]",
                 diagnostics.Value(Arm.Name));
             Assert.AreEqual($"2018-06-01-preview", diagnostics.Value(Arm.ApiVersion));
             var loggerResource =

@@ -39,6 +39,7 @@ Example when user is connected to multitenants:
 | ExportPIManagementInstance | Flag inidicating if the API Management instance should be exported | false| true | 
 | ExportGroups | Flag inidicating if Groups should be exported | false | true |
 | ExportProducts | Flag inidicating if Products should be exported | false | true |
+| ExportTags | Flag inidicating if Tags should be exported | false
 | ExportSwaggerDefinition | Export the API operations and schemas as a swagger/Open API 2.0 definition. If set to false then the operations and schemas of the API will be included as arm templates  | false | false |
 | Token | An AAD Token to access the resources - should not include `Bearer`, only the token | false  |  |
 | ParametrizePropertiesOnly | If parameters only should be created for properties such as names of apim services or logic apps and not names of groups, apis or products | false | false |
@@ -62,6 +63,7 @@ Use Write-APIManagementTemplates generate many small ARM templates (as suggested
 | Parameter | Description | Required | Default | 
 | --------- | ---------- | -------| --- |
 | ApiStandalone | If the APIs should be able to be deployed independently of the rest of the resources | false | true | 
+| ListApiInProduct | If true only the names of the API will be added as array parameter | false | false |
 | OutputDirectory | The directory where the templates are written to | false | . | 
 | SeparatePolicyFile | If the policies should be written to a separate xml file. If set to false then the policies are included as a part of the arm templates | false | false | 
 | SeparateSwaggerFile | Swagger/Openapi definitions are written to a separate file. If set to false then the Swagger/Openapi definitions are included as part of the arm templates | false | false | 

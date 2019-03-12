@@ -69,7 +69,7 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual("2017-03-01", obj.Value<string>("apiVersion"));
 
             Assert.AreEqual("[concat(parameters('service_apidev_name'), '/' ,parameters('api_invoice-retrieval-api_name'))]", obj.Value<string>("name"));
-            Assert.AreEqual(2, obj["resources"].Count());
+            Assert.AreEqual(3, obj["resources"].Count());
             Assert.AreEqual(2, obj["dependsOn"].Count());
 
             var prop = obj["properties"];
@@ -80,7 +80,7 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual("api/documents/invoices", prop.Value<string>("path"));
             Assert.AreEqual("[parameters('invoice-retrieval-api_isCurrent')]", prop.Value<string>("isCurrent"));
             Assert.AreEqual("[parameters('invoice-retrieval-api_apiVersion')]", prop.Value<string>("apiVersion"));
-            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service/api-version-sets',parameters('service_apidev_name'),'5b1fb4607e5c66b5cb2fe2e8')]", prop.Value<string>("apiVersionSetId"));
+            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service/api-version-sets',parameters('service_apidev_name'), '5b1fb4607e5c66b5cb2fe2e8')]", prop.Value<string>("apiVersionSetId"));
             Assert.AreEqual("https", prop.Value<JArray>("protocols").First().Value<string>());            
         }
 

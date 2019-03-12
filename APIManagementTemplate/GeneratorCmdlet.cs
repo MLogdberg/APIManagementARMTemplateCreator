@@ -35,11 +35,17 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false,HelpMessage = "Export the API Management Instance")]
         public bool ExportPIManagementInstance = true;
 
+        [Parameter(Mandatory = false,HelpMessage = "Export the API Management Certificates")]
+        public bool ExportCertificates = true;
+
         [Parameter(Mandatory = false,HelpMessage = "Export the API Management Groups, not builtin")]
         public bool ExportGroups = true;
 
         [Parameter(Mandatory = false,HelpMessage = "Export the API Management Products")]
         public bool ExportProducts = true;
+
+        [Parameter(Mandatory = false,HelpMessage = "Export the API Management Tags and API Tags")]
+        public bool ExportTags = false;
 
         [Parameter(Mandatory = false,HelpMessage = "Export the API operations and schemas as a swagger/Open API 2.0 definition")]
         public bool ExportSwaggerDefinition = false;
@@ -94,7 +100,7 @@ namespace APIManagementTemplate
 
             try
             {
-                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter, CreateApplicationInsightsInstance, ApiVersion, ParameterizeBackendFunctionKey, ExportSwaggerDefinition);
+                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter, CreateApplicationInsightsInstance, ApiVersion, ParameterizeBackendFunctionKey, ExportCertificates, ExportSwaggerDefinition, ExportTags);
                 JObject result = generator.GenerateTemplate().Result;
                 WriteObject(result.ToString());
             }

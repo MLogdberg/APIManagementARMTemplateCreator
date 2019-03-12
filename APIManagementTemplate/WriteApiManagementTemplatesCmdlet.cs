@@ -20,8 +20,8 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false, HelpMessage = "Generate templates for APIs that can be deployed standalone (without the rest of the resources)")]
         public bool ApiStandalone = true;
 
-        [Parameter(Mandatory = false, HelpMessage = "If true only the names of the API will be added as array parameter (does not work if ApiStandalone is true)")]
-        public bool ListApiInProduct = true;
+        [Parameter(Mandatory = false, HelpMessage = "If true only the names of the API will be added as array parameter")]
+        public bool ListApiInProduct = false;
 
         [Parameter(Mandatory = false, HelpMessage = "The output directory")]
         public string OutputDirectory = ".";
@@ -34,7 +34,7 @@ namespace APIManagementTemplate
 
         [Parameter(Mandatory = false, HelpMessage = "If the template already exists in the output directory, it will be merged with the new result.")]
         public bool MergeTemplates = false;
-
+       
         [Parameter(Mandatory = false, HelpMessage = "If parameter files should be generated")]
         public bool GenerateParameterFiles = false;
 

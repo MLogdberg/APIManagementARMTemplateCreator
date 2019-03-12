@@ -543,24 +543,34 @@ namespace APIManagementTemplate
                 //get productName
                 var productName = product["name"].Value<string>();
                 var apimServiceName = Regex.Match(productName, "(?<=\\(')(.*)(?=('\\)),)").Value;
+                string apisListParameterName;
 
-                //get names of apis
+                //get names of apis with ParametrizePropertiesOnly is false
                 var apiNames = product.SelectTokens($"$..[?(@.type=='{ProductAPIResourceType}')]").Select(a => Regex.Match(a["name"].Value<string>(), "(?<='api_)(.*)(?=_name')").Value).Where(n => n != string.Empty);
+                if (apiNames.Any())
+                {
+                    apisListParameterName = $"apis_in_product_{Regex.Match(productName, "(?<='product_)(.*)(?=_name')").Value}";
+                    
+                    //remove api specific parameters
+                    var apiParameters = apiNames.Select(a => parameterObject.SelectToken($"api_{a}_name").Parent);
+                    foreach (var api in apiParameters.ToArray())
+                    {
+                        api.Remove();
+                    }
+                }
+                //get names of apis with ParametrizePropertiesOnly is true
+                else
+                {
+                    apiNames = product.SelectTokens($"$..[?(@.type=='{ProductAPIResourceType}')]").Select(a => Regex.Match(a["name"].Value<string>().Split('/').Last(), "(?<=(,(.*)'))(.*)(?=')").Value).Where(n => n != string.Empty);
+                    apisListParameterName = $"apis_in_product_{Regex.Match(productName, "(?<='/)(.*)(?=')").Value}";
+                }
 
                 //if no apis in product skip
                 if (!apiNames.Any())
                     continue;
 
-                //remove api specific parameters
-                var apiParameters = apiNames.Select(a => parameterObject.SelectToken($"api_{a}_name").Parent);
-
-                foreach (var api in apiParameters.ToArray())
-                {
-                    api.Remove();
-                }
 
                 //add apilist parameter
-                var apisListParameterName = $"apis_in_product_{Regex.Match(productName, "(?<='product_)(.*)(?=_name')").Value}";
                 parameterObject.Add(
                     new JProperty(apisListParameterName,
                     new JObject(

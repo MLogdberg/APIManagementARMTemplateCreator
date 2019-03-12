@@ -86,7 +86,7 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual("Microsoft.ApiManagement/service/properties", obj.Value<string>("type"));
             Assert.AreEqual("2017-03-01", obj.Value<string>("apiVersion"));
 
-            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'),'/','5b418f9eb3de406c8744638f')]", obj.Value<string>("name"));
+            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', '5b418f9eb3de406c8744638f')]", obj.Value<string>("name"));
             Assert.AreEqual(0, obj["resources"].Count());
             Assert.AreEqual(0, obj["dependsOn"].Count());
 
