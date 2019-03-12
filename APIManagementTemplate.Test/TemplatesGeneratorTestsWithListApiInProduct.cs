@@ -19,7 +19,7 @@ namespace APIManagementTemplate.Test
         public void Initialize()
         {
             _templatesGenerator = new TemplatesGenerator();
-            _sourceTemplate = Utils.GetEmbededFileContent("APIManagementTemplate.Test.SamplesTemplate.templateParameters.json");
+            _sourceTemplate = Utils.GetEmbededFileContent("APIManagementTemplate.Test.SamplesTemplate.template.json");
             _generatedTemplates = _templatesGenerator.Generate(_sourceTemplate, false, false, listApiInProduct:true);
         }
 
@@ -34,7 +34,7 @@ namespace APIManagementTemplate.Test
             var defaultValue = parameter.ValueWithType<JArray>(Arm.DefaultValue);
             Assert.IsNotNull(defaultValue);
             Assert.AreEqual(1, defaultValue.Count);
-            Assert.AreEqual("tfs", defaultValue[0].Value<string>());
+            Assert.AreEqual("echo-api", defaultValue[0].Value<string>());
         }
 
         [TestMethod]
@@ -45,14 +45,14 @@ namespace APIManagementTemplate.Test
             var productApis = productTemplate.WithDirectResources(ResourceType.ProductApi);
             Assert.AreEqual(1, productApis.Count());
             Assert.IsTrue(productTemplate.ExternalDependencies.Contains(
-                "[resourceId('Microsoft.ApiManagement/service/products', parameters('apimServiceName'), parameters('apis_in_product_unlimited'))]"));
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_PreDemoTest_name'), parameters('apis_in_product_unlimited'))]"));
         }
 
         [TestMethod]
         public void TestResultContainsUnlimitedProductWithApisName()
         {
             Assert.AreEqual(
-                "[concat(parameters('apimServiceName'), '/' ,parameters('product_unlimited_name'), '/', parameters('apis_in_product_unlimited')[copyIndex()])]",
+                "[concat(parameters('service_PreDemoTest_name'), '/unlimited', '/', parameters('apis_in_product_unlimited')[copyIndex()])]",
                 GetProductApi().Value(Arm.Name));
         }
 
