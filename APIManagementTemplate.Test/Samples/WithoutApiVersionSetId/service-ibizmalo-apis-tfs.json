@@ -6,6 +6,7 @@
     "displayName": "TFS",
     "apiRevision": "1",
     "description": " A nice warm laptop for me to sit on find empty spot in cupboard and sleep all day, i like fish and have my breakfast spaghetti yarn spill litter box, scratch at owner, destroy all furniture, especially couch i could pee on this if i had the energy. Hack up furballs claw your carpet in places everyone can see - why hide my amazing artistic clawing skills?",
+    "subscriptionRequired": true,
     "serviceUrl": "http://ibizmalotest-backend.azure-api.net/tfsBackend",
     "path": "tfs",
     "protocols": [
@@ -14,8 +15,8 @@
     "authenticationSettings": {
       "oAuth2": null,
       "openid": {
-          "openidProviderId": "myOpenIdProvider",
-          "bearerTokenSendingMethods": null
+        "openidProviderId": "myOpenIdProvider",
+        "bearerTokenSendingMethods": null
       }
     },
     "subscriptionKeyParameterNames": {

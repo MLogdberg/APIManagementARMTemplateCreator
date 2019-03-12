@@ -733,10 +733,6 @@ namespace APIManagementTemplate
             }
             template.parameters = GetParameters(parsedTemplate["parameters"], apiObject);
             SetFilenameAndDirectory(apiObject, parsedTemplate, generatedTemplate, false);
-            if (apiObject["properties"]?["subscriptionRequired"] != null)
-            {
-                apiObject["apiVersion"] = "2018-06-01-preview";
-            }
             template.resources.Add(apiStandalone ? RemoveServiceDependencies(apiObject) : apiObject);
 
             if (apiStandalone)
