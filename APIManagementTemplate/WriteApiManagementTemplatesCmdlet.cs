@@ -29,6 +29,9 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false, HelpMessage = "Policies are written to a separate file")]
         public bool SeparatePolicyFile = false;
 
+        [Parameter(Mandatory = false, HelpMessage = "Swagger definitions are written to a separate file")]
+        public bool SeparateSwaggerFile = false;
+
         [Parameter(Mandatory = false, HelpMessage = "If the template already exists in the output directory, it will be merged with the new result.")]
         public bool MergeTemplates = false;
        
@@ -45,7 +48,7 @@ namespace APIManagementTemplate
         {
             if (!string.IsNullOrEmpty(DebugTemplateFile))
                 File.WriteAllText(DebugTemplateFile, ARMTemplate);
-            var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone, SeparatePolicyFile, GenerateParameterFiles, ReplaceListSecretsWithParameter, ListApiInProduct);
+            var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone, SeparatePolicyFile, GenerateParameterFiles, ReplaceListSecretsWithParameter, ListApiInProduct, SeparateSwaggerFile);
             foreach (GeneratedTemplate template in templates)
             {
                 string filename = $@"{OutputDirectory}\{template.FileName}";
@@ -56,7 +59,8 @@ namespace APIManagementTemplate
                     filename = $@"{directory}\{template.FileName}";
                 }
 
-                if (File.Exists(filename) && MergeTemplates && template.Type == ContentType.Json)
+                if (File.Exists(filename) && MergeTemplates && template.Type == ContentType.Json 
+                    && !template.FileName.EndsWith(".swagger.json"))
                 {
                     JObject oldTemplate = JObject.Parse(File.ReadAllText(filename));
                     template.Content = TemplateMerger.Merge(oldTemplate, template.Content);

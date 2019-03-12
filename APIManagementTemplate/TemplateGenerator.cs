@@ -29,9 +29,10 @@ namespace APIManagementTemplate
         private bool createApplicationInsightsInstance;
         private string apiVersion;
         private readonly bool parameterizeBackendFunctionKey;
+        private readonly bool exportSwaggerDefinition;
         IResourceCollector resourceCollector;
 
-        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportCertificates = true, bool exportTags = false)
+        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportSwaggerDefinition = false, bool exportCertificates = true, bool exportTags = false)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -49,6 +50,7 @@ namespace APIManagementTemplate
             this.createApplicationInsightsInstance = createApplicationInsightsInstance;
             this.apiVersion = apiVersion;
             this.parameterizeBackendFunctionKey = parameterizeBackendFunctionKey;
+            this.exportSwaggerDefinition = exportSwaggerDefinition;
         }
 
         private string GetAPIMResourceIDString()
@@ -130,31 +132,46 @@ namespace APIManagementTemplate
                     }
 
                     var operations = await resourceCollector.GetResource(id + "/operations");
-                    foreach (JObject operation in (operations == null ? new JArray() : operations.Value<JArray>("value")))
+                    foreach (JObject operation in (operations == null
+                        ? new JArray()
+                        : operations.Value<JArray>("value")))
                     {
                         var opId = operation.Value<string>("id");
 
                         var operationInstance = await resourceCollector.GetResource(opId);
                         var operationTemplateResource = template.CreateOperation(operationInstance);
-                        apiTemplateResource.Value<JArray>("resources").Add(operationTemplateResource);
-
-
+                        if (!exportSwaggerDefinition)
+                        {
+                            apiTemplateResource.Value<JArray>("resources").Add(operationTemplateResource);
+                        }
                         var operationPolicies = await resourceCollector.GetResource(opId + "/policies");
-                        foreach (JObject policy in (operationPolicies == null ? new JArray() : operationPolicies.Value<JArray>("value")))
+                        foreach (JObject policy in (operationPolicies == null
+                            ? new JArray()
+                            : operationPolicies.Value<JArray>("value")))
                         {
                             var pol = template.CreatePolicy(policy);
 
                             //add properties
-                            this.PolicyHandleProperties(pol, apiTemplateResource.Value<string>("name"), (operationInstance.Value<string>("name").StartsWith("api-") ? operationInstance.Value<string>("name").Substring(4, (operationInstance.Value<string>("name").LastIndexOf("-" + operationInstance["properties"].Value<string>("method").ToLower())) - 4) : operationInstance.Value<string>("name")));
+                            this.PolicyHandleProperties(pol, apiTemplateResource.Value<string>("name"),
+                                (operationInstance.Value<string>("name").StartsWith("api-")
+                                    ? operationInstance.Value<string>("name").Substring(4,
+                                        (operationInstance.Value<string>("name")
+                                            .LastIndexOf("-" + operationInstance["properties"]
+                                                             .Value<string>("method").ToLower())) - 4)
+                                    : operationInstance.Value<string>("name")));
 
-                            var operationSuffix = apiInstance.Value<string>("name") + "_" + operationInstance.Value<string>("name");
+                            var operationSuffix = apiInstance.Value<string>("name") + "_" +
+                                                  operationInstance.Value<string>("name");
                             //Handle Azure Resources
-                            if (!this.PolicyHandeAzureResources(pol, apiTemplateResource.Value<string>("name"), template))
+                            if (!this.PolicyHandeAzureResources(pol, apiTemplateResource.Value<string>("name"),
+                                template))
                             {
                                 PolicyHandeBackendUrl(pol, operationSuffix, template);
                             }
 
-                            var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>("policyContent"));
+                            var backendid =
+                                TemplateHelper.GetBackendIdFromnPolicy(policy["properties"]
+                                    .Value<string>("policyContent"));
 
                             if (!string.IsNullOrEmpty(backendid))
                             {
@@ -164,14 +181,34 @@ namespace APIManagementTemplate
                                     apiTemplateResource["dependsOn"] = new JArray();
 
                                 //add dependeOn
-                                apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
+                                apiTemplateResource.Value<JArray>("dependsOn").Add(
+                                    $"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
                             }
                             if (exportCertificates) await AddCertificate(policy, template);
 
-                            operationTemplateResource.Value<JArray>("resources").Add(pol);
+                            if(exportSwaggerDefinition)
+                                apiTemplateResource.Value<JArray>("resources").Add(pol);
+                            else
+                                operationTemplateResource.Value<JArray>("resources").Add(pol);
                             //handle nextlink?
                         }
                         //handle nextlink?                
+                    }
+                    if(exportSwaggerDefinition)
+                    {
+                        apiTemplateResource["properties"]["contentFormat"] = "swagger-json";
+                        var swaggerExport = await resourceCollector.GetResource(id + "?format=swagger-link&export=true", apiversion: "2018-06-01-preview");
+                        var swaggerUrl = swaggerExport.Value<string>("link");
+                        var swaggerContent = await resourceCollector.GetResourceByURL(swaggerUrl);
+                        var serviceUrl = apiInstance["properties"].Value<string>("serviceUrl");
+                        if(!String.IsNullOrWhiteSpace(serviceUrl))
+                        {
+                            var serviceUri = new Uri(serviceUrl);
+                            swaggerContent["host"] = serviceUri.Host;
+                            swaggerContent["basePath"] = serviceUri.AbsolutePath;
+                            swaggerContent["schemes"] = JArray.FromObject(new[] {serviceUri.Scheme});
+                        }
+                        apiTemplateResource["properties"]["contentValue"] = swaggerContent.ToString();
                     }
 
                     var apiPolicies = await resourceCollector.GetResource(id + "/policies");
@@ -200,12 +237,15 @@ namespace APIManagementTemplate
 
                         //handle nextlink?
                     }
-                    //schemas
-                    var apiSchemas = await resourceCollector.GetResource(id + "/schemas");
-                    foreach (JObject schema in (apiSchemas == null ? new JArray() : apiSchemas.Value<JArray>("value")))
+
+                    if (!exportSwaggerDefinition)
                     {
-                        var schemaTemplate = template.CreateAPISchema(schema);
-                        apiTemplateResource.Value<JArray>("resources").Add(JObject.FromObject(schemaTemplate));
+                        var apiSchemas = await resourceCollector.GetResource(id + "/schemas");
+                        foreach (JObject schema in (apiSchemas == null ? new JArray() : apiSchemas.Value<JArray>("value")))
+                        {
+                            var schemaTemplate = template.CreateAPISchema(schema);
+                            apiTemplateResource.Value<JArray>("resources").Add(JObject.FromObject(schemaTemplate));
+                        }
                     }
 
                     //diagnostics

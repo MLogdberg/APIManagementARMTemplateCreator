@@ -1,0 +1,196 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Basic Calculator",
+    "version": "v1",
+    "description": "Basic calculator"
+  },
+  "host": "ibizmalotest.azure-api.net",
+  "basePath": "/calculator/v1",
+  "schemes": [
+    "https"
+  ],
+  "securityDefinitions": {
+    "apiKeyHeader": {
+      "type": "apiKey",
+      "name": "Ocp-Apim-Subscription-Key",
+      "in": "header"
+    },
+    "apiKeyQuery": {
+      "type": "apiKey",
+      "name": "subscription-key",
+      "in": "query"
+    }
+  },
+  "security": [
+    {
+      "apiKeyHeader": []
+    },
+    {
+      "apiKeyQuery": []
+    }
+  ],
+  "paths": {
+    "/add": {
+      "get": {
+        "description": "Produces a sum of two numbers.",
+        "operationId": "5b59b13c5a635f22ac9db322",
+        "summary": "Add two integers 2",
+        "parameters": [
+          {
+            "name": "a",
+            "in": "query",
+            "description": "First operand. Default value is <code>51</code>.",
+            "required": true,
+            "type": "string",
+            "default": "51",
+            "enum": [
+              "51"
+            ]
+          },
+          {
+            "name": "b",
+            "in": "query",
+            "description": "Second operand. Default value is <code>49</code>.",
+            "required": true,
+            "type": "string",
+            "default": "49",
+            "enum": [
+              "49"
+            ]
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/sub": {
+      "get": {
+        "description": "Produces a difference between two numbers.",
+        "operationId": "5b59b13d5a635f22ac9db323",
+        "summary": "Subtract two integers",
+        "parameters": [
+          {
+            "name": "a",
+            "in": "query",
+            "description": "First operand. Default value is <code>51</code>.",
+            "required": true,
+            "type": "string",
+            "default": "51",
+            "enum": [
+              "51"
+            ]
+          },
+          {
+            "name": "b",
+            "in": "query",
+            "description": "Second operand. Default value is <code>49</code>.",
+            "required": true,
+            "type": "string",
+            "default": "49",
+            "enum": [
+              "49"
+            ]
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/mul": {
+      "get": {
+        "description": "Produces a product of two numbers.",
+        "operationId": "5b59b13d5a635f22ac9db324",
+        "summary": "Multiply two integers",
+        "parameters": [
+          {
+            "name": "a",
+            "in": "query",
+            "description": "First operand. Default value is <code>51</code>.",
+            "required": true,
+            "type": "string",
+            "default": "51",
+            "enum": [
+              "51"
+            ]
+          },
+          {
+            "name": "b",
+            "in": "query",
+            "description": "Second operand. Default value is <code>49</code>.",
+            "required": true,
+            "type": "string",
+            "default": "49",
+            "enum": [
+              "49"
+            ]
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/div": {
+      "get": {
+        "description": "Produces a quotient of two numbers.",
+        "operationId": "5b59b13d5a635f22ac9db325",
+        "summary": "Divide two integers",
+        "parameters": [
+          {
+            "name": "a",
+            "in": "query",
+            "description": "First operand. Default value is <code>51</code>.",
+            "required": true,
+            "type": "string",
+            "default": "51",
+            "enum": [
+              "51"
+            ]
+          },
+          {
+            "name": "b",
+            "in": "query",
+            "description": "Second operand. Default value is <code>49</code>.",
+            "required": true,
+            "type": "string",
+            "default": "49",
+            "enum": [
+              "49"
+            ]
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/copy-5bae2-of-/add": {
+      "get": {
+        "description": "Produces a sum of two numbers.",
+        "operationId": "5bae27e44ed39cce93813a18",
+        "summary": "Add two integers 2 (clone)",
+        "parameters": [
+          {
+            "name": "a",
+            "in": "query",
+            "description": "First operand. Default value is <code>51</code>.",
+            "required": true,
+            "type": "string",
+            "default": "51",
+            "enum": [
+              "51"
+            ]
+          },
+          {
+            "name": "b",
+            "in": "query",
+            "description": "Second operand. Default value is <code>49</code>.",
+            "required": true,
+            "type": "string",
+            "default": "49",
+            "enum": [
+              "49"
+            ]
+          }
+        ],
+        "responses": {}
+      }
+    }
+  },
+  "tags": []
+}

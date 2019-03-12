@@ -28,27 +28,28 @@ Example when user is connected to multitenants:
 
 ### Specifications
 
-| Parameter | Description | Required |
-| --------- | ---------- | -------|
-| APIManagement | Name of the API Management instance| true |
-| ResourceGroup | The name of the Resource Group | true |
-| SubscriptionId | The Subscription id (guid)| true |
-| TenantName | Name of the Tenant i.e. contoso.onmicrosoft.com | false |
-| APIFilters | Filter for what API's to exort i.e: path eq 'api/v1/currencyconverter' or endswith(path,'currencyconverter') | false
-| ExportAuthorizationServers | Flag inidicating if Authorization servers should be exported, default true | false
-| ExportPIManagementInstance | Flag inidicating if the API Management instance should be exported, default true | false
-| ExportGroups | Flag inidicating if Groups should be exported, default true | false
-| ExportProducts | Flag inidicating if Products should be exported, default true | false
+| Parameter | Description | Required | Default |
+| --------- | ---------- | -------| --- |
+| APIManagement | Name of the API Management instance| true | |
+| ResourceGroup | The name of the Resource Group | true | |
+| SubscriptionId | The Subscription id (guid)| true | |
+| TenantName | Name of the Tenant i.e. contoso.onmicrosoft.com | false | |
+| APIFilters | Filter for what API's to exort i.e: path eq 'api/v1/currencyconverter' or endswith(path,'currencyconverter') | false | |
+| ExportAuthorizationServers | Flag inidicating if Authorization servers should be exported | false | true | 
+| ExportPIManagementInstance | Flag inidicating if the API Management instance should be exported | false| true | 
+| ExportGroups | Flag inidicating if Groups should be exported | false | true |
+| ExportProducts | Flag inidicating if Products should be exported | false | true |
 | ExportTags | Flag inidicating if Tags should be exported | false
-| Token | An AAD Token to access the resources - should not include `Bearer`, only the token | false |
-| ParametrizePropertiesOnly | If parameters only should be created for properties such as names of apim services or logic apps and not names of groups, apis or products | false |
-| ReplaceSetBackendServiceBaseUrlWithProperty | If the base-url of <set-backend-service> with should be replaced with a property instead of a parameter. If this is false you will not be able to set SeparatePolicyFile=true for Write-APIManagementTemplates when you have set-backend-service with base-url-attribute in a policy | false |
-| FixedServiceNameParameter | True if the parameter for the name of the service should have a fixed name (apimServiceName). Otherwise the parameter name will depend on the name of the service (service_PreDemoTest_name)| false |
-| CreateApplicationInsightsInstance | If an Application Insights instance should be created when used by a logger. Otherwise you need to provide the instrumentation key of an existing Application Insights instance as a parameter| false |
-| DebugOutPutFolder | If set, result from rest interface will be saved to this folder | false |
-| ApiVersion | If set, api result will be filtered based on this value i.e: v2 | false |
-| ClaimsDump | A dump of claims piped in from `armclient` - should not be manually set | false |
-| ParameterizeBackendFunctionKey | Set to 'true' if you want the backend function key to be parameterized, default false. | false |
+| ExportSwaggerDefinition | Export the API operations and schemas as a swagger/Open API 2.0 definition. If set to false then the operations and schemas of the API will be included as arm templates  | false | false |
+| Token | An AAD Token to access the resources - should not include `Bearer`, only the token | false  |  |
+| ParametrizePropertiesOnly | If parameters only should be created for properties such as names of apim services or logic apps and not names of groups, apis or products | false | false |
+| ReplaceSetBackendServiceBaseUrlWithProperty | If the base-url of <set-backend-service> with should be replaced with a property instead of a parameter. If this is false you will not be able to set SeparatePolicyFile=true for Write-APIManagementTemplates when you have set-backend-service with base-url-attribute in a policy | false | false |
+| FixedServiceNameParameter | True if the parameter for the name of the service should have a fixed name (apimServiceName). Otherwise the parameter name will depend on the name of the service (service_PreDemoTest_name)| false | false |
+| CreateApplicationInsightsInstance | If an Application Insights instance should be created when used by a logger. Otherwise you need to provide the instrumentation key of an existing Application Insights instance as a parameter| false | false |
+| DebugOutPutFolder | If set, result from rest interface will be saved to this folder | false | |
+| ApiVersion | If set, api result will be filtered based on this value i.e: v2 | false | |
+| ClaimsDump | A dump of claims piped in from `armclient` - should not be manually set | false | |
+| ParameterizeBackendFunctionKey | Set to 'true' if you want the backend function key to be parameterized | false | false |
 
 After extraction a parameters file can be created off the ARMTemplate.
 
@@ -64,9 +65,26 @@ Use Write-APIManagementTemplates generate many small ARM templates (as suggested
 | ApiStandalone | If the APIs should be able to be deployed independently of the rest of the resources | false | true | 
 | ListApiInProduct | If true only the names of the API will be added as array parameter | false | false |
 | OutputDirectory | The directory where the templates are written to | false | . | 
-| SeparatePolicyFile | If the policies should be written to a separate xml file | false | false | 
+| SeparatePolicyFile | If the policies should be written to a separate xml file. If set to false then the policies are included as a part of the arm templates | false | false | 
+| SeparateSwaggerFile | Swagger/Openapi definitions are written to a separate file. If set to false then the Swagger/Openapi definitions are included as part of the arm templates | false | false | 
 | MergeTemplates | If the template already exists in the output directory, it will be merged with the new result. | false | false | 
 | GenerateParameterFiles | If parameter files should be generated | false | false | 
 | ReplaceListSecretsWithParameter | If the key to an Azure Function should be defined in a parameter instead of calling listsecrets | false | false |
 | DebugTemplateFile | If set, the input ARM template is written to this file | false | |
 | ARMTemplate | The ARM template piped from Get-APIManagementTemplate - should not be manually set | false | |
+
+### Using OpenAPI/Swagger definition files
+It is possible to generate ARM templates that use Openapi/Swagger 2.0 definition files to describe the operations and schemas of your APIs.
+
+The advantage is that when there is a change in the backend API you just need to update the OpenAPI/Swagger definition file of your API. No need to modify the ARM templates of the operations and schemas by hand or to change the source API Management instance and then update the ARM templates with this tool.
+
+Use ExportSwaggerDefinition=$true as parameter to Get-APIManagementTemplate and SeparateSwaggerFile=$true as parameter to Write-APIManagementTemplates.
+
+Due to limitations in Azure it is not supported to use ExportSwaggerDefinition=$true without using SeparateSwaggerFile=$true.
+
+`armclient token 80d4fe69-xxxx-4dd2-a938-9250f1c8ab03 | Get-APIManagementTemplate -APIManagement MyApiManagementInstance -ResourceGroup myResourceGroup -SubscriptionId 80d4fe69-xxxx-4dd2-a938-9250f1c8ab03 -ParametrizePropertiesOnly $true -FixedServiceNameParameter $true -CreateApplicationInsightsInstance $true -ReplaceSetBackendServiceBaseUrlWithProperty $true -ExportSwaggerDefinition $true | Write-APIManagementTemplates -OutputDirectory C:\temp\templates -ApiStandalone $true -SeparatePolicyFile $true -SeparateSwaggerFile $true -MergeTemplates $true -GenerateParameterFiles $true  -ReplaceListSecretsWithParameter $true -ListApiInProduct $false`
+
+If you have a host property in your OpenAPI/Swagger definition it will override the serviceUrl property of your API. 
+So if you want to have different serviceUrls for different environments (for example test and production environments) you need to do one of the following two options
+* Write a policy that changes the backend url
+* Modify the OpenAPI/Swagger definition file so that it contains the correct url in host, basePath and schemes before you deploy it

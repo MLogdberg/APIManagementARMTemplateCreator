@@ -16,13 +16,31 @@ namespace APIManagementTemplate.Test
         }
         public Task<JObject> GetResource(string resourceId, string suffix = "", string apiversion = "2017-03-01")
         {
-            var t = new Task<JObject>(() => { return JObject.Parse(Utils.GetEmbededFileContent($"APIManagementTemplate.Test.Samples.{basepath}.{resourceId.Split('/').SkipWhile((a) => { return a != "service" && a != "workflows" && a != "sites"; }).Aggregate<string>((b, c) => { return b + "-" + c; })}.json")); });
+            var t = new Task<JObject>(() =>
+            {
+                var path = $"APIManagementTemplate.Test.Samples.{basepath}.{resourceId.Split('/').SkipWhile((a) => { return a != "service" && a != "workflows" && a != "sites"; }).Aggregate<string>((b, c) => { return b + "-" + c; })}.json";
+                var resourceName = AzureResourceCollector.EscapeString(path);
+                return JObject.Parse(Utils.GetEmbededFileContent(resourceName));
+            });
+            t.Start();
+            return t;
+        }
+
+        public Task<JObject> GetResourceByURL(string url)
+        {
+            var t = new Task<JObject>(() =>
+            {
+                var uri = new Uri(url);
+                var path = AzureResourceCollector.EscapeString($"APIManagementTemplate.Test.Samples.{basepath}.{uri.Host}{uri.AbsolutePath}");
+                return JObject.Parse(Utils.GetEmbededFileContent(path));
+            });
             t.Start();
             return t;
         }
 
         public string Login(string tenantName)
         {
-            return "mocked";        }
+            return "mocked";
+        }
     }
 }

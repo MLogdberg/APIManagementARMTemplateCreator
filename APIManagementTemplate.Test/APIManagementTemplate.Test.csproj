@@ -60,8 +60,11 @@
     <Compile Include="DeploymentTemplateTests.cs" />
     <Compile Include="FunctionAppMixedWithLogicAppTests.cs" />
     <Compile Include="TemplateMergerTests.cs" />
+    <Compile Include="TemplatesGeneratorTestsWithListApiInProduct.cs" />
+    <Compile Include="TemplatesGeneratorTestsWithSwagger.cs" />
     <Compile Include="TemplatesGeneratorTestsWithSeparatePolicyFileAsFalse.cs" />
     <Compile Include="TemplatesGeneratorTests.cs" />
+    <Compile Include="TestExtensions.cs" />
     <Compile Include="WithoutApiVersionSetIdTests.cs" />
     <Compile Include="FunctionAppUneditedTests.cs" />
     <Compile Include="LogicAppCustomTriggerNameTest.cs" />
@@ -256,6 +259,10 @@
     <EmbeddedResource Include="Samples\UrlHandling\service-apidev-apis-invoice-retrieval-api-diagnostics.json" />
     <EmbeddedResource Include="Samples\UrlHandling\service-apidev-loggers.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-diagnostics.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-apis-tfs-format-swagger-link-export-true.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\apimgmtstsulap3tpjfi3ccv.blob.core.windows.net-api-export-tfs.json" />
+    <EmbeddedResource Include="SamplesTemplate\templateSwagger.json" />
+    <EmbeddedResource Include="SamplesTemplate\templateParameters.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />

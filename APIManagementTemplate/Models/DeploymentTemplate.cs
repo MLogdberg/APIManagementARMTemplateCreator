@@ -3,6 +3,9 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Management.Automation;
+using System.Security.Policy;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace APIManagementTemplate.Models
@@ -245,12 +248,23 @@ namespace APIManagementTemplate.Models
                 }
             }
             resource["properties"]["additionalLocations"] = restObject["properties"]["additionalLocations"];
-            resource["properties"]["virtualNetworkConfiguration"] = restObject["properties"]["virtualNetworkConfiguration"];
             resource["properties"]["customProperties"] = restObject["properties"]["customProperties"];
-            resource["properties"]["virtualNetworkType"] = restObject["properties"]["virtualNetworkType"];
+            var virtualNetworkTypeParameter = AddParameter($"{GetServiceName(servicename, false)}_virtualNetworkType", "string", restObject["properties"].Value<string>("virtualNetworkType"));
+            resource["properties"]["virtualNetworkType"] = WrapParameterName(virtualNetworkTypeParameter);
+            resource["properties"]["virtualNetworkConfiguration"] = $"[if(not(equals(parameters('{virtualNetworkTypeParameter}'), 'None')), variables('virtualNetworkConfiguration'), json('null'))]";
             this.resources.Add(resource);
+            var vnc = GetVirtualNetworkConfigurationVariable(servicename, restObject["properties"]["virtualNetworkConfiguration"]);
+            this.variables.Add("virtualNetworkConfiguration", vnc);
             APIMInstanceAdded = true;
             return resource;
+        }
+
+        private string GetVirtualnetworkParameter(string servicename, JToken virtualNetworkConfiguration, string propertyName)
+        {
+            return WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_virtualNetwork_{propertyName}",
+                "string",virtualNetworkConfiguration.Type == JTokenType.Null
+                    ? null
+                    : virtualNetworkConfiguration.Value<string>(propertyName)));
         }
 
         public string GetServiceName(string servicename, bool addName = true)
@@ -281,7 +295,10 @@ namespace APIManagementTemplate.Models
             AddParameterFromObject((JObject)resource["properties"], "serviceUrl", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "apiVersion", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "isCurrent", "bool", name);
-            
+            if (resource["properties"]?["subscriptionRequired"] != null)
+            {
+                resource["apiVersion"] = "2018-06-01-preview";
+            }
             if (APIMInstanceAdded)
             {
                 resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]" });
@@ -293,6 +310,18 @@ namespace APIManagementTemplate.Models
 
             this.resources.Add(resource);
             return resource;
+        }
+
+        private JObject GetVirtualNetworkConfigurationVariable(string servicename, JToken virtualNetworkConfiguration)
+        {
+            var subnetnameParameter = AddParameter($"{GetServiceName(servicename, false)}_virtualNetwork_subnetname",
+                "string", virtualNetworkConfiguration.Type == JTokenType.Null ? String.Empty : virtualNetworkConfiguration.Value<string>("subnetname")?? String.Empty);
+            return new JObject
+            {
+                ["subnetResourceId"] = GetVirtualnetworkParameter(servicename, virtualNetworkConfiguration, "subnetResourceId"),
+                ["vnetid"] = GetVirtualnetworkParameter(servicename, virtualNetworkConfiguration, "vnetid"),
+                ["subnetname"] = $"[if(equals(parameters('{subnetnameParameter}'), ''), json('null'), parameters('{subnetnameParameter}'))]"
+            };
         }
 
         public ResourceTemplate CreateAPITag(JObject restObject)

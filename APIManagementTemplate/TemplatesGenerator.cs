@@ -77,12 +77,12 @@ namespace APIManagementTemplate
         private const string MasterTemplateJson = "master.template.json";
         private const string ProductAPIResourceType = "Microsoft.ApiManagement/service/products/apis";
 
-        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false, bool generateParameterFiles = false, bool replaceListSecretsWithParameter = false, bool listApiInProduct = false)
+        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false, bool generateParameterFiles = false, bool replaceListSecretsWithParameter = false, bool listApiInProduct = false, bool separateSwaggerFile = false)
         {
             JObject parsedTemplate = JObject.Parse(sourceTemplate);
             if (replaceListSecretsWithParameter)
                 ReplaceListSecretsWithParameter(parsedTemplate);
-            List<GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate, separatePolicyFile);
+            List<GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate, separatePolicyFile, separateSwaggerFile);
             templates.AddRange(GenerateProducts(parsedTemplate, separatePolicyFile, apiStandalone, listApiInProduct));
             templates.AddRange(GenerateService(parsedTemplate, separatePolicyFile));
             templates.Add(GenerateTemplate(parsedTemplate, "subscriptions.template.json", String.Empty, SubscriptionResourceType));
@@ -152,7 +152,7 @@ namespace APIManagementTemplate
         {
             string name = resource.Value<string>("name").ToLowerInvariant();
             string part = namePart.ToLowerInvariant();
-            return name.Contains(part) || (part.StartsWith("'") && name.Contains($"'/{part.Split('\'')[1]}'"));
+            return name.Contains(part) || name == part.Split('\'')[1] || (part.StartsWith("'") && name.Contains($"'/{part.Split('\'')[1]}'"));
         }
 
         private IEnumerable<GeneratedTemplate> GenerateAPIMasterTemplate(List<GeneratedTemplate> templates, JObject parsedTemplate, bool separatePolicyFile, bool apiStandalone)
@@ -162,7 +162,7 @@ namespace APIManagementTemplate
             {
                 masterApis.Add(GeneratedMasterTemplate2(parsedTemplate, separatePolicyFile,
                     $"{versionSet.Directory}.master.template.json", versionSet.Directory,
-                    templates.Where(x => x.Directory.StartsWith(versionSet.Directory) && x.Type == ContentType.Json), templates.Where(x => x.Type == ContentType.Json).ToList()));
+                    templates.Where(x => x.Directory.StartsWith(versionSet.Directory) && x.Type == ContentType.Json && !x.FileName.EndsWith(".swagger.json")), templates.Where(x => x.Type == ContentType.Json).ToList()));
             }
             return masterApis;
         }
@@ -182,8 +182,7 @@ namespace APIManagementTemplate
             foreach (JProperty parameter in parameters.Cast<JProperty>().Where(p => excludedParameters.All(e => e != p.Name)))
             {
                 string name = parameter.Name;
-                string type = parameter.Value["type"].Value<string>();
-                switch (type)
+                switch (parameter.Value["type"].Value<string>())
                 {
                     case "bool":
                         bool boolValue = parameter.Value["defaultValue"]?.Value<bool>() ?? false;
@@ -288,6 +287,8 @@ namespace APIManagementTemplate
                     var notFound = true;
                 }
             }
+            if (template.FileName.EndsWith(".swagger.template.json"))
+                dependsOn.Add($"[resourceId('Microsoft.Resources/deployments', '{template.FileName.Replace(".swagger.template.json", ".template.json")}')]");
             return dependsOn;
         }
 
@@ -295,6 +296,8 @@ namespace APIManagementTemplate
         {
             var parameters = new JObject();
             var parametersFromTemplate = template2.Content["parameters"];
+            if (parametersFromTemplate == null)
+                return parameters;
             foreach (JProperty token in parametersFromTemplate.Cast<JProperty>())
             {
                 var name = token.Name;
@@ -332,6 +335,13 @@ namespace APIManagementTemplate
                     }
                 }
                 template.parameters = GetParameters(parsedTemplate["parameters"], resource);
+                template.variables = GetParameters(parsedTemplate["variables"], resource, "variables");
+                var variableParameters = GetParameters(parsedTemplate["parameters"], parsedTemplate["variables"]);
+                foreach (var parameter in variableParameters)
+                {
+                    if (template.parameters[parameter.Key] == null)
+                        template.parameters[parameter.Key] = parameter.Value;
+                }
                 template.resources.Add(JObject.FromObject(resource));
             }
             generatedTemplate.Content = JObject.FromObject(template);
@@ -349,17 +359,63 @@ namespace APIManagementTemplate
             }
         }
 
-        private List<GeneratedTemplate> GenerateAPIsAndVersionSets(bool apiStandalone, JObject parsedTemplate, bool separatePolicyFile)
+        private static JObject CreateSwaggerTemplate(JToken api, JObject parsedTemplate)
+        {
+            JObject item = JObject.FromObject(api);
+            var fileInfo = GetFilenameAndDirectoryForSwaggerFile(api, parsedTemplate);
+            ReplaceSwaggerWithFileLink(item, fileInfo);
+            var allowed = new[] { "contentFormat", "contentValue", "path" };
+            item["properties"].Cast<JProperty>().Where(p => !allowed.Any(a => a == p.Name)).ToList().ForEach(x => x.Remove());
+            item["resources"].Where(x => x.Value<string>("type") == ApiOperationResourceType)
+                .ToList().ForEach(x => x.Remove());
+            return item;
+        }
+
+        private List<GeneratedTemplate> GenerateAPIsAndVersionSets(bool apiStandalone, JObject parsedTemplate,
+            bool separatePolicyFile, bool separateSwaggerFile)
         {
             var apis = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == ApiResourceType);
             List<GeneratedTemplate> templates = separatePolicyFile ? GenerateAPIPolicyFiles(apis, parsedTemplate).ToList()
                 : new List<GeneratedTemplate>();
-            templates.AddRange(apis.Select(api => GenerateAPI(api, parsedTemplate, apiStandalone, separatePolicyFile)));
+            if (separateSwaggerFile)
+            {
+                GenerateSwaggerTemplate(parsedTemplate, separatePolicyFile, apis, templates);
+            }
+            templates.AddRange(apis.Select(api => GenerateAPI(api, parsedTemplate, apiStandalone, separatePolicyFile, separateSwaggerFile)));
             var versionSets = apis.Where(api => api["properties"]["apiVersionSetId"] != null)
                 .Distinct(new ApiVersionSetIdComparer())
                 .Select(api => GenerateVersionSet(api, parsedTemplate, apiStandalone)).ToList();
             templates.AddRange(versionSets);
             return templates;
+        }
+
+        private void GenerateSwaggerTemplate(JObject parsedTemplate, bool separatePolicyFile, IEnumerable<JToken> apis, List<GeneratedTemplate> templates)
+        {
+            AddParametersForFileLink(parsedTemplate);
+            var apisWithSwagger = apis.Where(x => x["properties"].Value<string>("contentFormat") == "swagger-json" &&
+                                                  x["properties"].Value<string>("contentValue") != null);
+            foreach (var apiWithSwagger in apisWithSwagger)
+            {
+                GeneratedTemplate generatedTemplate = new GeneratedTemplate();
+                DeploymentTemplate template = new DeploymentTemplate(true, true);
+                SetFilenameAndDirectory(apiWithSwagger, parsedTemplate, generatedTemplate, true);
+                if (separatePolicyFile)
+                {
+                    ReplaceApiOperationPolicyWithFileLink(apiWithSwagger, parsedTemplate);
+                    AddParametersForFileLink(parsedTemplate);
+                }
+
+                var swaggerTemplate = CreateSwaggerTemplate(apiWithSwagger, parsedTemplate);
+                template.resources.Add(JObject.FromObject(swaggerTemplate));
+                template.parameters = GetParameters(parsedTemplate["parameters"], swaggerTemplate);
+                generatedTemplate.Content = JObject.FromObject(template);
+                templates.Add(generatedTemplate);
+                GeneratedTemplate generatedSwagger = new GeneratedTemplate();
+                SetFilenameAndDirectory(apiWithSwagger, parsedTemplate, generatedSwagger, true);
+                generatedSwagger.FileName = generatedSwagger.FileName.Replace("swagger.template.json", "swagger.json");
+                generatedSwagger.Content = JObject.Parse(apiWithSwagger["properties"].Value<string>("contentValue"));
+                templates.Add(generatedSwagger);
+            }
         }
 
         private IEnumerable<GeneratedTemplate> GenerateAPIPolicyFiles(IEnumerable<JToken> apis, JObject parsedTemplate)
@@ -372,15 +428,11 @@ namespace APIManagementTemplate
                 {
                     policyFiles.Add(GeneratePolicyFile(parsedTemplate, apiPolicy, api, String.Empty));
                 }
-                var operations = api["resources"].Where(x => x.Value<string>("type") == ApiOperationResourceType);
-                foreach (var operation in operations)
+                var operationPolicies = api.SelectTokens($"$..resources[?(@.type=='{ApiOperationPolicyResourceType}')]");
+                foreach (var policy in operationPolicies)
                 {
-                    var policy = operation["resources"].FirstOrDefault(x => x.Value<string>("type") == ApiOperationPolicyResourceType);
-                    if (policy != null)
-                    {
-                        var operationId = GetParameterPart(operation, "name", -2);
-                        policyFiles.Add(GeneratePolicyFile(parsedTemplate, policy, api, operationId));
-                    }
+                    var operationId = GetParameterPart(policy, "name", 9);
+                    policyFiles.Add(GeneratePolicyFile(parsedTemplate, policy, api, operationId));
                 }
             }
             return policyFiles;
@@ -482,9 +534,6 @@ namespace APIManagementTemplate
 
         private void ListApiInProduct(JObject content)
         {
-
-            //ParametrizePropertiesOnly
-
             var parameterObject = content.SelectToken($"$.parameters") as JObject;
             //get products
             var products = content.SelectTokens($"$..resources[?(@.type=='{ProductResourceType}')]").ToList();
@@ -592,7 +641,7 @@ namespace APIManagementTemplate
                 policy["properties"]["policyContent"] = $"[concat(parameters('repoBaseUrl'), '/product-{productId}/product-{productId}.policy.xml', parameters('{TemplatesStorageAccountSASToken}'))]";
             }
         }
-        private void ReplaceApiOperationPolictPolicyWithFileLink(JToken api, JObject parsedTemplate)
+        private void ReplaceApiOperationPolicyWithFileLink(JToken api, JObject parsedTemplate)
         {
             ReplacePoliciesWithFileLink(api, ApiOperationPolicyResourceType, policy => GetParameterPart(policy, "name", -6), parsedTemplate);
             ReplacePoliciesWithFileLink(api, ApiPolicyResourceType, policy => String.Empty, parsedTemplate);
@@ -624,6 +673,16 @@ namespace APIManagementTemplate
             if (directory == "/")
                 directory = String.Empty;
             policy["properties"]["policyContent"] =
+                $"[concat(parameters('repoBaseUrl'), '{directory}/{fileInfo.FileName}', parameters('{TemplatesStorageAccountSASToken}'))]";
+        }
+
+        private static void ReplaceSwaggerWithFileLink(JToken policy, FileInfo fileInfo)
+        {
+            policy["properties"]["contentFormat"] = "swagger-link-json";
+            policy["apiVersion"] = "2018-06-01-preview";
+            string formattedDirectory = fileInfo.Directory.Replace(@"\", "/");
+            var directory = $"/{formattedDirectory}";
+            policy["properties"]["contentValue"] =
                 $"[concat(parameters('repoBaseUrl'), '{directory}/{fileInfo.FileName}', parameters('{TemplatesStorageAccountSASToken}'))]";
         }
 
@@ -663,21 +722,31 @@ namespace APIManagementTemplate
             return generatedTemplate;
         }
 
-        private GeneratedTemplate GenerateAPI(JToken api, JObject parsedTemplate, bool apiStandalone, bool separatePolicyFile)
+        private GeneratedTemplate GenerateAPI(JToken api, JObject parsedTemplate, bool apiStandalone,
+            bool separatePolicyFile, bool separateSwaggerFile)
         {
+            var apiObject = JObject.FromObject(api);
             GeneratedTemplate generatedTemplate = new GeneratedTemplate();
             DeploymentTemplate template = new DeploymentTemplate(true, true);
             if (separatePolicyFile)
             {
-                ReplaceApiOperationPolictPolicyWithFileLink(api, parsedTemplate);
+                ReplaceApiOperationPolicyWithFileLink(apiObject, parsedTemplate);
                 AddParametersForFileLink(parsedTemplate);
             }
-            template.parameters = GetParameters(parsedTemplate["parameters"], api);
+            if (separateSwaggerFile)
+            {
+                ((JObject)apiObject["properties"]).Property("contentFormat").Remove();
+                ((JObject)apiObject["properties"]).Property("contentValue").Remove();
+                var removePolicyTypes = new[] { ApiPolicyResourceType, ApiOperationPolicyResourceType };
+                apiObject["resources"].Where(x => removePolicyTypes.Any(p => p == x.Value<string>("type")))
+                    .ToList().ForEach(x => x.Remove());
+            }
+            template.parameters = GetParameters(parsedTemplate["parameters"], apiObject);
+            SetFilenameAndDirectory(apiObject, parsedTemplate, generatedTemplate, false);
+            template.resources.Add(apiStandalone ? RemoveServiceDependencies(apiObject) : apiObject);
 
-            SetFilenameAndDirectory(api, parsedTemplate, generatedTemplate);
-            template.resources.Add(apiStandalone ? RemoveServiceDependencies(api) : JObject.FromObject(api));
             if (apiStandalone)
-                AddProductAPI(api, parsedTemplate, template.resources);
+                AddProductAPI(apiObject, parsedTemplate, template.resources);
             generatedTemplate.Content = JObject.FromObject(template);
             return generatedTemplate;
         }
@@ -709,9 +778,9 @@ namespace APIManagementTemplate
         }
 
         private static void SetFilenameAndDirectory(JToken api, JObject parsedTemplate,
-            GeneratedTemplate generatedTemplate)
+            GeneratedTemplate generatedTemplate, bool swaggerFile = false)
         {
-            var filenameAndDirectory = GetFileNameAndDirectory(api, parsedTemplate);
+            var filenameAndDirectory = GetFileNameAndDirectory(api, parsedTemplate, swaggerFile);
             generatedTemplate.FileName = filenameAndDirectory.FileName;
             generatedTemplate.Directory = filenameAndDirectory.Directory;
         }
@@ -725,19 +794,28 @@ namespace APIManagementTemplate
             return fileInfo;
         }
 
-        private static FileInfo GetFileNameAndDirectory(JToken api, JObject parsedTemplate)
+        private static FileInfo GetFilenameAndDirectoryForSwaggerFile(JToken api,
+            JObject parsedTemplate)
+        {
+            var fileInfo = GetFileNameAndDirectory(api, parsedTemplate);
+            fileInfo.FileName = fileInfo.FileName.Replace(".template.json", ".swagger.json");
+            return fileInfo;
+        }
+
+        private static FileInfo GetFileNameAndDirectory(JToken api, JObject parsedTemplate, bool swaggerFile = false)
         {
             string filename, directory;
+            var template = swaggerFile ? "swagger.template" : "template";
             if (api["properties"]["apiVersionSetId"] != null)
             {
                 string versionSetName = GetVersionSetName(api, parsedTemplate);
                 string version = GetApiVersion(api, parsedTemplate);
-                filename = $"api-{versionSetName}.{version}.template.json";
+                filename = $"api-{versionSetName}.{version}.{template}.json";
                 directory = $@"api-{versionSetName}\{version}";
                 return new FileInfo(filename, directory);
             }
             string name = api["properties"].Value<string>("displayName").Replace(' ', '-');
-            filename = $"api-{name}.template.json";
+            filename = $"api-{name}.{template}.json";
             directory = $"api-{name}";
             return new FileInfo(filename, directory);
         }
@@ -795,12 +873,12 @@ namespace APIManagementTemplate
             return split[length + index];
         }
 
-        private static JObject GetParameters(JToken parameters, JToken api)
+        private static JObject GetParameters(JToken parameters, JToken api, string type = "parameters")
         {
-            var regExp = new Regex("parameters\\('(?<parameter>.+?)'\\)");
+            var regExp = new Regex($"{type}\\('(?<name>.+?)'\\)");
             MatchCollection matches = regExp.Matches(api.ToString());
             IEnumerable<string> usedParameters =
-                matches.Cast<Match>().Select(x => x.Groups["parameter"].Value).Distinct();
+                matches.Cast<Match>().Select(x => x.Groups["name"].Value).Distinct();
             IEnumerable<JProperty> filteredParameters =
                 parameters.Cast<JProperty>().Where(x => usedParameters.Contains(x.Name));
             return new JObject(filteredParameters);
