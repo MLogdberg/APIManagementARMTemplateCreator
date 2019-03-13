@@ -263,8 +263,8 @@ namespace APIManagementTemplate.Models
         {
             return WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_virtualNetwork_{propertyName}",
                 "string",virtualNetworkConfiguration.Type == JTokenType.Null
-                    ? null
-                    : virtualNetworkConfiguration.Value<string>(propertyName)));
+                    ? string.Empty
+                    : virtualNetworkConfiguration.Value<string>(propertyName)), true);
         }
 
         public string GetServiceName(string servicename, bool addName = true)

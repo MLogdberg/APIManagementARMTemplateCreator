@@ -168,9 +168,9 @@ namespace APIManagementTemplate.Test
 
             var configuration = variables.Index(Arm.VirtualNetworkConfiguration);
             Assert.IsNotNull(configuration);
-            Assert.AreEqual("[parameters('apimServiceName_virtualNetwork_subnetResourceId')]",
+            Assert.AreEqual("[if(empty(parameters('apimServiceName_virtualNetwork_subnetResourceId')), json('null'), parameters('apimServiceName_virtualNetwork_subnetResourceId'))]",
                 configuration.Value(Arm.SubnetResourceId));
-            Assert.AreEqual("[parameters('apimServiceName_virtualNetwork_vnetid')]",
+            Assert.AreEqual("[if(empty(parameters('apimServiceName_virtualNetwork_vnetid')), json('null'), parameters('apimServiceName_virtualNetwork_vnetid'))]",
                 configuration.Value(Arm.VnetId));
             Assert.AreEqual(
                 "[if(equals(parameters('apimServiceName_virtualNetwork_subnetname'), ''), json('null'), parameters('apimServiceName_virtualNetwork_subnetname'))]",
