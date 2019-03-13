@@ -37,14 +37,7 @@ namespace APIManagementTemplate.Models
         }
 
         private string _name = null;
-
-        public string apiVersion
-        {
-            get
-            {
-                return "2017-03-01";
-            }
-        }
+        public string apiVersion { get; set; } = "2017-03-01";
         public JObject properties { get; set; }
 
         public IList<JObject> resources { get; set; }
