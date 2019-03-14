@@ -119,18 +119,18 @@ namespace APIManagementTemplate.Test
         public void TestComplexArrayMergeStringValues1()
         {
             AssertMerge(
-                new { dependsOn = new object[] { "a", "shouldBeSame" } },
+                new { dependsOn = new object[] { "a", "b" } },
                 new { dependsOn = new object[] { "c" } },
-                new { dependsOn = new object[] { "a", "shouldBeSame", "c" } });
+                new { dependsOn = new object[] { "a", "b", "c" } });
         }
 
         [TestMethod]
         public void TestComplexArrayMergeStringValues2()
         {
             AssertMerge(
-                new { dependsOn = new object[] { "a", "shouldBeSame" } },
+                new { dependsOn = new object[] { "a", "b" } },
                 new { dependsOn = new object[] { "a", "c" } },
-                new { dependsOn = new object[] { "a", "shouldBeSame", "c" } });
+                new { dependsOn = new object[] { "a", "b", "c" } });
         }
 
         [TestMethod]
