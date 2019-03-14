@@ -183,7 +183,9 @@ namespace APIManagementTemplate.Test
         [Description("Microsoft.Insights/components")]
         ApplicationInsights,
         [Description("Microsoft.ApiManagement/service/diagnostics")]
-        Diagnostics,
+        Diagnostic,
+        [Description("Microsoft.ApiManagement/service/apis/diagnostics")]
+        ApiDiagnostic,
         [Description("Microsoft.ApiManagement/service/products/apis")]
         ProductApi,
         [Description("Microsoft.ApiManagement/service/products")]

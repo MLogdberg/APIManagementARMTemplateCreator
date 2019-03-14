@@ -524,7 +524,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestServiceContainsDiagnosticsForAzureMonitor()
         {
-            var diagnostic = GetSubResourceFromTemplate(ResourceType.Service, ResourceType.Diagnostics).Skip(1)
+            var diagnostic = GetSubResourceFromTemplate(ResourceType.Service, ResourceType.Diagnostic).Skip(1)
                 .SingleOrDefault();
             Assert.IsNotNull(diagnostic);
             Assert.AreEqual($"[concat(parameters('service_ibizmalo_name'), '/', 'azuremonitor')]",
@@ -539,7 +539,7 @@ namespace APIManagementTemplate.Test
         private void AssertDiagnostic(bool createApplicationInsightsInstance, bool parametrizePropertiesOnly,
             string name, string loggerName)
         {
-            var diagnostics = GetSubResourceFromTemplate(ResourceType.Service, ResourceType.Diagnostics,
+            var diagnostics = GetSubResourceFromTemplate(ResourceType.Service, ResourceType.Diagnostic,
                     createApplicationInsightsInstance, parametrizePropertiesOnly)
                 .FirstOrDefault();
             Assert.IsNotNull(diagnostics);

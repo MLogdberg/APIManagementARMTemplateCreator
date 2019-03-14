@@ -44,6 +44,14 @@ namespace APIManagementTemplate.Test
             sameNames.Should().BeEmpty();
         }
 
+        [TestMethod]
+        public async Task TestApiShouldContainApiDiagnostic()
+        {
+            var diagnostic = _generatedTemplates.With(Filename.TFSTemplate).WithDirectResource(ResourceType.Api)
+                .WithDirectResource(ResourceType.ApiDiagnostic);
+            diagnostic.Should().NotBeNull();
+        }
+
         private static IEnumerable<string> GetApiResourceNames(IList<GeneratedTemplate> generatedTemplates, Filename template)
         {
             var apiTemplate = generatedTemplates.With(template).WithDirectResource(ResourceType.Api);
