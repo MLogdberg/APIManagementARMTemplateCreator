@@ -105,7 +105,9 @@ namespace APIManagementTemplate.Test
         [Description("copy")]
         Copy,
         [Description("count")]
-        Count
+        Count,
+        [Description("resources")]
+        Resources
     }
 
     public enum Filename
@@ -137,7 +139,11 @@ namespace APIManagementTemplate.Test
         [Description("master.template.json")]
         MasterTemplate,
         [Description("api-Echo-API.create-resource.policy.xml")]
-        EchoCreateResourcePolicy
+        EchoCreateResourcePolicy,
+        [Description("api-TFS.template.json")]
+        TFSTemplate,
+        [Description("api-TFS.swagger.template.json")]
+        TFSSwaggerTemplate,
     }
 
     public enum ResourceType
