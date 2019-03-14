@@ -53,6 +53,7 @@ namespace APIManagementTemplate
 
     public class TemplatesGenerator
     {
+        private string[] _swaggerTemplateApiResourceTypes = { ApiPolicyResourceType, ApiOperationPolicyResourceType };
         private const string ProductResourceType = "Microsoft.ApiManagement/service/products";
         private const string ApiResourceType = "Microsoft.ApiManagement/service/apis";
         private const string ServiceResourceType = "Microsoft.ApiManagement/service";
@@ -359,14 +360,14 @@ namespace APIManagementTemplate
             }
         }
 
-        private static JObject CreateSwaggerTemplate(JToken api, JObject parsedTemplate)
+        private JObject CreateSwaggerTemplate(JToken api, JObject parsedTemplate)
         {
             JObject item = JObject.FromObject(api);
             var fileInfo = GetFilenameAndDirectoryForSwaggerFile(api, parsedTemplate);
             ReplaceSwaggerWithFileLink(item, fileInfo);
             var allowed = new[] { "contentFormat", "contentValue", "path" };
             item["properties"].Cast<JProperty>().Where(p => !allowed.Any(a => a == p.Name)).ToList().ForEach(x => x.Remove());
-            item["resources"].Where(x => x.Value<string>("type") == ApiOperationResourceType)
+            item["resources"].Where(x => _swaggerTemplateApiResourceTypes.All(r => r != x.Value<string>("type")) )
                 .ToList().ForEach(x => x.Remove());
             return item;
         }
@@ -737,8 +738,7 @@ namespace APIManagementTemplate
             {
                 ((JObject)apiObject["properties"]).Property("contentFormat").Remove();
                 ((JObject)apiObject["properties"]).Property("contentValue").Remove();
-                var removePolicyTypes = new[] { ApiPolicyResourceType, ApiOperationPolicyResourceType };
-                apiObject["resources"].Where(x => removePolicyTypes.Any(p => p == x.Value<string>("type")))
+                apiObject["resources"].Where(x => _swaggerTemplateApiResourceTypes.Any(p => p == x.Value<string>("type")))
                     .ToList().ForEach(x => x.Remove());
             }
             template.parameters = GetParameters(parsedTemplate["parameters"], apiObject);

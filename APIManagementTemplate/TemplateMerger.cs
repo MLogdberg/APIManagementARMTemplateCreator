@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Metadata.W3cXsd2001;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 
 namespace APIManagementTemplate
@@ -83,7 +86,18 @@ namespace APIManagementTemplate
         {
             if (properties.Any(p => x.Value<string>(p) == null || y.Value<string>(p) == null))
                 return false;
-            return properties.All(p => x.Value<string>(p) == y.Value<string>(p));
+            return properties.All(p => Compare(x, y, p));
+        }
+
+        private static bool Compare(JToken x, JToken y, string property)
+        {
+            var xValue = x.Value<string>(property);
+            var yValue = y.Value<string>(property);
+            if (property == "name")
+            {
+                return xValue.Replace(" ", String.Empty) == yValue.Replace(" ", String.Empty);
+            }
+            return xValue == yValue;
         }
     }
 
