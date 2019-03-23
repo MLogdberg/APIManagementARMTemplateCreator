@@ -169,12 +169,44 @@ namespace APIManagementTemplate.Test
                 new { resources = new object[] { new { name = "1", type = "1", a = 1 }, new { name = "1", type = "2", a = 2 } } });
         }
 
+        [TestMethod]
+        public void TestSameNameButWithSpacesBetweenNames()
+        {
+            TestSameName(
+                "[concat(parameters('apimServiceName'),'/','c341bf18-54fb-4685-ad4b-3e49b4a847c2')]", 
+                "[concat(parameters('apimServiceName'), '/', 'c341bf18-54fb-4685-ad4b-3e49b4a847c2')]");
+        }
 
-        private static void AssertMerge(object oldObject, object newObject, object expected)
+        [TestMethod]
+        public void TestSameNameButWithMoreSpacesBetweenNames()
+        {
+            TestSameName(
+                "[concat(parameters('apimServiceName'),'/','c341bf18-54fb-4685-ad4b-3e49b4a847c2')]", 
+                "[concat( parameters('apimServiceName'), '/' , 'c341bf18-54fb-4685-ad4b-3e49b4a847c2' )]");
+        }
+
+        [TestMethod]
+        public void TestSameNameButWithSpacesInName()
+        {
+            TestSameName(
+                "[concat(parameters('apimServiceName'),'/','c341bf18-54fb-4685-ad4b-3e49b4a847c2')]", 
+                "[concat( parameters('apimServiceName '), '/' , 'c341bf18-54fb-4685-ad4b-3e49b4a847c2' )]");
+        }
+
+        private static void TestSameName(string name1, string name2, bool shouldBeSame=true)
+        {
+            AssertMerge(
+                new {resources = new object[] {new {name = name1, type = "1", a = 1}}},
+                new {resources = new object[] {new {name = name2, type = "1", a = 2}}},
+                new {resources = new object[] {new {name = name2, type = "1", a = 2}}}, shouldBeSame);
+        }
+
+
+        private static void AssertMerge(object oldObject, object newObject, object expected, bool shouldBeSame=true)
         {
             JObject result = TemplateMerger.Merge(JObject.FromObject(oldObject), JObject.FromObject(newObject));
 
-            Assert.IsTrue(JObject.EqualityComparer.Equals(JObject.FromObject(expected), result));
+            Assert.AreEqual(shouldBeSame, JObject.EqualityComparer.Equals(JObject.FromObject(expected), result));
         }
     }
 }
