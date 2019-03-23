@@ -217,8 +217,8 @@ namespace APIManagementTemplate.Test
 
             Assert.AreEqual(3, loggers.Count());
 
-            var logger = loggers.First(x => x.Value(Arm.Name).Contains("appInsights"));
-            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', 'appInsights')]",
+            var logger = loggers.First(x => x.Value(Arm.Name).Contains("parameters('service_ibizmalo_applicationInsights')"));
+            Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', parameters('service_ibizmalo_applicationInsights'))]",
                 logger.Value(Arm.Name));
             Assert.AreEqual("Microsoft.ApiManagement/service/loggers", logger.Value(Arm.Type));
             var properties = logger.Index(Arm.Properties);
@@ -504,7 +504,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestServiceContainsDiagnosticsForApplicationInsightsWhenCreateApplicationInsightsInstanceIsFalse()
         {
-            AssertDiagnostic(false, true, "'appInsights'", "'appInsights'");
+            AssertDiagnostic(false, true, "'appInsights'", "'service_ibizmalo_applicationInsights'");
         }
 
         [TestMethod]
@@ -549,7 +549,7 @@ namespace APIManagementTemplate.Test
                 diagnostics.Value(Arm.Name));
             Assert.AreEqual($"2018-06-01-preview", diagnostics.Value(Arm.ApiVersion));
             var loggerResource =
-                $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('service_ibizmalo_name'), {loggerName})]";
+                $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('service_ibizmalo_name'), parameters('service_ibizmalo_applicationInsights'))]";
             Assert.AreEqual(loggerResource, diagnostics.Index(Arm.Properties).Value(Arm.LoggerId));
             var dependsOn = diagnostics.DependsOn();
             Assert.AreEqual(2, dependsOn.Count());
@@ -608,7 +608,7 @@ namespace APIManagementTemplate.Test
         public void TestContainsParametersForApplicationInsightsServiceName()
         {
             var template = GetTemplate(true, false);
-            AssertParameter(template, "logger_appInsights_name", "appInsights", "string");
+            AssertParameter(template, "service_ibizmalo_applicationInsights", "appInsights", "string");
         }
 
         [TestMethod]
