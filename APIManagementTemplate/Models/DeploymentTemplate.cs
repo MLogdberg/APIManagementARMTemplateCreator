@@ -263,8 +263,8 @@ namespace APIManagementTemplate.Models
         {
             return WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_virtualNetwork_{propertyName}",
                 "string",virtualNetworkConfiguration.Type == JTokenType.Null
-                    ? null
-                    : virtualNetworkConfiguration.Value<string>(propertyName)));
+                    ? string.Empty
+                    : virtualNetworkConfiguration.Value<string>(propertyName)), true);
         }
 
         public string GetServiceName(string servicename, bool addName = true)
@@ -1000,13 +1000,15 @@ namespace APIManagementTemplate.Models
             obj.AddName(apiname);
             obj.AddName($"parameters('{AddParameter($"diagnostics_{name}_name", "string", name)}')");
 
-            //resource["apiVersion"] = "2018-06-01-preview";
             if (logger != null)
             {
                 var rid = new AzureResourceId(restObject.Value<string>("id"));
                 JObject loggerObject = JObject.FromObject(logger);
                 var loggerName = GetServiceResourceName(loggerObject, "Microsoft.ApiManagement/service/loggers");
                 string loggerResource = $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), {loggerName})]";
+
+                //set apiVersion to 2018-06-01-preview
+                obj.apiVersion = "2018-06-01-preview";
 
                 obj.properties["loggerId"] = loggerResource;
                 obj.properties["alwaysLog"] = WrapParameterName(AddParameter($"diagnostic_{name}_alwaysLog", "string", GetDefaultValue(restObject, "alwaysLog")), true);
