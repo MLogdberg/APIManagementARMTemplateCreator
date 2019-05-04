@@ -171,17 +171,19 @@ namespace APIManagementTemplate
                             if (!string.IsNullOrEmpty(backendid))
                             {
                                 JObject backendInstance = await HandleBackend(template, operationSuffix, backendid);
+                                if (backendInstance != null)
+                                {
+                                    if (apiTemplateResource.Value<JArray>("dependsOn") == null)
+                                        apiTemplateResource["dependsOn"] = new JArray();
 
-                                if (apiTemplateResource.Value<JArray>("dependsOn") == null)
-                                    apiTemplateResource["dependsOn"] = new JArray();
-
-                                //add dependeOn
-                                apiTemplateResource.Value<JArray>("dependsOn").Add(
-                                    $"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
+                                    //add dependeOn
+                                    apiTemplateResource.Value<JArray>("dependsOn").Add(
+                                        $"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
+                                }
                             }
                             if (exportCertificates) await AddCertificate(policy, template);
 
-                            if(exportSwaggerDefinition)
+                            if (exportSwaggerDefinition)
                                 apiTemplateResource.Value<JArray>("resources").Add(pol);
                             else
                                 operationTemplateResource.Value<JArray>("resources").Add(pol);
@@ -189,19 +191,19 @@ namespace APIManagementTemplate
                         }
                         //handle nextlink?                
                     }
-                    if(exportSwaggerDefinition)
+                    if (exportSwaggerDefinition)
                     {
                         apiTemplateResource["properties"]["contentFormat"] = "swagger-json";
                         var swaggerExport = await resourceCollector.GetResource(id + "?format=swagger-link&export=true", apiversion: "2018-06-01-preview");
                         var swaggerUrl = swaggerExport.Value<string>("link");
                         var swaggerContent = await resourceCollector.GetResourceByURL(swaggerUrl);
                         var serviceUrl = apiInstance["properties"].Value<string>("serviceUrl");
-                        if(!String.IsNullOrWhiteSpace(serviceUrl))
+                        if (!String.IsNullOrWhiteSpace(serviceUrl))
                         {
                             var serviceUri = new Uri(serviceUrl);
                             swaggerContent["host"] = serviceUri.Host;
                             swaggerContent["basePath"] = serviceUri.AbsolutePath;
-                            swaggerContent["schemes"] = JArray.FromObject(new[] {serviceUri.Scheme});
+                            swaggerContent["schemes"] = JArray.FromObject(new[] { serviceUri.Scheme });
                         }
                         apiTemplateResource["properties"]["contentValue"] = swaggerContent.ToString();
                     }
@@ -222,12 +224,14 @@ namespace APIManagementTemplate
                         if (!string.IsNullOrEmpty(backendid))
                         {
                             JObject backendInstance = await HandleBackend(template, apiObject.Value<string>("name"), backendid);
+                            if (backendInstance == null)
+                            {
+                                if (apiTemplateResource.Value<JArray>("dependsOn") == null)
+                                    apiTemplateResource["dependsOn"] = new JArray();
 
-                            if (apiTemplateResource.Value<JArray>("dependsOn") == null)
-                                apiTemplateResource["dependsOn"] = new JArray();
-
-                            //add dependeOn
-                            apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
+                                //add dependeOn
+                                apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
+                            }
                         }
 
                         //handle nextlink?
@@ -249,11 +253,11 @@ namespace APIManagementTemplate
                     var diagnostics = await resourceCollector.GetResource(id + "/diagnostics", apiversion: "2018-06-01-preview");
                     foreach (JObject diagnostic in diagnostics.Value<JArray>("value"))
                     {
-                            if (diagnostic.Value<string>("type") == "Microsoft.ApiManagement/service/apis/diagnostics")
-                            {
-                                var diagnosticTemplateResource = template.CreateApiDiagnostic(diagnostic, logger, false);
-                                apiTemplateResource.Value<JArray>("resources").Add(diagnosticTemplateResource);
-                            }
+                        if (diagnostic.Value<string>("type") == "Microsoft.ApiManagement/service/apis/diagnostics")
+                        {
+                            var diagnosticTemplateResource = template.CreateApiDiagnostic(diagnostic, logger, false);
+                            apiTemplateResource.Value<JArray>("resources").Add(diagnosticTemplateResource);
+                        }
                     }
 
                     //tags
@@ -444,6 +448,10 @@ namespace APIManagementTemplate
 
                 azureResource = await resourceCollector.GetResource(backendInstance["properties"].Value<string>("resourceId"), "", version);
             }
+
+            //sometime old endpoint are not cleaned-up, this will result in null. So skip these resources
+            if (azureResource == null)
+                return null;
 
             var property = template.AddBackend(backendInstance, azureResource);
 

@@ -880,7 +880,7 @@ namespace APIManagementTemplate.Models
             var name = restObject.Value<string>("name");
             var resourceTypeShort = GetResourceTypeShort(resourceType);
             bool applicationInsightsLogger = IsApplicationInsightsLogger(restObject);
-            if (applicationInsightsLogger && referenceApplicationInsightsInstrumentationKey)
+            if (applicationInsightsLogger)
                 name = $"parameters('{AddParameter($"{GetServiceName(servicename, false)}_applicationInsights", "string", name)}')";
             else
                 name = parametrizePropertiesOnly ? $"'{name}'" : $"parameters('{AddParameter($"{resourceTypeShort}_{name}_name", "string", name)}')";
