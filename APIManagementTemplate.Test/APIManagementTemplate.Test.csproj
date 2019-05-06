@@ -67,6 +67,7 @@
     <Compile Include="AzureResourceIdTests.cs" />
     <Compile Include="DeploymentTemplateTests.cs" />
     <Compile Include="FunctionAppMixedWithLogicAppTests.cs" />
+    <Compile Include="LogicAppAddedAsOperationTests.cs" />
     <Compile Include="TemplateMergerTests.cs" />
     <Compile Include="TemplatesGeneratorTestsWithoutApiVersionSetId.cs" />
     <Compile Include="TemplatesGeneratorTestsWithListApiInProduct.cs" />
@@ -274,6 +275,24 @@
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\apimgmtstsulap3tpjfi3ccv.blob.core.windows.net-api-export-tfs.json" />
     <EmbeddedResource Include="SamplesTemplate\templateSwagger.json" />
     <EmbeddedResource Include="SamplesTemplate\templateParameters.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-apis-sales-orders-diagnostics.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-apis-sales-orders-operations-create-sales-order-policies.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-apis-sales-orders-operations-create-sales-order.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-apis-sales-orders-operations.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-apis-sales-orders-policies.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-apis-sales-orders-schemas.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-apis-sales-orders-tags.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-apis-sales-orders.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-apis.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-backends-LogicApp_salesinvoice-la_LabResources.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-loggers.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-products-sales-api-s-apis.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-products-sales-api-s-groups.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-products-sales-api-s-policies.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-products.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-properties.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\workflows-salesinvoice-la.json" />
+    <None Include="Samples\workflows-salesinvoice-la.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Samples\Operations\" />

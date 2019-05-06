@@ -1,0 +1,18 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/a4525dcb-b7ac-4677-b104-97bde6a8f41d/resourceGroups/LabResources/providers/Microsoft.ApiManagement/service/iBizUtbildningAPIM/products/sales-api-s",
+      "type": "Microsoft.ApiManagement/service/products",
+      "name": "sales-api-s",
+      "properties": {
+        "displayName": "Sales API's",
+        "description": "All Apis for the Sales Domain",
+        "terms": "Use at your own risk, missuasage will be reported.",
+        "subscriptionRequired": true,
+        "approvalRequired": true,
+        "subscriptionsLimit": null,
+        "state": "published"
+      }
+    }
+  ]
+}
