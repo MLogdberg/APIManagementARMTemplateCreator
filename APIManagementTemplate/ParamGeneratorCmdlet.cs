@@ -37,14 +37,16 @@ namespace APIManagementTemplate
         private ParameterTemplate paramTemplate;
         public ParamGenerator()
         {
-
+            /*
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
             var resourceName = "LogicAppTemplate.Templates.paramTemplate.json";
             using (Stream stream = assembly.GetManifestResourceStream(resourceName))
             using (StreamReader reader = new StreamReader(stream))
             {
                 paramTemplate = JsonConvert.DeserializeObject<ParameterTemplate>(reader.ReadToEnd());
-            }
+            }*/
+            paramTemplate = new ParameterTemplate();
+
         }
 
         protected override void ProcessRecord()

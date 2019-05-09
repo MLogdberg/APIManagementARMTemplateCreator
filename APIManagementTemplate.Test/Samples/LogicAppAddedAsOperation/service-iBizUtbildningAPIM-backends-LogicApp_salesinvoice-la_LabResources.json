@@ -1,0 +1,12 @@
+{
+  "id": "/subscriptions/a4525dcb-b7ac-4677-b104-97bde6a8f41d/resourceGroups/LabResources/providers/Microsoft.ApiManagement/service/iBizUtbildningAPIM/backends/LogicApp_salesinvoice-la_LabResources",
+  "type": "Microsoft.ApiManagement/service/backends",
+  "name": "LogicApp_salesinvoice-la_LabResources",
+  "properties": {
+    "title": null,
+    "description": "salesinvoice-la",
+    "url": "https://prod-123.westeurope.logic.azure.com/workflows/b6f289210f4f4020a73d9bb9bd458fb9/triggers",
+    "protocol": "http",
+    "resourceId": "https://management.azure.com/subscriptions/a4525dcb-b7ac-4677-b104-97bde6a8f41d/resourceGroups/LabResources/providers/Microsoft.Logic/workflows/salesinvoice-la"
+  }
+}
