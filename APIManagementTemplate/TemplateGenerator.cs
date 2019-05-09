@@ -153,12 +153,7 @@ namespace APIManagementTemplate
 
                             //add properties
                             this.PolicyHandleProperties(pol, apiTemplateResource.Value<string>("name"),
-                                (operationInstance.Value<string>("name").StartsWith("api-")
-                                    ? operationInstance.Value<string>("name").Substring(4,
-                                        (operationInstance.Value<string>("name")
-                                            .LastIndexOf("-" + operationInstance["properties"]
-                                                             .Value<string>("method").ToLower())) - 4)
-                                    : operationInstance.Value<string>("name")));
+                                GetOperationName(operationInstance));
 
                             var operationSuffix = apiInstance.Value<string>("name") + "_" +
                                                   operationInstance.Value<string>("name");
@@ -383,6 +378,16 @@ namespace APIManagementTemplate
 
             return JObject.FromObject(template);
 
+        }
+
+        internal static string GetOperationName(JObject operationInstance)
+        {
+            var operationName = operationInstance.Value<string>("name");
+            var method = operationInstance["properties"].Value<string>("method").ToLower();
+            if (!operationName.StartsWith("api-"))
+                return operationName;
+            var length = (operationName.ToLower().LastIndexOf("-" + method)) - 4;
+            return length > 0 ? operationName.Substring(4, length) : operationName;
         }
 
         private async Task<JObject> AddServiceResource(JObject apimTemplateResource, string resourceName, Func<JObject, JObject> createResource)

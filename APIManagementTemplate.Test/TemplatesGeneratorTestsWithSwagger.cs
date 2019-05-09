@@ -153,6 +153,36 @@ namespace APIManagementTemplate.Test
             Assert.IsTrue(dependsOn.Any(x =>
                 x.Value<string>().Contains(Filename.HttpBinV2)));
         }
+
+        [TestMethod]
+        public void GetOperationName_Normal()
+        {
+            TestGetOperationName("Purchase", "POST", "Purchase");
+        }
+
+        [TestMethod]
+        public void GetOperationName_ApiAndMethodLowercase()
+        {
+            TestGetOperationName("api-Purchase-post", "POST", "Purchase");
+        }
+
+        [TestMethod]
+        public void GetOperationName_ApiAndMethodUppercase()
+        {
+            TestGetOperationName("api-Purchase-POST", "POST", "Purchase");
+        }
+
+        [TestMethod]
+        public void GetOperationName_Api()
+        {
+            TestGetOperationName("api-Purchase", "POST", "api-Purchase");
+        }
+
+        private static void TestGetOperationName(string name, string method, string expected)
+        {
+            var result = TemplateGenerator.GetOperationName(JObject.FromObject(new {name = name, properties = new {method = method}}));
+            Assert.AreEqual(expected, result);
+        }
     }
 
 }
