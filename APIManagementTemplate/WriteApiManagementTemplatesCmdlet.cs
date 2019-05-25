@@ -41,6 +41,9 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false, HelpMessage = "If the key to an Azure Function should be defined in a parameter instead of calling listsecrets")]
         public bool ReplaceListSecretsWithParameter = false;
 
+        [Parameter(Mandatory = false, HelpMessage = "Always add properties and backend, usefull when having logicapp backends and this service is not generated.")]
+        public bool AlwaysAddPropertiesAndBackend = false;
+
         [Parameter(Mandatory = false, HelpMessage = "If set, the input template is written to this file ")]
         public string DebugTemplateFile = "";
 
@@ -48,7 +51,7 @@ namespace APIManagementTemplate
         {
             if (!string.IsNullOrEmpty(DebugTemplateFile))
                 File.WriteAllText(DebugTemplateFile, ARMTemplate);
-            var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone, SeparatePolicyFile, GenerateParameterFiles, ReplaceListSecretsWithParameter, ListApiInProduct, SeparateSwaggerFile);
+            var templates= new TemplatesGenerator().Generate(ARMTemplate, ApiStandalone, SeparatePolicyFile, GenerateParameterFiles, ReplaceListSecretsWithParameter, ListApiInProduct, SeparateSwaggerFile, AlwaysAddPropertiesAndBackend);
             foreach (GeneratedTemplate template in templates)
             {
                 string filename = $@"{OutputDirectory}\{template.FileName}";

@@ -70,6 +70,9 @@ Use Write-APIManagementTemplates generate many small ARM templates (as suggested
 | MergeTemplates | If the template already exists in the output directory, it will be merged with the new result. | false | false | 
 | GenerateParameterFiles | If parameter files should be generated | false | false | 
 | ReplaceListSecretsWithParameter | If the key to an Azure Function should be defined in a parameter instead of calling listsecrets | false | false |
+| AlwaysAddPropertiesAndBackend | Always add properties and backend, usefull when having logicapp backends and this service is not generated | false | false |
+
+
 | DebugTemplateFile | If set, the input ARM template is written to this file | false | |
 | ARMTemplate | The ARM template piped from Get-APIManagementTemplate - should not be manually set | false | |
 
