@@ -53,5 +53,21 @@ namespace APIManagementTemplate
             }
             return "";
         }
+
+        public static string GetAPIMGenereatedRewritePolicyTemplate(string policyContent)
+        {
+            var docu = XDocument.Parse(policyContent);
+            var rewritePolicy = docu.Descendants("rewrite-uri").Where(dd => dd.HasAttributes && dd.Attribute(XName.Get("id")).Value.Equals("apim-generated-policy", StringComparison.CurrentCultureIgnoreCase)).LastOrDefault();
+            if (rewritePolicy != null)
+            {
+                XAttribute id = rewritePolicy.Attribute("template");
+                if (id == null)
+                {
+                    return "";
+                }
+                return id.Value;
+            }
+            return "";
+        }
     }
 }

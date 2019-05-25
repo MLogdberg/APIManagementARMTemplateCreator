@@ -217,7 +217,7 @@ namespace APIManagementTemplate.Models
             resource["sku"]["name"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_name", "string", restObject["sku"].Value<string>("name")));
             resource["sku"]["capacity"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_capacity", "string", restObject["sku"].Value<string>("capacity")));
             resource["location"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_location", "string", restObject.Value<string>("location")));
-            if (restObject["identity"]?["type"] != null)
+            if (restObject["identity"] != null && restObject["identity"].HasValues && restObject["identity"]["type"] != null)
             {
                 resource["identity"] = new JObject();
                 resource["identity"]["type"] = restObject["identity"].Value<string>("type");

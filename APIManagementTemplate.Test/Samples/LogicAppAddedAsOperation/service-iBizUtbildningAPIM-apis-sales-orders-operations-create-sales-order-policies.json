@@ -1,0 +1,13 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/a4525dcb-b7ac-4677-b104-97bde6a8f41d/resourceGroups/LabResources/providers/Microsoft.ApiManagement/service/iBizUtbildningAPIM/apis/sales-orders/operations/create-sales-order/policies/policy",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "name": "policy",
+      "properties": {
+        "policyContent": "<!--\r\n    IMPORTANT:\r\n    - Policy elements can appear only within the <inbound>, <outbound>, <backend> section elements.\r\n    - To apply a policy to the incoming request (before it is forwarded to the backend service), place a corresponding policy element within the <inbound> section element.\r\n    - To apply a policy to the outgoing response (before it is sent back to the caller), place a corresponding policy element within the <outbound> section element.\r\n    - To add a policy, place the cursor at the desired insertion point and select a policy from the sidebar.\r\n    - To remove a policy, delete the corresponding policy statement from the policy document.\r\n    - Position the <base> element within a section element to inherit all policies from the corresponding section element in the enclosing scope.\r\n    - Remove the <base> element to prevent inheriting policies from the corresponding section element in the enclosing scope.\r\n    - Policies are applied in the order of their appearance, from the top down.\r\n    - Comments within policy elements are not supported and may disappear. Place your comments between policy elements or at a higher level scope.\r\n-->\r\n<policies>\r\n  <inbound>\r\n    <base />\r\n    <return-response>\r\n      <set-status code=\"201\" />\r\n      <set-header name=\"Content-Type\" exists-action=\"override\">\r\n        <value>@(context.Request.Headers.GetValueOrDefault(\"Content-Type\",\"application/json\"))</value>\r\n      </set-header>\r\n      <set-body>@(context.Request.Body.As&lt;string&gt;() )</set-body>\r\n    </return-response>\r\n    <set-backend-service id=\"apim-generated-policy\" backend-id=\"LogicApp_salesinvoice-la_LabResources\" />\r\n    <set-method id=\"apim-generated-policy\">POST</set-method>\r\n    <rewrite-uri id=\"apim-generated-policy\" template=\"/manual/paths/invoke/?api-version=2016-06-01&amp;sp=/triggers/manual/run&amp;sv=1.0&amp;sig={{sales-orders_create-sales-order_5cc9f8a843285d9c7cdc3e3d}}\" />\r\n    <set-header id=\"apim-generated-policy\" name=\"Ocp-Apim-Subscription-Key\" exists-action=\"delete\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n  <on-error>\r\n    <base />\r\n  </on-error>\r\n</policies>",
+        "contentFormat": "xml"
+      }
+    }
+  ]
+}
