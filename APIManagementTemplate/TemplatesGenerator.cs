@@ -341,8 +341,8 @@ namespace APIManagementTemplate
                         }
                     }
                 }
-                template.parameters = GetParameters(parsedTemplate["parameters"], resource);
-                template.variables = GetParameters(parsedTemplate["variables"], resource, "variables");
+                template.parameters.Merge(GetParameters(parsedTemplate["parameters"], resource));
+                template.variables.Merge(GetParameters(parsedTemplate["variables"], resource, "variables"));
                 var variableParameters = GetParameters(parsedTemplate["parameters"], parsedTemplate["variables"]);
                 foreach (var parameter in variableParameters)
                 {
