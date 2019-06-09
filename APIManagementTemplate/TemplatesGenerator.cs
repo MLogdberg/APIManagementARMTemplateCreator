@@ -78,14 +78,14 @@ namespace APIManagementTemplate
         private const string MasterTemplateJson = "master.template.json";
         private const string ProductAPIResourceType = "Microsoft.ApiManagement/service/products/apis";
 
-        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false, bool generateParameterFiles = false, bool replaceListSecretsWithParameter = false, bool listApiInProduct = false, bool separateSwaggerFile = false)
+        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false, bool generateParameterFiles = false, bool replaceListSecretsWithParameter = false, bool listApiInProduct = false, bool separateSwaggerFile = false, bool alwaysAddPropertiesAndBackend = false)
         {
             JObject parsedTemplate = JObject.Parse(sourceTemplate);
             if (replaceListSecretsWithParameter)
                 ReplaceListSecretsWithParameter(parsedTemplate);
             List<GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate, separatePolicyFile, separateSwaggerFile);
             templates.AddRange(GenerateProducts(parsedTemplate, separatePolicyFile, apiStandalone, listApiInProduct));
-            templates.AddRange(GenerateService(parsedTemplate, separatePolicyFile));
+            templates.AddRange(GenerateService(parsedTemplate, separatePolicyFile, alwaysAddPropertiesAndBackend));
             templates.Add(GenerateTemplate(parsedTemplate, "subscriptions.template.json", String.Empty, SubscriptionResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "users.template.json", String.Empty, UserResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "groups.template.json", String.Empty, GroupResourceType));
@@ -307,12 +307,18 @@ namespace APIManagementTemplate
             return parameters;
         }
 
-        private IEnumerable<GeneratedTemplate> GenerateService(JObject parsedTemplate, bool separatePolicyFile)
+        private IEnumerable<GeneratedTemplate> GenerateService(JObject parsedTemplate, bool separatePolicyFile, bool alwaysAddPropertiesAndBackend)
         {
             List<GeneratedTemplate> templates = new List<GeneratedTemplate>();
-            string[] wantedResources = {
+            List<string> wantedResources = new List<string>{
                 ServiceResourceType,OperationalInsightsWorkspaceResourceType, AppInsightsResourceType, StorageAccountResourceType
             };
+
+            if (alwaysAddPropertiesAndBackend)
+            {
+                wantedResources.AddRange(new[]{ PropertyResourceType, BackendResourceType});
+            }
+
             var generatedTemplate = new GeneratedTemplate { FileName = "service.template.json", Directory = String.Empty };
             DeploymentTemplate template = new DeploymentTemplate(true, true);
             var resources = parsedTemplate.SelectTokens("$.resources[*]")
@@ -335,8 +341,8 @@ namespace APIManagementTemplate
                         }
                     }
                 }
-                template.parameters = GetParameters(parsedTemplate["parameters"], resource);
-                template.variables = GetParameters(parsedTemplate["variables"], resource, "variables");
+                template.parameters.Merge(GetParameters(parsedTemplate["parameters"], resource));
+                template.variables.Merge(GetParameters(parsedTemplate["variables"], resource, "variables"));
                 var variableParameters = GetParameters(parsedTemplate["parameters"], parsedTemplate["variables"]);
                 foreach (var parameter in variableParameters)
                 {
