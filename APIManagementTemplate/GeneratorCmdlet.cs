@@ -25,10 +25,10 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false,HelpMessage = "Name of the Tenant i.e. contoso.onmicrosoft.com")]
         public string TenantName = "";
 
-        //see filter in https://docs.microsoft.com/en-us/rest/api/apimanagement/api/listbyservice
-        [Parameter(Mandatory = false,HelpMessage = "Filter for what API's to exort i.e: path eq 'api/v1/currencyconverter' or endswith(path,'currencyconverter')")]
+        //see filter in https://docs.microsoft.com/en-us/rest/api/apimanagement/2019-01-01/apis/listbyservice
+        [Parameter(Mandatory = false, HelpMessage = "Filter for what API's to exort i.e: path eq 'api/v1/currencyconverter' or endswith(path,'currencyconverter'). In addition to this, is it also possible to filter on productname i.e.: productname eq 'product-x'")]
         public string APIFilters = null;
-
+        
         [Parameter(Mandatory = false,HelpMessage = "Export AuthorizationServers")]
         public bool ExportAuthorizationServers = true;
 
