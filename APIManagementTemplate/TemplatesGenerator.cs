@@ -592,7 +592,7 @@ namespace APIManagementTemplate
                     new JProperty("type", "Microsoft.ApiManagement/service/products/apis"),
                     new JProperty("tags", new JObject(new JProperty("displayName", "ListOfApis"))),
                     new JProperty("apiVersion", "2017-03-01"),
-                    new JProperty("dependsOn", new JArray($"[resourceId('Microsoft.ApiManagement/service/products', {productName.Replace("[concat(", "").Replace("]","").Replace("/","")}]")),
+                    new JProperty("dependsOn", new JArray($"[resourceId('Microsoft.ApiManagement/service/products', {productName.Replace("[concat(", "").Replace("]","").Replace("/","").Replace(", ''","")}]")),
                     new JProperty("copy",
                         new JObject(new JProperty("name", "apicopy"),
                         new JProperty("count", $"[length(parameters('{apisListParameterName}'))]"))
