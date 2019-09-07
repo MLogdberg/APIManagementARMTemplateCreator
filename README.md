@@ -34,7 +34,7 @@ Example when user is connected to multitenants:
 | ResourceGroup | The name of the Resource Group | true | |
 | SubscriptionId | The Subscription id (guid)| true | |
 | TenantName | Name of the Tenant i.e. contoso.onmicrosoft.com | false | |
-| APIFilters | Filter for what API's to exort i.e: path eq 'api/v1/currencyconverter' or endswith(path,'currencyconverter') | false | |
+| APIFilters | Filter for what API's to exort i.e: path eq 'api/v1/currencyconverter' or endswith(path,'currencyconverter'). In addition to this, is it also possible to filter on productname i.e.: productname eq 'product-x') | false | |
 | ExportAuthorizationServers | Flag inidicating if Authorization servers should be exported | false | true | 
 | ExportPIManagementInstance | Flag inidicating if the API Management instance should be exported | false| true | 
 | ExportGroups | Flag inidicating if Groups should be exported | false | true |

@@ -89,7 +89,24 @@ namespace APIManagementTemplate
                     tags => template.CreateTags(tags, false));
             }
 
+            //check for special productname filter
+            var getProductname = Regex.Match(apiFilters, "(?<=productname\\s*eq\\s*\\')(.+?)(?=\\')", RegexOptions.IgnoreCase);
+            if (getProductname.Success)
+            {
+                apiFilters = Regex.Replace(apiFilters, "productname\\s*eq\\s*\'(.+?)(\')", "");
+
+                var apiFilterList = new List<string>();
+                var productApis = await resourceCollector.GetResource(GetAPIMResourceIDString() + $"/products/{getProductname.Value}/apis");
+                foreach (JObject api in productApis["value"])
+                {
+                    apiFilterList.Add($"name eq '{api["name"]}'");
+                }
+
+                apiFilters = "("+string.Join(" or ", apiFilterList) + ")" + apiFilters;
+            }
+            
             var apis = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
+
             if (apis != null)
             {
                 foreach (JObject apiObject in (!string.IsNullOrEmpty(apiVersion) ? apis.Value<JArray>("value").Where(aa => aa["properties"].Value<string>("apiVersion") == this.apiVersion) : apis.Value<JArray>("value")))
