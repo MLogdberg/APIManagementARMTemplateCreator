@@ -20,7 +20,7 @@ namespace APIManagementTemplate
         public static string GetBackendIdFromnPolicy(string policyContent)
         {
             var docu = XDocument.Parse(policyContent);
-            var backend = docu.Descendants("set-backend-service").LastOrDefault();
+            var backend = docu.Descendants("set-backend-service").Where(a => a.Attribute("backend-id") != null && a.Attribute("backend-id").Value != "apim-generated-policy").LastOrDefault();
             if (backend != null && backend.Attribute("backend-id") != null)
             {
                 XAttribute id = backend.Attribute("backend-id");
