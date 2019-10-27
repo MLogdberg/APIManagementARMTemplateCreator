@@ -28,5 +28,10 @@ namespace LogicAppTemplate.Models
         }
 
         public JObject parameters { get; set; }
+
+        public ParameterTemplate()
+        {
+            parameters = new JObject();
+        }
     }
 }

@@ -998,7 +998,7 @@ namespace APIManagementTemplate.Models
             obj.name = null;
             obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
             obj.AddName(apiname);
-            obj.AddName($"parameters('{AddParameter($"diagnostics_{name}_name", "string", name)}')");
+            obj.AddName($"parameters('{AddParameter($"diagnostic_{name}_name", "string", name)}')");
 
             if (logger != null)
             {

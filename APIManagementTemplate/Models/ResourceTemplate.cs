@@ -11,9 +11,15 @@ namespace APIManagementTemplate.Models
     public class ResourceTemplate
     {
         private List<string> names = new List<string>();
+
         public void AddName(string name)
         {
             names.Add(name);
+        }
+
+        public void RemoveNameAt(int i)
+        {
+            names.RemoveAt(i);
         }
         public string GetResourceId()
         {

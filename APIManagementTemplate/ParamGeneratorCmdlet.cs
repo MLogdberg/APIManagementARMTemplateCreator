@@ -51,8 +51,8 @@ namespace APIManagementTemplate
 
         protected override void ProcessRecord()
         {
-
-            var logicappTemplate = JObject.Parse(File.ReadAllText(TemplateFile));
+            var path = System.IO.Path.GetFullPath(TemplateFile);
+            var logicappTemplate = JObject.Parse(File.ReadAllText(path));
             var result = CreateParameterFileFromTemplate(logicappTemplate);
 
 

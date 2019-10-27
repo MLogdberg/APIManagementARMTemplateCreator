@@ -47,7 +47,14 @@ namespace APIManagementTemplate
             {
                 return null;
             }
+            
             var responseContent = await response.Content.ReadAsStringAsync();
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                throw new UnauthorizedAccessException(responseContent);
+            }
+
+
             if (!string.IsNullOrEmpty(DebugOutputFolder))
             {
                 var path = DebugOutputFolder + "\\" + EscapeString(resourceId.Split('/').SkipWhile( (a) => { return a != "service" && a != "workflows" && a != "sites"; }).Aggregate<string>((b,c) => { return b +"-" +c; })  + ".json");

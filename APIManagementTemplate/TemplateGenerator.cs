@@ -164,8 +164,8 @@ namespace APIManagementTemplate
                                 PolicyHandeBackendUrl(pol, operationSuffix, template);
                             }
 
-
-                            string policyContent = policy["properties"].Value<string>("policyContent");
+                            var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
+                            string policyContent = policy["properties"].Value<string>(policyPropertyName);
 
                             var backendid = TemplateHelper.GetBackendIdFromnPolicy(policyContent);
 
@@ -236,7 +236,8 @@ namespace APIManagementTemplate
                     foreach (JObject policy in (apiPolicies == null ? new JArray() : apiPolicies.Value<JArray>("value")))
                     {
                         //Handle SOAP Backend
-                        var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>("policyContent"));
+                        var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
+                        var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>(policyPropertyName));
 
                         if (exportCertificates) await AddCertificate(policy, template);
                         PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
@@ -293,6 +294,15 @@ namespace APIManagementTemplate
                         {
                             var tagTemplate = template.CreateAPITag(tag);
                             apiTemplateResource.Value<JArray>("resources").Add(JObject.FromObject(tagTemplate));
+                            //shoudl we get the root tag instead of copying underlaying tags?
+                            if (!exportPIManagementInstance)
+                            {
+                                tagTemplate.RemoveNameAt(1);
+                                tagTemplate.type = "Microsoft.ApiManagement/service/tags";
+                                tagTemplate.dependsOn.RemoveAll();
+                                template.resources.Add(JObject.FromObject(tagTemplate));
+                                apiTemplateResource.Value<JArray>("dependsOn").Add(tagTemplate.name);
+                            }
                         }
                     }
 
@@ -331,10 +341,13 @@ namespace APIManagementTemplate
                             var productProperties = productApi["properties"];
                             if (productProperties["apiVersionSetId"] != null)
                             {
-                                var apiVersionSetId = new AzureResourceId(productProperties["apiVersionSetId"].ToString()).ValueAfter("api-version-sets");
-                                productProperties["apiVersionSetId"] = $"[resourceId('Microsoft.ApiManagement/service/api-version-sets', parameters('{GetServiceName(servicename)}'), '{apiVersionSetId}')]";
+                                var apiVersionSetId = new AzureResourceId(productProperties["apiVersionSetId"].ToString()).ValueAfter("apiVersionSets");
+                                productProperties["apiVersionSetId"] = $"[resourceId('Microsoft.ApiManagement/service/apiVersionSets', parameters('{GetServiceName(servicename)}'), '{apiVersionSetId}')]";
                             }
                             productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(productApi));
+
+                            //also add depends On for API
+                            productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'), parameters('api_{productApi.Value<string>("name")}_name'))]");
                         }
 
                         var groups = await resourceCollector.GetResource(id + "/groups");
@@ -435,7 +448,8 @@ namespace APIManagementTemplate
 
         private async Task AddCertificate(JObject policy, DeploymentTemplate template)
         {
-            var certificateThumbprint = TemplateHelper.GetCertificateThumbPrintIdFromPolicy(policy["properties"].Value<string>("policyContent"));
+            var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
+            var certificateThumbprint = TemplateHelper.GetCertificateThumbPrintIdFromPolicy(policy["properties"].Value<string>(policyPropertyName));
             if (!string.IsNullOrEmpty(certificateThumbprint))
             {
                 var certificates = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/certificates");
@@ -523,12 +537,16 @@ namespace APIManagementTemplate
 
         public void PolicyHandleProperties(JObject policy, string apiname, string operationName)
         {
-            var policyContent = policy["properties"].Value<string>("policyContent");
+            var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
+            var policyContent = policy["properties"].Value<string>(policyPropertyName);
             HandleProperties(apiname, operationName, policyContent);
         }
 
         private void HandleProperties(string apiname, string operationName, string content)
         {
+            if (content == null)
+                return;
+
             var match = Regex.Match(content, "{{(?<name>[-_.a-zA-Z0-9]*)}}");
 
             while (match.Success)
@@ -558,7 +576,9 @@ namespace APIManagementTemplate
 
         public bool PolicyHandeAzureResources(JObject policy, string apiname, DeploymentTemplate template)
         {
-            var policyContent = policy["properties"].Value<string>("policyContent");
+            var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
+            var policyContent = policy["properties"].Value<string>(policyPropertyName);
+
             var policyXMLDoc = XDocument.Parse(policyContent);
 
             var commentMatch = Regex.Match(policyContent, "<!--[ ]*(?<json>{+.*\"azureResource.*)-->");
@@ -584,8 +604,8 @@ namespace APIManagementTemplate
 
                         //Set the Base URL
                         var backendService = policyXMLDoc.Descendants().Where(dd => dd.Name == "set-backend-service" && dd.Attribute("id").Value == "apim-generated-policy").FirstOrDefault();
-                        policy["properties"]["policyContent"] = CreatePolicyContentReplaceBaseUrl(backendService, policyContent, $"{listCallbackUrl}.basePath");
-
+                        policy["properties"][policyPropertyName] = CreatePolicyContentReplaceBaseUrl(backendService, policyContent, $"{listCallbackUrl}.basePath");
+                        
                         //Handle the sig property
                         var rewriteElement = policyXMLDoc.Descendants().Where(dd => dd.Name == "rewrite-uri").LastOrDefault();
                         var rewritetemplate = rewriteElement.Attribute("template");
@@ -614,7 +634,9 @@ namespace APIManagementTemplate
         }
         public void PolicyHandeBackendUrl(JObject policy, string apiname, DeploymentTemplate template)
         {
-            var policyContent = policy["properties"].Value<string>("policyContent");
+            var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
+            var policyContent = policy["properties"].Value<string>(policyPropertyName);
+
             var policyXMLDoc = XDocument.Parse(policyContent);
             //find the last backend service and add as parameter
             var backendService = policyXMLDoc.Descendants().Where(dd => dd.Name == "set-backend-service").LastOrDefault();
@@ -627,7 +649,8 @@ namespace APIManagementTemplate
                     var paramname = template.AddParameter($"api_{apiname}_backendurl", "string", baseUrl);
                     if (replaceSetBackendServiceBaseUrlAsProperty)
                     {
-                        policy["properties"]["policyContent"] = CreatePolicyContentReplaceBaseUrlWithProperty(backendService, policyContent, paramname);
+                        policy["properties"][policyPropertyName] = CreatePolicyContentReplaceBaseUrlWithProperty(backendService, policyContent, paramname);
+
                         string id = GetIdFromPolicy(policy);
                         AzureResourceId resourceId = new AzureResourceId(id);
                         var lookFor = $"/service/{resourceId.ValueAfter("service")}";
@@ -649,7 +672,7 @@ namespace APIManagementTemplate
                     }
                     else
                     {
-                        policy["properties"]["policyContent"] = CreatePolicyContentReplaceBaseUrl(backendService, policyContent, $"parameters('{paramname}')");
+                        policy["properties"][policyPropertyName] = CreatePolicyContentReplaceBaseUrl(backendService, policyContent, $"parameters('{paramname}')");
                     }
                 }
 
