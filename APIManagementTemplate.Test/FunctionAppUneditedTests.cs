@@ -126,7 +126,7 @@ namespace APIManagementTemplate.Test
             var products = ((JArray)template["resources"]).Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/products");
             var productApis = products.First()["resources"].Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/products/apis");
             var apiVersionSet = productApis.First()["properties"]["apiVersionSetId"];
-            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service/api-version-sets', parameters('service_ibizmalo_name'), '5b419345805ee415de572191')]", apiVersionSet);
+            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service/apiVersionSets', parameters('service_ibizmalo_name'), '5b419345805ee415de572191')]", apiVersionSet);
         }
 
         [TestMethod]

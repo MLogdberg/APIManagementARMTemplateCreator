@@ -18,7 +18,7 @@
         "subscriptionKeyParameterNames": null,
         "isCurrent": true,
         "apiVersion": "v1",
-        "apiVersionSetId": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/api-version-sets/5b419345805ee415de572191"
+        "apiVersionSetId": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apiVersionSets/5b419345805ee415de572191"
       }
     }
   ],
