@@ -1017,7 +1017,8 @@ namespace APIManagementTemplate.Models
 
 
                 obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'), {apiname})]");
-                obj.dependsOn.Add(loggerResource);
+                //add when logger object is added
+                //obj.dependsOn.Add(loggerResource);
                 if (IsApplicationInsightsLogger(loggerObject))
                 {
                     obj.properties["enableHttpCorrelationHeaders"] = WrapParameterName(AddParameter($"diagnostic_{name}_enableHttpCorrelationHeaders", "string", GetDefaultValue(restObject, "enableHttpCorrelationHeaders")));
