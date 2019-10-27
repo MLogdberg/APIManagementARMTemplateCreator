@@ -74,7 +74,7 @@ namespace APIManagementTemplate.Test
             {
 
                 Assert.AreEqual("Microsoft.ApiManagement/service/backends", obj.Value<string>("type"));
-                Assert.AreEqual("2017-03-01", obj.Value<string>("apiVersion"));
+                Assert.AreEqual("2019-09-01", obj.Value<string>("apiVersion"));
 
                 if (obj.Value<string>("name") == "[concat(parameters('service_ibizmalo_name'), '/' ,'FunctionApp_maloapimtest')]")
                 {
@@ -111,7 +111,7 @@ namespace APIManagementTemplate.Test
             foreach (var obj in ((JArray)template["resources"]).Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/properties"))
             {
                 Assert.AreEqual("Microsoft.ApiManagement/service/properties", obj.Value<string>("type"));
-                Assert.AreEqual("2017-03-01", obj.Value<string>("apiVersion"));
+                Assert.AreEqual("2019-09-01", obj.Value<string>("apiVersion"));
 
                 Assert.AreEqual(0, obj["resources"].Count());
                 Assert.AreEqual(0, obj["dependsOn"].Count());

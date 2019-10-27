@@ -716,7 +716,7 @@ namespace APIManagementTemplate
             SetFilenameAndDirectoryForVersionSet(api, generatedTemplate, parsedTemplate);
             var versionSetId = GetParameterPart(api["properties"], "apiVersionSetId", -2);
             var versionSet = parsedTemplate
-                .SelectTokens("$.resources[?(@.type==\'Microsoft.ApiManagement/service/api-version-sets\')]")
+                .SelectTokens("$.resources[?(@.type==\'Microsoft.ApiManagement/service/apiVersionSets\')]")
                 .FirstOrDefault(x => x.Value<string>("name").Contains(versionSetId));
             if (versionSet != null)
             {
@@ -857,7 +857,7 @@ namespace APIManagementTemplate
         {
             var versionSetId = GetParameterPart(api["properties"], "apiVersionSetId", -2);
             var apivs = parsedTemplate
-                .SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/api-version-sets')]")
+                .SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/apiVersionSets')]")
                 .FirstOrDefault(x => x.Value<string>("name").Contains(versionSetId));
             return apivs;
         }
