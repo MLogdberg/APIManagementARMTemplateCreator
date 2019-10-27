@@ -34,7 +34,7 @@ Example when user is connected to multitenants:
 | ResourceGroup | The name of the Resource Group | true | |
 | SubscriptionId | The Subscription id (guid)| true | |
 | TenantName | Name of the Tenant i.e. contoso.onmicrosoft.com | false | |
-| APIFilters | Filter for what API's to exort i.e: path eq 'api/v1/currencyconverter' or endswith(path,'currencyconverter') | false | |
+| APIFilters | Filter for what API's to exort i.e: path eq 'api/v1/currencyconverter' or endswith(path,'currencyconverter'). In addition to this, is it also possible to filter on productname i.e.: productname eq 'product-x') | false | |
 | ExportAuthorizationServers | Flag inidicating if Authorization servers should be exported | false | true | 
 | ExportPIManagementInstance | Flag inidicating if the API Management instance should be exported | false| true | 
 | ExportGroups | Flag inidicating if Groups should be exported | false | true |
@@ -70,6 +70,9 @@ Use Write-APIManagementTemplates generate many small ARM templates (as suggested
 | MergeTemplates | If the template already exists in the output directory, it will be merged with the new result. | false | false | 
 | GenerateParameterFiles | If parameter files should be generated | false | false | 
 | ReplaceListSecretsWithParameter | If the key to an Azure Function should be defined in a parameter instead of calling listsecrets | false | false |
+| AlwaysAddPropertiesAndBackend | Always add properties and backend, usefull when having logicapp backends and this service is not generated | false | false |
+
+
 | DebugTemplateFile | If set, the input ARM template is written to this file | false | |
 | ARMTemplate | The ARM template piped from Get-APIManagementTemplate - should not be manually set | false | |
 

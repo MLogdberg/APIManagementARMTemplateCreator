@@ -78,14 +78,14 @@ namespace APIManagementTemplate
         private const string MasterTemplateJson = "master.template.json";
         private const string ProductAPIResourceType = "Microsoft.ApiManagement/service/products/apis";
 
-        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false, bool generateParameterFiles = false, bool replaceListSecretsWithParameter = false, bool listApiInProduct = false, bool separateSwaggerFile = false)
+        public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false, bool generateParameterFiles = false, bool replaceListSecretsWithParameter = false, bool listApiInProduct = false, bool separateSwaggerFile = false, bool alwaysAddPropertiesAndBackend = false)
         {
             JObject parsedTemplate = JObject.Parse(sourceTemplate);
             if (replaceListSecretsWithParameter)
                 ReplaceListSecretsWithParameter(parsedTemplate);
             List<GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate, separatePolicyFile, separateSwaggerFile);
             templates.AddRange(GenerateProducts(parsedTemplate, separatePolicyFile, apiStandalone, listApiInProduct));
-            templates.AddRange(GenerateService(parsedTemplate, separatePolicyFile));
+            templates.AddRange(GenerateService(parsedTemplate, separatePolicyFile, alwaysAddPropertiesAndBackend));
             templates.Add(GenerateTemplate(parsedTemplate, "subscriptions.template.json", String.Empty, SubscriptionResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "users.template.json", String.Empty, UserResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "groups.template.json", String.Empty, GroupResourceType));
@@ -307,12 +307,18 @@ namespace APIManagementTemplate
             return parameters;
         }
 
-        private IEnumerable<GeneratedTemplate> GenerateService(JObject parsedTemplate, bool separatePolicyFile)
+        private IEnumerable<GeneratedTemplate> GenerateService(JObject parsedTemplate, bool separatePolicyFile, bool alwaysAddPropertiesAndBackend)
         {
             List<GeneratedTemplate> templates = new List<GeneratedTemplate>();
-            string[] wantedResources = {
+            List<string> wantedResources = new List<string>{
                 ServiceResourceType,OperationalInsightsWorkspaceResourceType, AppInsightsResourceType, StorageAccountResourceType
             };
+
+            if (alwaysAddPropertiesAndBackend)
+            {
+                wantedResources.AddRange(new[]{ PropertyResourceType, BackendResourceType});
+            }
+
             var generatedTemplate = new GeneratedTemplate { FileName = "service.template.json", Directory = String.Empty };
             DeploymentTemplate template = new DeploymentTemplate(true, true);
             var resources = parsedTemplate.SelectTokens("$.resources[*]")
@@ -335,8 +341,8 @@ namespace APIManagementTemplate
                         }
                     }
                 }
-                template.parameters = GetParameters(parsedTemplate["parameters"], resource);
-                template.variables = GetParameters(parsedTemplate["variables"], resource, "variables");
+                template.parameters.Merge(GetParameters(parsedTemplate["parameters"], resource));
+                template.variables.Merge(GetParameters(parsedTemplate["variables"], resource, "variables"));
                 var variableParameters = GetParameters(parsedTemplate["parameters"], parsedTemplate["variables"]);
                 foreach (var parameter in variableParameters)
                 {
@@ -527,13 +533,13 @@ namespace APIManagementTemplate
             template.resources.Add(JObject.FromObject(product));
             generatedTemplate.Content = JObject.FromObject(template);
             if (listApiInProduct)
-                ListApiInProduct(generatedTemplate.Content);
+                ListApiInProduct(generatedTemplate.Content, parsedTemplate);
             if (!listApiInProduct && apiStandalone)
                 RemoveProductAPIs(generatedTemplate.Content);
             return generatedTemplate;
         }
 
-        private void ListApiInProduct(JObject content)
+        private void ListApiInProduct(JObject content, JObject parsedTemplate)
         {
             var parameterObject = content.SelectToken($"$.parameters") as JObject;
             //get products
@@ -551,7 +557,7 @@ namespace APIManagementTemplate
                 if (apiNames.Any())
                 {
                     apisListParameterName = $"apis_in_product_{Regex.Match(productName, "(?<='product_)(.*)(?=_name')").Value}";
-                    
+
                     //remove api specific parameters
                     var apiParameters = apiNames.Select(a => parameterObject.SelectToken($"api_{a}_name").Parent);
                     foreach (var api in apiParameters.ToArray())
@@ -578,15 +584,15 @@ namespace APIManagementTemplate
                         new JProperty("type", "array"),
                         new JProperty("defaultValue", new JArray(apiNames))
                     )));
-
-
+                ((JObject)parsedTemplate["parameters"]).Add(parameterObject.Last);
+                
                 var apisResource = new JObject
                 {
                     new JProperty("name", productName.Replace(")]", $", '/', parameters('{apisListParameterName}')[copyIndex()])]")),
                     new JProperty("type", "Microsoft.ApiManagement/service/products/apis"),
                     new JProperty("tags", new JObject(new JProperty("displayName", "ListOfApis"))),
                     new JProperty("apiVersion", "2017-03-01"),
-                    new JProperty("dependsOn", new JArray($"[resourceId('Microsoft.ApiManagement/service/products', parameters('{apimServiceName}'), parameters('{apisListParameterName}'))]")),
+                    new JProperty("dependsOn", new JArray($"[resourceId('Microsoft.ApiManagement/service/products', {productName.Replace("[concat(", "").Replace("]","").Replace("/","").Replace(", ''","")}]")),
                     new JProperty("copy",
                         new JObject(new JProperty("name", "apicopy"),
                         new JProperty("count", $"[length(parameters('{apisListParameterName}'))]"))
