@@ -102,9 +102,9 @@ namespace APIManagementTemplate
                     apiFilterList.Add($"name eq '{api["name"]}'");
                 }
 
-                apiFilters = "("+string.Join(" or ", apiFilterList) + ")" + apiFilters;
+                apiFilters = "(" + string.Join(" or ", apiFilterList) + ")" + apiFilters;
             }
-            
+
             var apis = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
 
             if (apis != null)
@@ -199,13 +199,13 @@ namespace APIManagementTemplate
                                     apiTemplateResource.Value<JArray>("dependsOn").Add(
                                         $"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
                                 }
-                                if(bo.backendProperty != null)
+                                if (bo.backendProperty != null)
                                 {
-                                    if(bo.backendProperty.type == Property.PropertyType.LogicApp)
+                                    if (bo.backendProperty.type == Property.PropertyType.LogicApp)
                                     {
                                         var urltemplatestring = TemplateHelper.GetAPIMGenereatedRewritePolicyTemplate(policyContent);
                                         var match = Regex.Match(urltemplatestring, "{{(?<name>[-_.a-zA-Z0-9]*)}}");
-                                        if(match.Success)
+                                        if (match.Success)
                                         {
                                             string name = match.Groups["name"].Value;
                                             var idp = identifiedProperties.Where(pp => pp.name == name).FirstOrDefault();
@@ -226,7 +226,7 @@ namespace APIManagementTemplate
                                 operationTemplateResource.Value<JArray>("resources").Add(pol);
 
                             //all other fixed let's add the not found properties
-                           
+
 
                             //handle nextlink?
                         }
@@ -375,10 +375,11 @@ namespace APIManagementTemplate
                                 // Add group resource
                                 var groupObject = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/groups/" + group.Value<string>("name"));
                                 template.AddGroup(groupObject);
-                                productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/groups', parameters('{GetServiceName(servicename)}'), '{group.Value<string>("name")}')]");
+                                //$"parameters('{AddParameter("group_{name}_name", "string", name)}')"
+                                productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/groups', parameters('{GetServiceName(servicename)}'), parameters('{template.AddParameter($"group_{group.Value<string>("name")}_name", "string", group.Value<string>("name"))}'))]");
                             }
                             productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(group));
-                            
+
                         }
                         var policies = await resourceCollector.GetResource(id + "/policies");
                         foreach (JObject policy in (policies == null ? new JArray() : policies.Value<JArray>("value")))
@@ -571,7 +572,7 @@ namespace APIManagementTemplate
                 string name = match.Groups["name"].Value;
                 var idp = identifiedProperties.Where(pp => pp.name == name).FirstOrDefault();
                 if (idp == null)
-                {                  
+                {
                     this.identifiedProperties.Add(new Property()
                     {
                         name = name,
@@ -622,7 +623,7 @@ namespace APIManagementTemplate
                         //Set the Base URL
                         var backendService = policyXMLDoc.Descendants().Where(dd => dd.Name == "set-backend-service" && dd.Attribute("id").Value == "apim-generated-policy").FirstOrDefault();
                         policy["properties"][policyPropertyName] = CreatePolicyContentReplaceBaseUrl(backendService, policyContent, $"{listCallbackUrl}.basePath");
-                        
+
                         //Handle the sig property
                         var rewriteElement = policyXMLDoc.Descendants().Where(dd => dd.Name == "rewrite-uri").LastOrDefault();
                         var rewritetemplate = rewriteElement.Attribute("template");
