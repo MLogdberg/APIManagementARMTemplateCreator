@@ -1,6 +1,6 @@
 ﻿{
   "id": "/subscriptions/fake439-770d-43f3-9e4a-8b910457a20c/resourceGroups/API/providers/Microsoft.ApiManagement/service/dev/api-version-sets/5ae6f90fc96f5f1090700732",
-  "type": "Microsoft.ApiManagement/service/api-version-sets",
+  "type": "Microsoft.ApiManagement/service/apiVersionSets",
   "name": "5ae6f90fc96f5f1090700732",
   "properties": {
     "displayName": "My Api Version Set",

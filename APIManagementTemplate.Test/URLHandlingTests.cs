@@ -66,7 +66,7 @@ namespace APIManagementTemplate.Test
 
 
             Assert.AreEqual("Microsoft.ApiManagement/service/apis", obj.Value<string>("type"));
-            Assert.AreEqual("2017-03-01", obj.Value<string>("apiVersion"));
+            Assert.AreEqual("2019-01-01", obj.Value<string>("apiVersion"));
 
             Assert.AreEqual("[concat(parameters('service_apidev_name'), '/' ,parameters('api_invoice-retrieval-api_name'))]", obj.Value<string>("name"));
             Assert.AreEqual(3, obj["resources"].Count());
@@ -80,7 +80,7 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual("api/documents/invoices", prop.Value<string>("path"));
             Assert.AreEqual("[parameters('invoice-retrieval-api_isCurrent')]", prop.Value<string>("isCurrent"));
             Assert.AreEqual("[parameters('invoice-retrieval-api_apiVersion')]", prop.Value<string>("apiVersion"));
-            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service/api-version-sets',parameters('service_apidev_name'), '5b1fb4607e5c66b5cb2fe2e8')]", prop.Value<string>("apiVersionSetId"));
+            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service/apiVersionSets',parameters('service_apidev_name'), '5b1fb4607e5c66b5cb2fe2e8')]", prop.Value<string>("apiVersionSetId"));
             Assert.AreEqual("https", prop.Value<JArray>("protocols").First().Value<string>());            
         }
 
@@ -93,7 +93,7 @@ namespace APIManagementTemplate.Test
 
             var obj = ((JArray)api["resources"]).Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/apis/operations").First();
             Assert.AreEqual("Microsoft.ApiManagement/service/apis/operations", obj.Value<string>("type"));
-            Assert.AreEqual("2017-03-01", obj.Value<string>("apiVersion"));
+            Assert.AreEqual("2019-01-01", obj.Value<string>("apiVersion"));
 
             Assert.AreEqual("[concat(parameters('service_apidev_name'), '/', parameters('api_invoice-retrieval-api_name'), '/', 'get-invoice')]", obj.Value<string>("name"));
             Assert.AreEqual(1, obj["resources"].Count());
@@ -115,7 +115,7 @@ namespace APIManagementTemplate.Test
             
 
             Assert.AreEqual("Microsoft.ApiManagement/service/apis/operations/policies", obj.Value<string>("type"));
-            Assert.AreEqual("2017-03-01", obj.Value<string>("apiVersion"));
+            Assert.AreEqual("2019-01-01", obj.Value<string>("apiVersion"));
 
             Assert.AreEqual("[concat(parameters('service_apidev_name'), '/', parameters('api_invoice-retrieval-api_name'), '/', 'get-invoice', '/', 'policy')]", obj.Value<string>("name"));
             Assert.AreEqual(0, obj["resources"].Count());

@@ -14,7 +14,7 @@ namespace APIManagementTemplate.Test
         {
             this.basepath = basepath;
         }
-        public Task<JObject> GetResource(string resourceId, string suffix = "", string apiversion = "2017-03-01")
+        public Task<JObject> GetResource(string resourceId, string suffix = "", string apiversion = "2019-01-01")
         {
             var t = new Task<JObject>(() =>
             {

@@ -1,6 +1,6 @@
 {
   "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/api-version-sets/5b419345805ee415de572191",
-  "type": "Microsoft.ApiManagement/service/api-version-sets",
+  "type": "Microsoft.ApiManagement/service/apiVersionSets",
   "name": "5b419345805ee415de572191",
   "properties": {
     "displayName": "maloapimtestclean",

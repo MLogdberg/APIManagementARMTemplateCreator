@@ -295,10 +295,11 @@ namespace APIManagementTemplate.Models
             AddParameterFromObject((JObject)resource["properties"], "serviceUrl", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "apiVersion", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "isCurrent", "bool", name);
-            if (resource["properties"]?["subscriptionRequired"] != null)
+     /*       Migrated to new version
+      *       if (resource["properties"]?["subscriptionRequired"] != null)
             {
                 resource["apiVersion"] = "2018-06-01-preview";
-            }
+            }*/
             if (APIMInstanceAdded)
             {
                 resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]" });
@@ -690,8 +691,31 @@ namespace APIManagementTemplate.Models
             string productname = apiid.ValueAfter("products");
 
             productname = parametrizePropertiesOnly ? $"'{productname}'" : $"parameters('{AddParameter($"product_{productname}_name", "string", productname)}')";
-            bool nonApi = type != "Microsoft.ApiManagement/service/products/apis";
-            var objectname = parametrizePropertiesOnly || nonApi ? $"'{name}'" : $"parameters('{AddParameter($"api_{name}_name", "string", name)}')";
+            var objectname = "";
+            if (parametrizePropertiesOnly)
+            {
+                objectname = $"'{name}'";
+            }
+            else {
+                switch (type)
+                {
+                    case "Microsoft.ApiManagement/service/products/apis":
+                        {
+                            objectname = $"parameters('{AddParameter($"api_{name}_name", "string", name)}')";
+                            break;
+                        }
+                    case "Microsoft.ApiManagement/service/products/groups":
+                        {
+                            objectname = $"parameters('{AddParameter($"group_{name}_name", "string", name)}')";
+                            break;
+                        }
+                    default:
+                        {
+                            objectname = $"'{name}'";
+                            break;
+                        }
+                }
+            }
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
@@ -1017,7 +1041,8 @@ namespace APIManagementTemplate.Models
 
 
                 obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'), {apiname})]");
-                obj.dependsOn.Add(loggerResource);
+                //add when logger object is added
+                //obj.dependsOn.Add(loggerResource);
                 if (IsApplicationInsightsLogger(loggerObject))
                 {
                     obj.properties["enableHttpCorrelationHeaders"] = WrapParameterName(AddParameter($"diagnostic_{name}_enableHttpCorrelationHeaders", "string", GetDefaultValue(restObject, "enableHttpCorrelationHeaders")));

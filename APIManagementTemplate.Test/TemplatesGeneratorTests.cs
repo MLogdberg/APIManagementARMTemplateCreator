@@ -490,7 +490,7 @@ namespace APIManagementTemplate.Test
         public void TestResultContainsVersionSetFor_httpbinVersionSet()
         {
             var api = _generatedTemplates.Single(x => x.FileName == HttpBinVersionSetFilename);
-            var versionSets = api.Content.SelectTokens("$.resources[?(@.type==\'Microsoft.ApiManagement/service/api-version-sets\')]");
+            var versionSets = api.Content.SelectTokens("$.resources[?(@.type==\'Microsoft.ApiManagement/service/apiVersionSets\')]");
             var correctVersionSet = versionSets.Where(x => x.Value<string>("name").Contains("'versionset-httpbin-api'"));
             Assert.AreEqual(1, correctVersionSet.Count());
         }

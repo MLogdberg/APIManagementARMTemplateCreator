@@ -1,6 +1,6 @@
 {
   "id": "/subscriptions/1fake145-d7fa-4d0f-b406-7394a2b64fb4/resourceGroups/Api-Default-West-Europe/providers/Microsoft.ApiManagement/service/apidev/api-version-sets/5b1fb4607e5c66b5cb2fe2e8",
-  "type": "Microsoft.ApiManagement/service/api-version-sets",
+  "type": "Microsoft.ApiManagement/service/apiVersionSets",
   "name": "5b1fb4607e5c66b5cb2fe2e8",
   "properties": {
     "displayName": "Invoices",
