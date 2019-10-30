@@ -351,6 +351,10 @@ namespace APIManagementTemplate
                     // Skip product if not related to an API in the filter.
                     if (productApis != null && productApis.Value<JArray>("value").Count > 0)
                     {
+                        //skip product when filter by productname and not this product
+                        if (getProductname.Success && !getProductname.Value.Equals(productObject.Value<string>("name"), StringComparison.OrdinalIgnoreCase))
+                            continue;
+
                         var productTemplateResource = template.AddProduct(productObject);
 
                         foreach (JObject productApi in (productApis == null ? new JArray() : productApis.Value<JArray>("value")))
