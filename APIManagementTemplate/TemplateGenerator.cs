@@ -318,7 +318,7 @@ namespace APIManagementTemplate
                                 tagTemplate.type = "Microsoft.ApiManagement/service/tags";
                                 tagTemplate.dependsOn.RemoveAll();
                                 template.resources.Add(JObject.FromObject(tagTemplate));
-                                apiTemplateResource.Value<JArray>("dependsOn").Add(tagTemplate.name);
+                                apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/tags', {tagTemplate.GetResourceId()})]");
                             }
                         }
                     }
