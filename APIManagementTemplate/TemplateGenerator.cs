@@ -375,7 +375,6 @@ namespace APIManagementTemplate
                                 // Add group resource
                                 var groupObject = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/groups/" + group.Value<string>("name"));
                                 template.AddGroup(groupObject);
-                                //$"parameters('{AddParameter("group_{name}_name", "string", name)}')"
                                 productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/groups', parameters('{GetServiceName(servicename)}'), parameters('{template.AddParameter($"group_{group.Value<string>("name")}_name", "string", group.Value<string>("name"))}'))]");
                             }
                             productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(group));
@@ -415,8 +414,14 @@ namespace APIManagementTemplate
                     }
                     else if (identifiedProperty.type == Property.PropertyType.Function)
                     {
+                        var functionSplittedName = identifiedProperty.operationName.Split('-');
+                        var functionName = functionSplittedName.Last();
+                        if (functionSplittedName.Count() > 2)
+                        {
+                            functionName = string.Join("-", functionSplittedName.Skip(1));
+                        }
                         //    "replacewithfunctionoperationname"
-                        propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo.Replace("replacewithfunctionoperationname", $"{identifiedProperty.operationName}")}]";
+                        propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo.Replace("replacewithfunctionoperationname", $"{functionName}")}]";
                     }
                     var propertyTemplate = template.AddProperty(propertyObject);
 
@@ -532,7 +537,9 @@ namespace APIManagementTemplate
                 }
                 else if (property.type == Property.PropertyType.Function)
                 {
-                    property.operationName = GetOperationName(startname);
+                    // old way of handling, removed 2019-11-03
+                    //property.operationName = GetOperationName(startname);
+                    property.operationName = startname;
                     identifiedProperties.Add(property);
                     foreach (var idp in this.identifiedProperties.Where(pp => pp.name.ToLower().StartsWith(property.name) && !pp.name.Contains("-invoke")))
                     {
