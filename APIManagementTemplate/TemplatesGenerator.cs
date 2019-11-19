@@ -448,7 +448,8 @@ namespace APIManagementTemplate
         private static GeneratedTemplate GeneratePolicyFile(JObject parsedTemplate, JToken policy, JToken api,
             string operationId)
         {
-            var content = policy["properties"].Value<string>("policyContent");
+            var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
+            var content = policy["properties"].Value<string>(policyPropertyName);
             var template = new GeneratedTemplate
             {
                 Type = ContentType.Xml,
@@ -462,7 +463,8 @@ namespace APIManagementTemplate
 
         private static GeneratedTemplate GenerateServicePolicyFile(JObject parsedTemplate, JToken policy)
         {
-            var content = policy["properties"].Value<string>("policyContent");
+            var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
+            var content = policy["properties"].Value<string>(policyPropertyName);
             var template = new GeneratedTemplate
             {
                 Type = ContentType.Xml,
@@ -494,7 +496,8 @@ namespace APIManagementTemplate
                 .FirstOrDefault(rr => rr["type"].Value<string>() == ProductPolicyResourceType);
             if (policy?["properties"] == null)
                 return null;
-            var content = policy["properties"].Value<string>("policyContent");
+            var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
+            var content = policy["properties"].Value<string>(policyPropertyName);
             return new GeneratedTemplate
             {
                 Directory = $"product-{productId}",
@@ -643,9 +646,11 @@ namespace APIManagementTemplate
             var policy = product["resources"].FirstOrDefault(x => x.Value<string>("type") == ProductPolicyResourceType);
             if (policy != null)
             {
-                policy["apiVersion"] = "2018-01-01";
-                policy["properties"]["contentFormat"] = "xml-link";
-                policy["properties"]["policyContent"] = $"[concat(parameters('repoBaseUrl'), '/product-{productId}/product-{productId}.policy.xml', parameters('{TemplatesStorageAccountSASToken}'))]";
+                policy["apiVersion"] = "2019-01-01";
+                var policyPropertyName = policy["properties"].Value<string>("format") == null ? "contentFormat" : "format";
+                policy["properties"][policyPropertyName] = "xml-link";
+                policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
+                policy["properties"][policyPropertyName] = $"[concat(parameters('repoBaseUrl'), '/product-{productId}/product-{productId}.policy.xml', parameters('{TemplatesStorageAccountSASToken}'))]";
             }
         }
         private void ReplaceApiOperationPolicyWithFileLink(JToken api, JObject parsedTemplate)
@@ -673,13 +678,16 @@ namespace APIManagementTemplate
 
         private static void ReplacePolicyWithFileLink(JToken policy, FileInfo fileInfo)
         {
-            policy["properties"]["contentFormat"] = "xml-link";
-            policy["apiVersion"] = "2018-01-01";
+            var policyPropertyName = policy["properties"].Value<string>("format") == null ? "contentFormat" : "format";
+            policy["properties"][policyPropertyName] = "xml-link";
+            policy["apiVersion"] = "2019-01-01";
             string formattedDirectory = fileInfo.Directory.Replace(@"\", "/");
             var directory = $"/{formattedDirectory}";
             if (directory == "/")
                 directory = String.Empty;
-            policy["properties"]["policyContent"] =
+
+            policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
+            policy["properties"][policyPropertyName] =
                 $"[concat(parameters('repoBaseUrl'), '{directory}/{fileInfo.FileName}', parameters('{TemplatesStorageAccountSASToken}'))]";
         }
 

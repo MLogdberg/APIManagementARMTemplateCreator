@@ -520,7 +520,7 @@ namespace APIManagementTemplate.Test
             var policies = service.Content.SelectTokens("$..resources[?(@.type==\'Microsoft.ApiManagement/service/policies\')]");
             Assert.AreEqual(1, policies.Count());
             JToken policy = policies.First();
-            Assert.AreEqual("2018-01-01", policy.Value<string>("apiVersion"));
+            Assert.AreEqual("2019-01-01", policy.Value<string>("apiVersion"));
             AssertFileLink(policy, "/service.policy.xml");
         }
 
