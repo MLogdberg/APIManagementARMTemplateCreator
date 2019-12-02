@@ -37,7 +37,7 @@ namespace APIManagementTemplate
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
             this.resourceGroup = resourceGroup;
-            this.apiFilters = apiFilters;
+            this.apiFilters = apiFilters ?? "";
             this.exportCertificates = exportCertificates;
             this.exportGroups = exportGroups;
             this.exportProducts = exportProducts;
@@ -88,24 +88,22 @@ namespace APIManagementTemplate
                     await AddServiceResource(apimTemplateResource, "/tags",
                     tags => template.CreateTags(tags, false));
             }
+            //check for special productname filter
+            var getProductname = Regex.Match(apiFilters, "(?<=productname\\s*eq\\s*\\')(.+?)(?=\\')", RegexOptions.IgnoreCase);
+            if (getProductname.Success)
+            {
+                apiFilters = Regex.Replace(apiFilters, "productname\\s*eq\\s*\'(.+?)(\')", "");
 
-            if(!string.IsNullOrEmpty(apiFilters)) {
-                //check for special productname filter
-                var getProductname = Regex.Match(apiFilters, "(?<=productname\\s*eq\\s*\\')(.+?)(?=\\')", RegexOptions.IgnoreCase);
-                if (getProductname.Success)
+                var apiFilterList = new List<string>();
+                var productApis = await resourceCollector.GetResource(GetAPIMResourceIDString() + $"/products/{getProductname.Value}/apis");
+                foreach (JObject api in productApis["value"])
                 {
-                    apiFilters = Regex.Replace(apiFilters, "productname\\s*eq\\s*\'(.+?)(\')", "");
-
-                    var apiFilterList = new List<string>();
-                    var productApis = await resourceCollector.GetResource(GetAPIMResourceIDString() + $"/products/{getProductname.Value}/apis");
-                    foreach (JObject api in productApis["value"])
-                    {
-                        apiFilterList.Add($"name eq '{api["name"]}'");
-                    }
-
-                    apiFilters = "(" + string.Join(" or ", apiFilterList) + ")" + apiFilters;
+                    apiFilterList.Add($"name eq '{api["name"]}'");
                 }
+
+                apiFilters = "(" + string.Join(" or ", apiFilterList) + ")" + apiFilters;
             }
+
 
             var apis = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
 
