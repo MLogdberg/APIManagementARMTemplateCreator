@@ -37,7 +37,7 @@ namespace APIManagementTemplate
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
             this.resourceGroup = resourceGroup;
-            this.apiFilters = apiFilters;
+            this.apiFilters = apiFilters ?? "";
             this.exportCertificates = exportCertificates;
             this.exportGroups = exportGroups;
             this.exportProducts = exportProducts;
@@ -88,7 +88,6 @@ namespace APIManagementTemplate
                     await AddServiceResource(apimTemplateResource, "/tags",
                     tags => template.CreateTags(tags, false));
             }
-
             //check for special productname filter
             var getProductname = Regex.Match(apiFilters, "(?<=productname\\s*eq\\s*\\')(.+?)(?=\\')", RegexOptions.IgnoreCase);
             if (getProductname.Success)
@@ -104,6 +103,7 @@ namespace APIManagementTemplate
 
                 apiFilters = "(" + string.Join(" or ", apiFilterList) + ")" + apiFilters;
             }
+
 
             var apis = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
 
