@@ -89,20 +89,22 @@ namespace APIManagementTemplate
                     tags => template.CreateTags(tags, false));
             }
 
-            //check for special productname filter
-            var getProductname = Regex.Match(apiFilters, "(?<=productname\\s*eq\\s*\\')(.+?)(?=\\')", RegexOptions.IgnoreCase);
-            if (getProductname.Success)
-            {
-                apiFilters = Regex.Replace(apiFilters, "productname\\s*eq\\s*\'(.+?)(\')", "");
-
-                var apiFilterList = new List<string>();
-                var productApis = await resourceCollector.GetResource(GetAPIMResourceIDString() + $"/products/{getProductname.Value}/apis");
-                foreach (JObject api in productApis["value"])
+            if(!string.IsNullOrEmpty(apiFilters)) {
+                //check for special productname filter
+                var getProductname = Regex.Match(apiFilters, "(?<=productname\\s*eq\\s*\\')(.+?)(?=\\')", RegexOptions.IgnoreCase);
+                if (getProductname.Success)
                 {
-                    apiFilterList.Add($"name eq '{api["name"]}'");
-                }
+                    apiFilters = Regex.Replace(apiFilters, "productname\\s*eq\\s*\'(.+?)(\')", "");
 
-                apiFilters = "(" + string.Join(" or ", apiFilterList) + ")" + apiFilters;
+                    var apiFilterList = new List<string>();
+                    var productApis = await resourceCollector.GetResource(GetAPIMResourceIDString() + $"/products/{getProductname.Value}/apis");
+                    foreach (JObject api in productApis["value"])
+                    {
+                        apiFilterList.Add($"name eq '{api["name"]}'");
+                    }
+
+                    apiFilters = "(" + string.Join(" or ", apiFilterList) + ")" + apiFilters;
+                }
             }
 
             var apis = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
