@@ -209,6 +209,11 @@ namespace APIManagementTemplate
         {
             var generatedTemplate = new GeneratedTemplate { Directory = directory, FileName = fileName };
             DeploymentTemplate template = new DeploymentTemplate(true, true);
+
+            //move servicetemplate to the top of the list
+            filteredTemplates = filteredTemplates.AsEnumerable().OrderBy(t => t.FileName != "service.template.json");
+
+
             foreach (GeneratedTemplate template2 in filteredTemplates)
             {
                 template.resources.Add(GenerateDeployment(template2, generatedTemplates));
