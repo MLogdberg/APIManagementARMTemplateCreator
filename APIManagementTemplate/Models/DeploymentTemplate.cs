@@ -534,16 +534,50 @@ namespace APIManagementTemplate.Models
                     string path = GetPathFromUrl(resource["properties"]?.Value<string>("url"));
                     resource["properties"]["url"] = $"[concat('https://',toLower(parameters('{paramsitename}')),'.azurewebsites.net/{path}')]";
 
+                    //Determine the extrainfo based on the parameterizeBackendFunctionKey. When the backend should be parameterized use the name of the property
+                    //in the x-functions-key header
+                    var extraInfo =
+                        $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key";
+                    var functionAppPropertyName = sitename;
+                    if (parameterizeBackendFunctionKey)
+                    {
+                        var custom = false;
+                        
+                        var xFunctionKey = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();;
+                        if (xFunctionKey != null)
+                        {
+                            var value = xFunctionKey.Value<string>();
+                            if (value.StartsWith("{{") && value.EndsWith("}}"))
+                            {
+                                var parsed = value.Substring(2, value.Length - 4);
+                                functionAppPropertyName = parsed;
+                                extraInfo = $"parameters('{AddParameter($"{parsed}", "string", "")}')";
+                                custom = true;
+                            }
+                        }
+
+                        if (!custom)
+                        {
+                            functionAppPropertyName = $"{sitename}-key";
+                            extraInfo = $"parameters('{AddParameter($"{sitename}-key", "string", "")}')";    
+                        }
+                    }
+                    
                     retval = new Property()
                     {
                         type = Property.PropertyType.Function,
-                        name = sitename.ToLower(),
-                        extraInfo = parameterizeBackendFunctionKey
-                        ? $"parameters('{AddParameter($"{sitename}-key", "string", "")}')"
-                        : $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key"
+                        name = functionAppPropertyName.ToLower(),
+                        
+                        extraInfo = extraInfo
                     };
 
                     var code = (resource["properties"]?["credentials"]?["query"]?.Value<JArray>("code") ?? new JArray()).FirstOrDefault();
+                    if (code == null)
+                    {
+                        //Fall back to the x functions key
+                        code = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();;
+                    }
+                    
                     if (code != null)
                     {
                         var value = code.Value<string>();
@@ -564,6 +598,10 @@ namespace APIManagementTemplate.Models
             if (APIMInstanceAdded)
             {
                 dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
+            }
+
+            if (dependsOn.Count > 0)
+            {
                 resource["dependsOn"] = dependsOn;
             }
 
@@ -1045,7 +1083,7 @@ namespace APIManagementTemplate.Models
                 //obj.dependsOn.Add(loggerResource);
                 if (IsApplicationInsightsLogger(loggerObject))
                 {
-                    obj.properties["enableHttpCorrelationHeaders"] = WrapParameterName(AddParameter($"diagnostic_{name}_enableHttpCorrelationHeaders", "string", GetDefaultValue(restObject, "enableHttpCorrelationHeaders")));
+                    obj.properties["enableHttpCorrelationHeaders"] = WrapParameterName(AddParameter($"diagnostic_{name}_enableHttpCorrelationHeaders", "bool", GetDefaultValue(resource, true, "enableHttpCorrelationHeaders")));
                 }
             }
             return JObject.FromObject(obj);
@@ -1072,7 +1110,8 @@ namespace APIManagementTemplate.Models
                 resource["properties"]["sampling"]["percentage"] = WrapParameterName(AddParameter($"diagnostic_{name}_samplingPercentage", "string", GetDefaultValue(resource, "sampling", "percentage")));
                 if (IsApplicationInsightsLogger(loggerObject))
                 {
-                    resource["properties"]["enableHttpCorrelationHeaders"] = WrapParameterName(AddParameter($"diagnostic_{name}_enableHttpCorrelationHeaders", "string", GetDefaultValue(resource, "enableHttpCorrelationHeaders")));
+                    var value = 
+                    resource["properties"]["enableHttpCorrelationHeaders"] = WrapParameterName(AddParameter($"diagnostic_{name}_enableHttpCorrelationHeaders", "bool", GetDefaultValue(resource, true, "enableHttpCorrelationHeaders")));
                 }
             }
             return resource;
@@ -1099,6 +1138,26 @@ namespace APIManagementTemplate.Models
                     return string.Empty;
             }
             return prop.Value<string>() ?? String.Empty;
+        }
+        
+        private static T GetDefaultValue<T>(JObject resource, T defaultValue, params string[] names)
+        {
+            var prop = resource["properties"];
+            foreach (var name in names)
+            {
+                prop = prop[name];
+                if (prop == null)
+                    return defaultValue;
+            }
+            
+            var retVal = prop.Value<T>();
+
+            if (retVal == null)
+            {
+                retVal = defaultValue;
+            }
+            
+            return retVal;
         }
 
         public JObject CreateBackend(JObject restObject)
