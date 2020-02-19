@@ -579,7 +579,7 @@ namespace APIManagementTemplate.Test
             var template = GetTemplate(true, false);
             AssertParameter(template, "diagnostic_appInsights_samplingPercentage", "100", "string");
             AssertParameter(template, "diagnostic_appInsights_alwaysLog", "allErrors", "string");
-            AssertParameter(template, "diagnostic_appInsights_enableHttpCorrelationHeaders", "true", "bool");
+            AssertParameter(template, "diagnostic_appInsights_enableHttpCorrelationHeaders", "True", "bool");
         }
 
         [TestMethod]
