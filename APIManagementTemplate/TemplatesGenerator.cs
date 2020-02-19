@@ -699,7 +699,7 @@ namespace APIManagementTemplate
         private static void ReplaceSwaggerWithFileLink(JToken policy, FileInfo fileInfo)
         {
             policy["properties"]["contentFormat"] = "swagger-link-json";
-            policy["apiVersion"] = "2018-06-01-preview";
+            policy["apiVersion"] = "2019-01-01";
             string formattedDirectory = fileInfo.Directory.Replace(@"\", "/");
             var directory = $"/{formattedDirectory}";
             policy["properties"]["contentValue"] =

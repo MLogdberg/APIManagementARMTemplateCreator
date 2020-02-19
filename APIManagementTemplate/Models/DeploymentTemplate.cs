@@ -298,7 +298,7 @@ namespace APIManagementTemplate.Models
      /*       Migrated to new version
       *       if (resource["properties"]?["subscriptionRequired"] != null)
             {
-                resource["apiVersion"] = "2018-06-01-preview";
+                resource["apiVersion"] = "2019-01-01";
             }*/
             if (APIMInstanceAdded)
             {
@@ -1031,8 +1031,8 @@ namespace APIManagementTemplate.Models
                 var loggerName = GetServiceResourceName(loggerObject, "Microsoft.ApiManagement/service/loggers");
                 string loggerResource = $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), {loggerName})]";
 
-                //set apiVersion to 2018-06-01-preview
-                obj.apiVersion = "2018-06-01-preview";
+                //set apiVersion to 2019-01-01
+                obj.apiVersion = "2019-01-01";
 
                 obj.properties["loggerId"] = loggerResource;
                 obj.properties["alwaysLog"] = WrapParameterName(AddParameter($"diagnostic_{name}_alwaysLog", "string", GetDefaultValue(restObject, "alwaysLog")), true);
@@ -1058,7 +1058,7 @@ namespace APIManagementTemplate.Models
             var name = restObject.Value<string>("name");
             var loggerId = restObject["properties"]?.Value<string>("loggerId") ?? String.Empty;
             var logger = loggers.FirstOrDefault(x => x.Value<string>("id") == loggerId);
-            resource["apiVersion"] = "2018-06-01-preview";
+            resource["apiVersion"] = "2019-01-01";
             if (logger != null)
             {
                 var rid = new AzureResourceId(restObject.Value<string>("id"));
