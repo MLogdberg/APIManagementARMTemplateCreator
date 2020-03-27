@@ -149,6 +149,7 @@ namespace APIManagementTemplate
                     }
 
                     var operations = await resourceCollector.GetResource(id + "/operations");
+                    string previousOperationName = null;
                     foreach (JObject operation in (operations == null
                         ? new JArray()
                         : operations.Value<JArray>("value")))
@@ -230,7 +231,15 @@ namespace APIManagementTemplate
 
                             //handle nextlink?
                         }
-                        //handle nextlink?                
+                        //handle nextlink?               
+                        
+                        //add dependency to make sure not all operations are deployed at the same time. This results in timeouts when having a lot of operations
+                        if(previousOperationName != null)
+                        {
+                            var dep = $"[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('apimServiceName'), 'IfsGatewayFunctionApp', '{previousOperationName}')]";
+                            operationTemplateResource.Value<JArray>("dependsOn").Add(dep);
+                        }
+                        previousOperationName = operationInstance.Value<string>("name");
                     }
                     if (exportSwaggerDefinition)
                     {
