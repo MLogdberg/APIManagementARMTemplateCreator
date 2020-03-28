@@ -1,0 +1,15 @@
+{
+    "value": [
+        {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/certificates/MyCertificate",
+            "type": "Microsoft.ApiManagement/service/certificates",
+            "name": "MyCertificate",
+            "properties": {
+                "subject": "CN=Cert_Se_MyCertificate, OU=IT, O=If, L=Hvidovre, C=DK",
+                "thumbprint": "CCA33558DEC546C6A3E52F90DE7B0884",
+                "expirationDate": "2022-01-17T13:51:48Z"
+            }
+        }
+    ],
+    "nextLink": ""
+}

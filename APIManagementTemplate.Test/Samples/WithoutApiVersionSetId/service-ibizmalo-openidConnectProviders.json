@@ -1,0 +1,17 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/openidConnectProviders/myOpenIdProvider",
+      "type": "Microsoft.ApiManagement/service/openidConnectProviders",
+      "name": "myOpenIdProvider",
+      "properties": {
+        "displayName": "My OpenId Provider",
+        "description": null,
+        "metadataEndpoint": "https://login.microsoftonline.com/ibiz.emea.microsoftonline.com/.well-known/openid-configuration",
+        "clientId": "a979b408-e0e3-492d-bef4-84756d0adf92",
+        "clientSecret": "O24v2v29fasasd924Kks4924jsdx+24s83JJFJW2f2D="
+      }
+    }
+  ],
+  "nextLink": ""
+}

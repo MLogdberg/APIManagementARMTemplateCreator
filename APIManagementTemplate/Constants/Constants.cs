@@ -9,6 +9,8 @@ namespace APIManagementTemplate
     public static class Constants
     {
         internal static readonly string deploymentSchema = @"https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#";
+        internal static readonly string deploymenParameterSchema = @"https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#";
+        internal static readonly string parameterSchema = @"https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#";
 
         public static string AuthString = "https://login.windows.net/common/oauth2/authorize";
         public static string ClientId = "1950a258-227b-4e31-a9cf-717495945fc2";

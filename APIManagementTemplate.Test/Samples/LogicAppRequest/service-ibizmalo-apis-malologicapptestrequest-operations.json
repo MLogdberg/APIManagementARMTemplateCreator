@@ -1,0 +1,70 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/malologicapptestrequest/operations/request-invoke",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "request-invoke",
+      "properties": {
+        "displayName": "Create Order",
+        "method": "POST",
+        "urlTemplate": "/order",
+        "templateParameters": [],
+        "description": "Utlös en körning av logikappen.",
+        "request": {
+          "description": "Begärantexten.",
+          "queryParameters": [],
+          "headers": [
+            {
+              "name": "Content-Type",
+              "description": "",
+              "type": "string",
+              "defaultValue": "application/json",
+              "required": true,
+              "values": [
+                "application/json"
+              ]
+            }
+          ],
+          "representations": [
+            {
+              "contentType": "application/json",
+              "sample": null,
+              "schemaId": "5b418fd6b352470e807f4083",
+              "typeName": "request-request"
+            }
+          ]
+        },
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Åtgärdens logikappssvar med statuskoden 200.",
+            "representations": [
+              {
+                "contentType": "application/json",
+                "sample": null,
+                "schemaId": "5b418fd6b352470e807f4083",
+                "typeName": "response-200"
+              }
+            ],
+            "headers": []
+          },
+          {
+            "statusCode": 500,
+            "description": "Logikapp-reponsen.",
+            "representations": [
+              {
+                "contentType": "application/json",
+                "sample": null,
+                "schemaId": "5b418fd6b352470e807f4083",
+                "typeName": "RequestPathsInvokePost500ApplicationJsonResponse"
+              }
+            ],
+            "headers": []
+          }
+        ],
+        "policies": null
+      }
+    }
+  ],
+  "nextLink": ""
+}

@@ -1,0 +1,26 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/products/57cd81afe568130059060001/apis/maloapimtest",
+      "type": "Microsoft.ApiManagement/service/products/apis",
+      "name": "maloapimtest",
+      "properties": {
+        "displayName": "maloapimtest",
+        "apiRevision": "1",
+        "description": null,
+        "serviceUrl": "https://maloapimtest.azurewebsites.net/",
+        "path": "maloapimtest",
+        "protocols": [
+          "http",
+          "https"
+        ],
+        "authenticationSettings": null,
+        "subscriptionKeyParameterNames": null,
+        "isCurrent": true,
+        "apiVersion": "v1",
+        "apiVersionSetId": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/api-version-sets/5b418f3269163148ccd0e264"
+      }
+    }
+  ],
+  "nextLink": ""
+}

@@ -42,7 +42,45 @@ namespace APIManagementTemplate.Test
             Assert.IsNotNull(actual);
         }
 
+        [TestMethod]
+        public void TestAddVersionSet()
+        {
+            var document = Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.VersionSet.VersionSetResource.json");
+            var template = new DeploymentTemplate();
+            var actual = template.AddVersionSet(JObject.Parse(document));            
+            Assert.IsNotNull(actual);
+        }
 
+        [TestMethod]
+        public void TestSchema()
+        {
+            ResourceTemplate actual = GetSchema(false);
+            Assert.IsNotNull(actual);
+        }
+
+        [TestMethod]
+        public void TestSchemaDependsOnWhenParametrizePropertiesOnlyIsFalse()
+        {
+            ResourceTemplate actual = GetSchema(false);
+            Assert.AreEqual(1, actual.dependsOn.Count);
+            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_dev_name'),parameters('api_vita-gatan_name'))]", actual.dependsOn[0].Value<string>());
+        }
+
+        [TestMethod]
+        public void TestSchemaDependsOnWhenParametrizePropertiesOnlyIsTrue()
+        {
+            ResourceTemplate actual = GetSchema(true);
+            Assert.AreEqual(1, actual.dependsOn.Count);
+            Assert.AreEqual("[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_dev_name'),'vita-gatan')]", actual.dependsOn[0].Value<string>());
+        }
+
+        private static ResourceTemplate GetSchema(bool parametrizePropertiesOnly = false)
+        {
+            var document = Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.Schema.simpleschema.json");
+            var template = new DeploymentTemplate(parametrizePropertiesOnly);
+            var actual = template.CreateAPISchema(JObject.Parse(document));
+            return actual;
+        }
 
         [TestMethod]
         public void TestPolicyAzureResourceLogicAppsUnmodified()
@@ -52,12 +90,13 @@ namespace APIManagementTemplate.Test
 
             var policy = (JObject)array[0];
 
-            TemplateGenerator generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest","",false,false,false,new MockResourceCollector());
+            TemplateGenerator generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest","",false,false,false,false,new MockResourceCollector("path"));
+
             var template = new DeploymentTemplate();
             template.CreatePolicy(policy);
 
             generator.PolicyHandeAzureResources(policy,"123",template);
-            generator.PolicyHandleProperties(policy,"123");
+            generator.PolicyHandleProperties(policy,"123",null);
 
             Assert.AreEqual(1, generator.identifiedProperties.Count);
 
@@ -123,7 +162,7 @@ namespace APIManagementTemplate.Test
             //check definition 
             Assert.AreEqual("Microsoft.ApiManagement/service", definition["resources"][0]["type"]);
             Assert.AreEqual("[parameters('service_ibizmalo_name')]", definition["resources"][0]["name"]);
-            Assert.AreEqual("2017-03-01", definition["resources"][0]["apiVersion"]);
+            Assert.AreEqual("2019-01-01", definition["resources"][0]["apiVersion"]);
 
             Assert.AreEqual("[parameters('service_ibizmalo_sku_name')]", definition["resources"][0]["sku"]["name"]);
             Assert.AreEqual("[parameters('service_ibizmalo_sku_capacity')]", definition["resources"][0]["sku"]["capacity"]);
@@ -197,7 +236,24 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual("countyNo", oparation["properties"]["templateParameters"][0].Value<string>("name"));
             Assert.AreEqual("other", oparation["properties"]["templateParameters"][1].Value<string>("name"));
         }
-    }
 
+        [TestMethod]
+        public void ScenarioTestLogicAppUpdatedBackend()
+        {
+            var collector = new MockResourceCollector("UpdatedeLogicApp");
+            var dtemplate = new DeploymentTemplate();
+
+            var document = JObject.Parse(Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.UpdatedeLogicApp.service-cramoapidev-backends-LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV.json"));
+            dtemplate.AddBackend(document,JObject.Parse("{\"properties\":{\"definition\": {\"triggers\": {\"manual\": {\"type\": \"Request\",\"kind\": \"Http\"}}}}}"));
+
+            Assert.AreEqual("[substring(listCallbackUrl(resourceId(parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_logicAppName'), 'manual'), '2017-07-01').basePath,0,add(10,indexOf(listCallbackUrl(resourceId(parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_logicAppName'), 'manual'), '2017-07-01').basePath,'/triggers/')))]", dtemplate.resources[0]["properties"].Value<string>("url"));
+            Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',subscription().subscriptionId,'/resourceGroups/',parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_resourceGroup'),'/providers/Microsoft.Logic/workflows/',parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_logicAppName'))]", dtemplate.resources[0]["properties"].Value<string>("resourceId"));
+            var result = dtemplate.ToString();
+
+            //Assert.AreEqual("other", oparation["properties"]["templateParameters"][1].Value<string>("name"));
+
+        }
+
+    }
 
 }

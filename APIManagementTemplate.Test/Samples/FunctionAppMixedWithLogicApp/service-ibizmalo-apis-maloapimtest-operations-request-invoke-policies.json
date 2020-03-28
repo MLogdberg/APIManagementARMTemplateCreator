@@ -1,0 +1,13 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/maloapimtest/operations/request-invoke/policies/policy",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "name": "policy",
+      "properties": {
+        "policyContent": "<policies>\r\n  <inbound>\r\n    <base />\r\n    <set-backend-service id=\"apim-generated-policy\" backend-id=\"LogicApp_malologicapptestRequest\" />\r\n    <set-method id=\"apim-generated-policy\">POST</set-method>\r\n    <rewrite-uri id=\"apim-generated-policy\" template=\"/request/paths/invoke/?api-version=2016-06-01&amp;sp=/triggers/request/run&amp;sv=1.0&amp;sig={{maloapimtest_request-invoke_5b4192e76a19ef3c6dbf2466}}\" />\r\n    <set-header id=\"apim-generated-policy\" name=\"Ocp-Apim-Subscription-Key\" exists-action=\"delete\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n  <on-error>\r\n    <base />\r\n  </on-error>\r\n</policies>"
+      }
+    }
+  ],
+  "nextLink": ""
+}

@@ -1,0 +1,288 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/agespassword",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "agespassword",
+      "properties": {
+        "displayName": "agespassword",
+        "value": "aaaa",
+        "tags": null,
+        "secret": false
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/agesuser",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "agesuser",
+      "properties": {
+        "displayName": "agesuser",
+        "value": "12354",
+        "tags": null,
+        "secret": false
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/authorizationserver",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "authorizationserver",
+      "properties": {
+        "displayName": "authorizationServer",
+        "value": "https://login.microsoftonline.com/1cb87777-3df4-428b-811a-86a0f215cd35/oauth2/token",
+        "tags": [
+          "aadauth"
+        ],
+        "secret": false
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/clientId",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "clientId",
+      "properties": {
+        "displayName": "clientId",
+        "value": "6041be74-2f53-46d9-8630-69c6cc2bf962",
+        "tags": [
+          "aadauth"
+        ],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/clientsecret",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "clientsecret",
+      "properties": {
+        "displayName": "clientSecret",
+        "value": "O3iZENWka7ykChBv9DnbG2ReipUb/NtEeAjjG/Zzri4=",
+        "tags": [
+          "aadauth"
+        ],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/59914817c702ae6acf8009ba",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "59914817c702ae6acf8009ba",
+      "properties": {
+        "displayName": "logicappmanual59914817b6ea5ee897eca74a",
+        "value": "sv=1.0&sig=k3M13MzEcb-MpID5XdwL8C76YFXImxYEP8bnSPd046M",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/59c24252419faa585c2de41f",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "59c24252419faa585c2de41f",
+      "properties": {
+        "displayName": "logicapprequest59c2425282cd0772e6be3e5c",
+        "value": "sv=1.0&sig=FlkhLPdRrw06nt-J6wwFhVAiJKOKq3I0KlrRuHDmAGM",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/5b418f4619afb685dc8de379",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "5b418f4619afb685dc8de379",
+      "properties": {
+        "displayName": "maloapimtest_GenericWebhook_query_5b418f4619afb685dc8de379",
+        "value": "code for GenericWebhook",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/5b41934ca550d9de49391585",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "5b41934ca550d9de49391585",
+      "properties": {
+        "displayName": "maloapimtest_GenericWebhook_query_5b41934ca550d9de49391585",
+        "value": "code for GenericWebhook",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/5b418f463f37b79bfde7eebe",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "5b418f463f37b79bfde7eebe",
+      "properties": {
+        "displayName": "maloapimtest_HTTPTrigger_query_5b418f463f37b79bfde7eebe",
+        "value": "code for HTTPTrigger",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/5b41934c571f50d55fdbf71b",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "5b41934c571f50d55fdbf71b",
+      "properties": {
+        "displayName": "maloapimtest_HTTPTrigger_query_5b41934c571f50d55fdbf71b",
+        "value": "code for HTTPTrigger",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/5b418f46b3882daea0919d26",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "5b418f46b3882daea0919d26",
+      "properties": {
+        "displayName": "maloapimtest_HttpTriggerAdminKey_query_5b418f46b3882daea0919d26",
+        "value": "code for HttpTriggerAdminKey",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/5b41934c6d0f59440d20c5ee",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "5b41934c6d0f59440d20c5ee",
+      "properties": {
+        "displayName": "maloapimtest_HttpTriggerAdminKey_query_5b41934c6d0f59440d20c5ee",
+        "value": "code for HttpTriggerAdminKey",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/5b4192e76a19ef3c6dbf2466",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "5b4192e76a19ef3c6dbf2466",
+      "properties": {
+        "displayName": "maloapimtest_request-invoke_5b4192e76a19ef3c6dbf2466",
+        "value": "ScNuk_FGFtc2OXxnp-uHnnpCNEV5R0eB-HZWnLK4BQA",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/5b419313d3e5a75808e3f4ce",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "5b419313d3e5a75808e3f4ce",
+      "properties": {
+        "displayName": "maloapimtest_request-invoke-1_5b419313d3e5a75808e3f4ce",
+        "value": "ScNuk_FGFtc2OXxnp-uHnnpCNEV5R0eB-HZWnLK4BQA",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/5b418f9eb3de406c8744638f",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "5b418f9eb3de406c8744638f",
+      "properties": {
+        "displayName": "malologicapptestmanual_manual-invoke_5b418f9eb3de406c8744638f",
+        "value": "qPiyHuTNJfb9j-vvWakToYTUIglqlOdIE5YKD-7mQTY",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/5b418fd358c38dab47be6782",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "5b418fd358c38dab47be6782",
+      "properties": {
+        "displayName": "malologicapptestrequest_request-invoke_5b418fd358c38dab47be6782",
+        "value": "ScNuk_FGFtc2OXxnp-uHnnpCNEV5R0eB-HZWnLK4BQA",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/59a6b478285385ab3dfbb752",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "59a6b478285385ab3dfbb752",
+      "properties": {
+        "displayName": "orderrequest59a6b4783fb21a7984df42ae",
+        "value": "sv=1.0&sig=rrm1LOpkMQZNIXhy4Balas-OBpCKimdjw6PfkD5GMzo",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/58d164cb2bcac02fbeba609d",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "58d164cb2bcac02fbeba609d",
+      "properties": {
+        "displayName": "ordersmanual58d164cb5858506b5bbd1deb",
+        "value": "sv=1.0&sig=ugGYkuWmjXfikYrxLintGqms018vZV8Dco4KrE-SjrU",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/58d1702c211482fb6f109130",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "58d1702c211482fb6f109130",
+      "properties": {
+        "displayName": "ordersmanual58d1702cc155ced11a5a0841",
+        "value": "sv=1.0&sig=GtpHO0xis7Pg3EDoK9trPVJ23rT_gJ8i5JuC8NfRTpQ",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/58d239caab56912ae224cc61",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "58d239caab56912ae224cc61",
+      "properties": {
+        "displayName": "ordersmanual58d239ca7a0b2cc9b7412a79",
+        "value": "sv=1.0&sig=4iZb4ekKtW6vKcGqkmWzJLOskwoKSxDmLWkF88KYXsU",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/59c10eeb60dcecf6582b9228",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "59c10eeb60dcecf6582b9228",
+      "properties": {
+        "displayName": "ordersrequest59c10eeb2534ebf47abba3b6",
+        "value": "sv=1.0&sig=rrm1LOpkMQZNIXhy4Balas-OBpCKimdjw6PfkD5GMzo",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/59ad46158eee3880beea96a6",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "59ad46158eee3880beea96a6",
+      "properties": {
+        "displayName": "request59ad4615791ea086137dcd00",
+        "value": "sv=1.0&sig=OjGV4Gvg8x4QEGOVX250ylsU_XoAA9FKZE4rJ1MvxwU",
+        "tags": [],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/scope",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "scope",
+      "properties": {
+        "displayName": "scope",
+        "value": "59aa6418-f601-4e5d-8a7d-7b98af666864",
+        "tags": [
+          "aadauth"
+        ],
+        "secret": true
+      }
+    },
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/properties/trafficauthkey",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "trafficauthkey",
+      "properties": {
+        "displayName": "trafficauthkey",
+        "value": "dummykey",
+        "tags": null,
+        "secret": true
+      }
+    }
+  ],
+  "nextLink": ""
+}

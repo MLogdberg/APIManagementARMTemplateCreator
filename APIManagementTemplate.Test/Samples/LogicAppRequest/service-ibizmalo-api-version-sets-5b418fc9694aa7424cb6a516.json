@@ -1,0 +1,12 @@
+{
+  "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/api-version-sets/5b418fc9694aa7424cb6a516",
+  "type": "Microsoft.ApiManagement/service/apiVersionSets",
+  "name": "5b418fc9694aa7424cb6a516",
+  "properties": {
+    "displayName": "malologicapptestRequest",
+    "description": null,
+    "versioningScheme": "Segment",
+    "versionQueryName": null,
+    "versionHeaderName": null
+  }
+}

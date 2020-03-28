@@ -1,0 +1,25 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/13ea6145-d7f4-4d0f-b406-7394a2b64fb4/resourceGroups/Api-Default-West-Europe/providers/Microsoft.ApiManagement/service/cramoapidev/apis/int3502-pricelisterrorfiletosharepoint-dev",
+      "type": "Microsoft.ApiManagement/service/apis",
+      "name": "int3502-pricelisterrorfiletosharepoint-dev",
+      "properties": {
+        "displayName": "INT3502-PricelistErrorFileToSharePoint-DEV",
+        "apiRevision": "1",
+        "description": "Azure Logic App ",
+        "serviceUrl": "https://prod-36.westeurope.logic.azure.com/workflows/78896b210a4a4841b93f814080ef171e/triggers",
+        "path": "api/pricelists/errorfile",
+        "protocols": [
+          "https"
+        ],
+        "authenticationSettings": null,
+        "subscriptionKeyParameterNames": null,
+        "isCurrent": true,
+        "apiVersion": "v1",
+        "apiVersionSetId": "/subscriptions/13ea6145-d7f4-4d0f-b406-7394a2b64fb4/resourceGroups/Api-Default-West-Europe/providers/Microsoft.ApiManagement/service/cramoapidev/api-version-sets/5a58a58d691c8ba358d7368b"
+      }
+    }
+  ],
+  "nextLink": ""
+}

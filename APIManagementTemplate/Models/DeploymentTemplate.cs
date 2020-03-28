@@ -2,12 +2,11 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Management.Automation;
+using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace APIManagementTemplate.Models
 {
@@ -37,13 +36,22 @@ namespace APIManagementTemplate.Models
 
         public JObject outputs { get; set; }
 
+        private bool parametrizePropertiesOnly { get; set; }
+        private bool fixedServiceNameParameter { get; set; }
+        private bool referenceApplicationInsightsInstrumentationKey { get; set; }
+        private readonly bool parameterizeBackendFunctionKey;
 
-        public DeploymentTemplate()
+        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false)
         {
             parameters = new JObject();
             variables = new JObject();
             resources = new List<JObject>();
             outputs = new JObject();
+
+            this.parametrizePropertiesOnly = parametrizePropertiesOnly;
+            this.fixedServiceNameParameter = fixedServiceNameParameter;
+            this.referenceApplicationInsightsInstrumentationKey = referenceApplicationInsightsInstrumentationKey;
+            this.parameterizeBackendFunctionKey = parameterizeBackendFunctionKey;
         }
 
         public static DeploymentTemplate FromString(string template)
@@ -69,7 +77,7 @@ namespace APIManagementTemplate.Models
             this.resources.Remove(resource);
         }
 
-        public string AddParameter(string paramname, string type, string defaultvalue)
+        public string AddParameter(string paramname, string type, object defaultvalue)
         {
             return AddParameter(paramname, type, new JProperty("defaultValue", defaultvalue));
         }
@@ -110,15 +118,51 @@ namespace APIManagementTemplate.Models
             return realParameterName;
         }
 
+        public string AddVariable(string variablename, string value)
+        {
+            string realVariableName = variablename;
+
+            if (this.variables[variablename] == null)
+            {
+                this.variables.Add(variablename, value);
+            }
+            else
+            {
+                foreach (var p in this.variables)
+                {
+                    if (p.Key.StartsWith(variablename))
+                    {
+                        for (int i = 2; i < 100; i++)
+                        {
+                            realVariableName = variablename + i.ToString();
+                            if (this.variables[realVariableName] == null)
+                            {
+                                this.variables.Add(realVariableName, value);
+                                return realVariableName;
+                            }
+                        }
+                    }
+                }
+            }
+            return realVariableName;
+        }
+
 
         public override string ToString()
         {
             return JsonConvert.SerializeObject(this);
         }
 
-        public string WrapParameterName(string paramname)
+        public string WrapParameterName(string paramname, bool isNullValue = false)
         {
-            return "[parameters('" + paramname + "')]";
+            if (isNullValue)
+            {
+                return $"[if(empty(parameters('{paramname}')), json('null'), parameters('{paramname}'))]";
+            }
+            else
+            {
+                return "[parameters('" + paramname + "')]";
+            }
         }
         public string RemoveWrapParameter(string parameterstring)
         {
@@ -140,10 +184,11 @@ namespace APIManagementTemplate.Models
 
         public void AddParameterFromObject(JObject obj, string propertyName, string propertyType, string paramNamePrefix = "")
         {
+
             var propValue = (string)obj[propertyName];
-            if (propValue.StartsWith("[") && propValue.EndsWith("]"))
+            if (propValue == null || (propValue.StartsWith("[") && propValue.EndsWith("]")))
                 return;
-            obj[propertyName] = WrapParameterName(this.AddParameter(paramNamePrefix + "_" + propertyName, propertyType, propValue));
+            obj[propertyName] = WrapParameterName(this.AddParameter(paramNamePrefix + "_" + propertyName, propertyType, obj[propertyName]));
         }
 
         /**
@@ -155,36 +200,78 @@ namespace APIManagementTemplate.Models
         private bool APIMInstanceAdded = false;
         private string apimservicename;
 
-        public void AddAPIManagementInstance(JObject restObject)
+        public JObject AddAPIManagementInstance(JObject restObject)
         {
             if (restObject == null)
-                return;
+                return null;
 
-            string servicename = restObject.Value<string>("name");
+            string servicename = restObject.Value<string>("name").ToLowerInvariant();
             string type = restObject.Value<string>("type");
             apimservicename = servicename;
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.name = WrapParameterName(AddParameter($"service_{servicename}_name", "string", servicename));
+            obj.name = WrapParameterName(AddParameter($"{GetServiceName(servicename)}", "string", servicename));
             obj.type = type;
             var resource = JObject.FromObject(obj);
             resource["sku"] = restObject["sku"];
-            resource["sku"]["name"] = WrapParameterName(AddParameter($"service_{servicename}_sku_name", "string", restObject["sku"].Value<string>("name")));
-            resource["sku"]["capacity"] = WrapParameterName(AddParameter($"service_{servicename}_sku_capacity", "string", restObject["sku"].Value<string>("capacity")));
-            resource["location"] = WrapParameterName(AddParameter($"service_{servicename}_location", "string", restObject.Value<string>("location")));
+            resource["sku"]["name"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_name", "string", restObject["sku"].Value<string>("name")));
+            resource["sku"]["capacity"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_capacity", "string", restObject["sku"].Value<string>("capacity")));
+            resource["location"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_location", "string", restObject.Value<string>("location")));
+            if (restObject["identity"] != null && restObject["identity"].HasValues && restObject["identity"]["type"] != null)
+            {
+                resource["identity"] = new JObject();
+                resource["identity"]["type"] = restObject["identity"].Value<string>("type");
+            }
             resource["tags"] = restObject["tags"];
             resource["scale"] = null;
             resource["properties"] = new JObject();
-            resource["properties"]["publisherEmail"] = WrapParameterName(AddParameter($"service_{servicename}_publisherEmail", "string", restObject["properties"].Value<string>("publisherEmail")));
-            resource["properties"]["publisherName"] = WrapParameterName(AddParameter($"service_{servicename}_publisherName", "string", restObject["properties"].Value<string>("publisherName")));
-            resource["properties"]["notificationSenderEmail"] = WrapParameterName(AddParameter($"service_{servicename}_notificationSenderEmail", "string", restObject["properties"].Value<string>("notificationSenderEmail")));
+            resource["properties"]["publisherEmail"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_publisherEmail", "string", restObject["properties"].Value<string>("publisherEmail")));
+            resource["properties"]["publisherName"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_publisherName", "string", restObject["properties"].Value<string>("publisherName")));
+            resource["properties"]["notificationSenderEmail"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_notificationSenderEmail", "string", restObject["properties"].Value<string>("notificationSenderEmail")));
             resource["properties"]["hostnameConfigurations"] = restObject["properties"]["hostnameConfigurations"];
+
+            for (int i = 0; i < restObject["properties"]["hostnameConfigurations"].Value<JArray>().Count; i++)
+            {
+                var hostType = restObject["properties"]["hostnameConfigurations"][i].Value<string>("type");
+                //check for custom hostname
+                if (!string.IsNullOrEmpty(restObject["properties"]["hostnameConfigurations"][i].Value<string>("hostName")))
+                {
+                    resource["properties"]["hostnameConfigurations"][i]["hostName"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_{hostType}_hostName", "string", restObject["properties"]["hostnameConfigurations"][i].Value<string>("hostName")));
+                }
+                //check for keyVaultId, then parameterize and remove cert properties.
+                if (!string.IsNullOrEmpty(restObject["properties"]["hostnameConfigurations"][i].Value<string>("keyVaultId")))
+                {
+                    resource["properties"]["hostnameConfigurations"][i]["keyVaultId"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_{hostType}_keyVaultId", "string", restObject["properties"]["hostnameConfigurations"][i].Value<string>("keyVaultId")));
+                    resource["properties"]["hostnameConfigurations"][i]["certificate"]?.Parent.Remove();
+                    resource["properties"]["hostnameConfigurations"][i]["encodedCertificate"]?.Parent.Remove();
+                    resource["properties"]["hostnameConfigurations"][i]["certificatePassword"]?.Parent.Remove();
+                }
+            }
             resource["properties"]["additionalLocations"] = restObject["properties"]["additionalLocations"];
-            resource["properties"]["virtualNetworkConfiguration"] = restObject["properties"]["virtualNetworkConfiguration"];
             resource["properties"]["customProperties"] = restObject["properties"]["customProperties"];
-            resource["properties"]["virtualNetworkType"] = restObject["properties"]["virtualNetworkType"];
+            var virtualNetworkTypeParameter = AddParameter($"{GetServiceName(servicename, false)}_virtualNetworkType", "string", restObject["properties"].Value<string>("virtualNetworkType"));
+            resource["properties"]["virtualNetworkType"] = WrapParameterName(virtualNetworkTypeParameter);
+            resource["properties"]["virtualNetworkConfiguration"] = $"[if(not(equals(parameters('{virtualNetworkTypeParameter}'), 'None')), variables('virtualNetworkConfiguration'), json('null'))]";
             this.resources.Add(resource);
+            var vnc = GetVirtualNetworkConfigurationVariable(servicename, restObject["properties"]["virtualNetworkConfiguration"]);
+            this.variables.Add("virtualNetworkConfiguration", vnc);
             APIMInstanceAdded = true;
+            return resource;
+        }
+
+        private string GetVirtualnetworkParameter(string servicename, JToken virtualNetworkConfiguration, string propertyName)
+        {
+            return WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_virtualNetwork_{propertyName}",
+                "string",virtualNetworkConfiguration.Type == JTokenType.Null
+                    ? string.Empty
+                    : virtualNetworkConfiguration.Value<string>(propertyName)), true);
+        }
+
+        public string GetServiceName(string servicename, bool addName = true)
+        {
+            if (fixedServiceNameParameter)
+                return "apimServiceName";
+            return addName ? $"service_{servicename}_name" : $"service_{servicename}";
         }
 
         public JObject AddApi(JObject restObject)
@@ -194,30 +281,110 @@ namespace APIManagementTemplate.Models
 
             string name = restObject.Value<string>("name");
             string type = restObject.Value<string>("type");
-
-            var matches = Regex.Match(restObject.Value<string>("id"), "/service/(?<servicename>[a-zA-Z0-9_-]*)/");
-            string servicename = matches.Groups["servicename"].Value;
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
+            string servicename = apiid.ValueAfter("service");
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/' ,parameters('{AddParameter($"api_{name}_name", "string", name)}'))]";
+            obj.name = parametrizePropertiesOnly ? $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/{name}')]" : $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/' ,parameters('{AddParameter($"api_{name}_name", "string", name)}'))]";
             obj.type = type;
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
 
             AddParameterFromObject((JObject)resource["properties"], "apiRevision", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "serviceUrl", "string", name);
-
+            AddParameterFromObject((JObject)resource["properties"], "apiVersion", "string", name);
+            AddParameterFromObject((JObject)resource["properties"], "isCurrent", "bool", name);
+     /*       Migrated to new version
+      *       if (resource["properties"]?["subscriptionRequired"] != null)
+            {
+                resource["apiVersion"] = "2018-06-01-preview";
+            }*/
             if (APIMInstanceAdded)
             {
-                resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]" });
-            }else
+                resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]" });
+            }
+            else
             {
                 resource["dependsOn"] = new JArray(); ;
             }
 
             this.resources.Add(resource);
             return resource;
+        }
+
+        private JObject GetVirtualNetworkConfigurationVariable(string servicename, JToken virtualNetworkConfiguration)
+        {
+            var subnetnameParameter = AddParameter($"{GetServiceName(servicename, false)}_virtualNetwork_subnetname",
+                "string", virtualNetworkConfiguration.Type == JTokenType.Null ? String.Empty : virtualNetworkConfiguration.Value<string>("subnetname")?? String.Empty);
+            return new JObject
+            {
+                ["subnetResourceId"] = GetVirtualnetworkParameter(servicename, virtualNetworkConfiguration, "subnetResourceId"),
+                ["vnetid"] = GetVirtualnetworkParameter(servicename, virtualNetworkConfiguration, "vnetid"),
+                ["subnetname"] = $"[if(equals(parameters('{subnetnameParameter}'), ''), json('null'), parameters('{subnetnameParameter}'))]"
+            };
+        }
+
+        public ResourceTemplate CreateAPITag(JObject restObject)
+        {
+            if (restObject == null)
+                return null;
+
+            string name = restObject.Value<string>("name");
+            string type = restObject.Value<string>("type");
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
+            string servicename = apiid.ValueAfter("service");
+            string apiname = apiid.ValueAfter("apis");
+            apiname = parametrizePropertiesOnly ? $"'{apiname}'" : $"parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}')";
+
+            var obj = new ResourceTemplate();
+            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
+            obj.AddName(apiname);
+            obj.AddName($"'{name}'");
+
+            obj.comments = "Generated for resource " + restObject.Value<string>("id");
+            obj.type = type;
+            obj.properties = restObject.Value<JObject>("properties");
+
+            if (APIMInstanceAdded)
+            {
+                obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
+                //resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]" });
+            }
+            obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'),{apiname})]");
+
+            return obj;
+        }
+
+        public ResourceTemplate CreateAPISchema(JObject restObject)
+        {
+            if (restObject == null)
+                return null;
+
+            string name = restObject.Value<string>("name");
+            string type = restObject.Value<string>("type");
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
+            string servicename = apiid.ValueAfter("service");
+            string apiname = apiid.ValueAfter("apis");
+            apiname = parametrizePropertiesOnly ? $"'{apiname}'" : $"parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}')";
+
+            var obj = new ResourceTemplate();
+            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
+            obj.AddName(apiname);
+            obj.AddName($"'{name}'");
+
+            obj.comments = "Generated for resource " + restObject.Value<string>("id");
+            obj.type = type;
+            obj.properties = restObject.Value<JObject>("properties");
+
+            if (APIMInstanceAdded)
+            {
+                obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
+                //resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]" });
+            }
+            obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'),{apiname})]");
+
+            return obj;
         }
 
         public JObject CreateOperation(JObject restObject)
@@ -228,26 +395,27 @@ namespace APIManagementTemplate.Models
             string name = restObject.Value<string>("name");
             string type = restObject.Value<string>("type");
 
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
+            string servicename = apiid.ValueAfter("service");
+            string apiname = apiid.ValueAfter("apis");
 
-            var matches = Regex.Match(restObject.Value<string>("id"), "/service/(?<servicename>[a-zA-Z0-9_-]*)/apis/(?<apiname>[a-zA-Z0-9_-]*)");
-            string servicename = matches.Groups["servicename"].Value;
-            string apiname = matches.Groups["apiname"].Value;
-
-
+            name = $"'{name}'";
+            apiname = parametrizePropertiesOnly ? $"'{apiname}'" : $"parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}')";
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/' ,parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}'), '/' ,parameters('{AddParameter($"operations_{name}_name", "string", name)}'))]";
+            obj.name = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/', {apiname}, '/', {name})]";
             obj.type = type;
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
 
-            //schemaId is not handled well yet.. so Reseting it for now
+            //Schema list
+            var schemalist = new List<string>();
 
             var request = resource["properties"].Value<JObject>("request");
             if (request != null)
             {
-                FixRepresentations(request.Value<JArray>("representations"));
+                schemalist = schemalist.Union(FixRepresentations(request.Value<JArray>("representations"))).ToList();
             }
 
             var responses = resource["properties"].Value<JArray>("responses");
@@ -255,7 +423,7 @@ namespace APIManagementTemplate.Models
             {
                 foreach (var resp in responses)
                 {
-                    FixRepresentations(resp.Value<JArray>("representations"));
+                    schemalist = schemalist.Union(FixRepresentations(resp.Value<JArray>("representations"))).ToList();
                 }
             }
 
@@ -263,20 +431,26 @@ namespace APIManagementTemplate.Models
             var dependsOn = new JArray();
             if (APIMInstanceAdded)
             {
-                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]");
-
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
             }
-            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_{servicename}_name'), parameters('api_{apiname}_name'))]");
+            foreach (var schema in schemalist)
+            {
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis/schemas', parameters('{GetServiceName(servicename)}'),{apiname},'{schema}')]");
+            }
+
+            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'),{apiname})]");
+
             resource["dependsOn"] = dependsOn;
 
             return resource;
             //this.resources.Add(resource);
         }
 
-        private void FixRepresentations(JArray reps)
+        private List<string> FixRepresentations(JArray reps)
         {
+            var ll = new List<string>();
             if (reps == null)
-                return;
+                return ll;
             foreach (JObject rep in reps)
             {
                 string sample = rep.Value<string>("sample") ?? "";
@@ -284,38 +458,162 @@ namespace APIManagementTemplate.Models
                 if (sample.StartsWith("["))
                     rep["sample"] = "[" + sample;
 
-                //temporary fix the schema until we have better solution TODO
-                rep["schemaId"] = null;
+                string generatedSample = rep.Value<string>("generatedSample") ?? "";
+                if (generatedSample.StartsWith("["))
+                    rep["generatedSample"] = "[" + generatedSample;
+
+
+                var schema = rep.Value<string>("schemaId");
+                if (!string.IsNullOrEmpty(schema))
+                    ll.Add(schema);
             }
+            return ll;
         }
 
-        public void AddBackend(JObject restObject)
+        public Property AddBackend(JObject restObject, JObject azureResource)
         {
+            Property retval = null;
             if (restObject == null)
-                return;
+                return retval;
 
             string name = restObject.Value<string>("name");
             string type = restObject.Value<string>("type");
 
-            var matches = Regex.Match(restObject.Value<string>("id"), "/service/(?<servicename>[a-zA-Z0-9_-]*)/");
-            string servicename = matches.Groups["servicename"].Value;
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
+            string servicename = apiid.ValueAfter("service");
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/' ,parameters('{AddParameter($"backend_{name}_name", "string", name)}'))]";
+            obj.name = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/' ,'{name}')]";
             obj.type = type;
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
 
-            AddParameterFromObject((JObject)resource["properties"], "url", "string", name);
+            var dependsOn = new JArray();
+            if (restObject["properties"]["resourceId"] != null)
+            {
+                string resourceid = restObject["properties"].Value<string>("resourceId");
+                var aid = new AzureResourceId(resourceid.Replace("https://management.azure.com/", ""));
+                aid.SubscriptionId = "',subscription().subscriptionId,'";
+                var rgparamname = AddParameter(name + "_resourceGroup", "string", aid.ResourceGroupName);
+                aid.ResourceGroupName = "',parameters('" + rgparamname + "'),'";
+                if (resourceid.Contains("providers/Microsoft.Logic/workflows")) //Logic App
+                {
+                    var laname = aid.ValueAfter("workflows");
+                    var logicappname = AddParameter(name + "_logicAppName", "string", laname);
+                    aid.ReplaceValueAfter("workflows", "',parameters('" + logicappname + "')");
+
+
+                    var triggerObject = azureResource["properties"]["definition"].Value<JObject>("triggers");
+                    string triggername = "manual";
+                    foreach (var trigger in triggerObject)
+                    {
+                        if (trigger.Value.Value<string>("type") == "Request" && trigger.Value.Value<string>("kind") == "Http")
+                        {
+                            triggername = trigger.Key;
+                        }
+                    }
+                    //need to get the Logic App triggers and find the HTTP one....
+
+                    string listcallbackref = $"listCallbackUrl(resourceId(parameters('{rgparamname}'), 'Microsoft.Logic/workflows/triggers', parameters('{logicappname}'), '{triggername}'), '2017-07-01')";
+
+                    resource["properties"]["url"] = $"[substring({listcallbackref}.basePath,0,add(10,indexOf({listcallbackref}.basePath,'/triggers/')))]";
+                    retval = new Property()
+                    {
+                        type = Property.PropertyType.LogicApp,
+                        name = laname.ToLower(),
+                        extraInfo = listcallbackref
+                    };
+                }
+                else if (resourceid.Contains("providers/Microsoft.Web/sites")) //Web App/Function
+                {
+                    var sitename = aid.ValueAfter("sites");
+                    var paramsitename = AddParameter(name + "_siteName", "string", sitename);
+                    aid.ReplaceValueAfter("sites", "',parameters('" + paramsitename + "')");
+                    resource["properties"]["description"] = $"[parameters('{paramsitename}')]";
+                    string path = GetPathFromUrl(resource["properties"]?.Value<string>("url"));
+                    resource["properties"]["url"] = $"[concat('https://',toLower(parameters('{paramsitename}')),'.azurewebsites.net/{path}')]";
+
+                    retval = new Property()
+                    {
+                        type = Property.PropertyType.Function,
+                        name = sitename.ToLower(),
+                        extraInfo = parameterizeBackendFunctionKey
+                        ? $"parameters('{AddParameter($"{sitename}-key", "string", "")}')"
+                        : $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key"
+                    };
+
+                    var code = (resource["properties"]?["credentials"]?["query"]?.Value<JArray>("code") ?? new JArray()).FirstOrDefault();
+                    if (code != null)
+                    {
+                        var value = code.Value<string>();
+                        if (value.StartsWith("{{") && value.EndsWith("}}"))
+                        {
+                            var parsed = value.Substring(2, value.Length - 4);
+                            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('{GetServiceName(servicename)}'),'{parsed}')]");
+                        }
+                    }
+                }
+                resource["properties"]["resourceId"] = "[concat('https://management.azure.com/','" + aid.ToString().Substring(1) + ")]";
+            }
+            else
+            {
+                AddParameterFromObject((JObject)resource["properties"], "url", "string", name);
+            }
 
             if (APIMInstanceAdded)
             {
-                resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]" });
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
+                resource["dependsOn"] = dependsOn;
             }
 
-            this.resources.Add(resource);
+            if (this.resources.Where(rr => rr.Value<string>("name") == obj.name).Count() == 0)
+                this.resources.Add(resource);
+
+            return retval;
         }
+
+        private string GetPathFromUrl(string url)
+        {
+            if (String.IsNullOrWhiteSpace(url))
+                return String.Empty;
+            var uri = new Uri(url);
+            return uri.PathAndQuery.Substring(1);
+        }
+
+        public ResourceTemplate AddVersionSet(JObject restObject)
+        {
+            if (restObject == null)
+                return null;
+
+            string name = restObject.Value<string>("name");
+            string type = restObject.Value<string>("type");
+
+
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
+            string servicename = apiid.ValueAfter("service");
+
+            var obj = new ResourceTemplate();
+            obj.comments = "Generated for resource " + restObject.Value<string>("id");
+            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
+            obj.AddName($"'{name}'");
+
+            obj.type = type;
+            obj.properties = restObject.Value<JObject>("properties");
+            var resource = JObject.FromObject(obj);
+            resource["properties"] = restObject["properties"];
+
+            var dependsOn = new JArray();
+            if (APIMInstanceAdded)
+            {
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
+
+            }
+            resource["dependsOn"] = dependsOn;
+            this.resources.Add(resource);
+            return obj;
+        }
+
         public void AddGroup(JObject restObject)
         {
             if (restObject == null)
@@ -325,14 +623,12 @@ namespace APIManagementTemplate.Models
             string type = restObject.Value<string>("type");
 
 
-            var matches = Regex.Match(restObject.Value<string>("id"), "/service/(?<servicename>[a-zA-Z0-9_-]*)/");
-            string servicename = matches.Groups["servicename"].Value;
-
-
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
+            string servicename = apiid.ValueAfter("service");
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/' ,parameters('{AddParameter($"group_{name}_name", "string", name)}'))]";
+            obj.name = parametrizePropertiesOnly ? $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/{name}')]" : $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/' ,parameters('{AddParameter($"group_{name}_name", "string", name)}'))]";
             obj.type = type;
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
@@ -340,46 +636,142 @@ namespace APIManagementTemplate.Models
             var dependsOn = new JArray();
             if (APIMInstanceAdded)
             {
-                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]");
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
 
             }
             resource["dependsOn"] = dependsOn;
 
-            this.resources.Add(resource);
+            // Avoid duplicates.
+            if (this.resources.Count(rr => rr.Value<string>("name") == obj.name && rr.Value<string>("type") == obj.type) == 0)
+            {
+                this.resources.Add(resource);
+            }
         }
 
-        public void AddProperty(JObject restObject)
+        public JObject AddProduct(JObject restObject)
         {
             if (restObject == null)
-                return;
+                return null;
 
             string name = restObject.Value<string>("name");
             string type = restObject.Value<string>("type");
 
-
-            var matches = Regex.Match(restObject.Value<string>("id"), "/service/(?<servicename>[a-zA-Z0-9_-]*)/");
-            string servicename = matches.Groups["servicename"].Value;
-
-
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
+            string servicename = apiid.ValueAfter("service");
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/' ,parameters('{AddParameter($"property_{name}_name", "string", name)}'))]";
+            obj.name = parametrizePropertiesOnly ? $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/{name}')]" : $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/' ,parameters('{AddParameter($"product_{name}_name", "string", name)}'))]";
             obj.type = type;
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
 
-            AddParameterFromObject((JObject)resource["properties"], "value", "securestring", name);
-
             var dependsOn = new JArray();
             if (APIMInstanceAdded)
             {
-                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]");
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
 
             }
             resource["dependsOn"] = dependsOn;
 
             this.resources.Add(resource);
+            return resource;
+        }
+
+        public JObject AddProductSubObject(JObject restObject)
+        {
+            if (restObject == null)
+                return null;
+
+            string name = restObject.Value<string>("name");
+            string type = restObject.Value<string>("type");
+
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
+            string servicename = apiid.ValueAfter("service");
+            string productname = apiid.ValueAfter("products");
+
+            productname = parametrizePropertiesOnly ? $"'{productname}'" : $"parameters('{AddParameter($"product_{productname}_name", "string", productname)}')";
+            var objectname = "";
+            if (parametrizePropertiesOnly)
+            {
+                objectname = $"'{name}'";
+            }
+            else {
+                switch (type)
+                {
+                    case "Microsoft.ApiManagement/service/products/apis":
+                        {
+                            objectname = $"parameters('{AddParameter($"api_{name}_name", "string", name)}')";
+                            break;
+                        }
+                    case "Microsoft.ApiManagement/service/products/groups":
+                        {
+                            objectname = $"parameters('{AddParameter($"group_{name}_name", "string", name)}')";
+                            break;
+                        }
+                    default:
+                        {
+                            objectname = $"'{name}'";
+                            break;
+                        }
+                }
+            }
+
+            var obj = new ResourceTemplate();
+            obj.comments = "Generated for resource " + restObject.Value<string>("id");
+            obj.name = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/', {productname}, '/', {objectname})]";
+            obj.type = type;
+            var resource = JObject.FromObject(obj);
+            resource["properties"] = restObject["properties"];
+
+            var dependsOn = new JArray();
+            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/products', parameters('{GetServiceName(servicename)}'), {productname})]");
+            resource["dependsOn"] = dependsOn;
+
+            return resource;
+        }
+
+        public ResourceTemplate AddProperty(JObject restObject)
+        {
+            if (restObject == null)
+                return null;
+
+            string name = restObject.Value<string>("name");
+            string type = restObject.Value<string>("type");
+            bool secret = restObject["properties"].Value<bool>("secret");
+
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
+            string servicename = apiid.ValueAfter("service");
+
+            var obj = new ResourceTemplate();
+            obj.comments = "Generated for resource " + restObject.Value<string>("id");
+            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
+            obj.AddName($"'{name}'");
+
+            obj.type = type;
+            obj.properties = restObject.Value<JObject>("properties");
+            var resource = JObject.FromObject(obj);
+
+            var propValue = resource["properties"].Value<string>("value");
+            if (!(propValue == null || (propValue.StartsWith("[") && propValue.EndsWith("]"))))
+            {
+                resource["properties"]["value"] = WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "value", secret ? "securestring" : "string", secret ? "secretvalue" : resource["properties"]["value"]));
+            }
+
+
+
+            //AddParameterFromObject((JObject)resource["properties"], "value", secret ? "securestring" : "string", restObject["properties"].Value<string>("displayName"));
+
+            var dependsOn = new JArray();
+            if (APIMInstanceAdded)
+            {
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
+
+            }
+            resource["dependsOn"] = dependsOn;
+
+            this.resources.Add(resource);
+            return obj;
         }
 
         //need to return an object with property list and so on
@@ -393,26 +785,36 @@ namespace APIManagementTemplate.Models
             string servicename = "";
             string apiname = "";
             string operationname = "";
-            
+            bool servicePolicy = false;
 
+            name = $"'{name}'";
+
+
+            var rid = new AzureResourceId(restObject.Value<string>("id"));
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
             if (type == "Microsoft.ApiManagement/service/apis/policies")
             {
-                var matches = Regex.Match(restObject.Value<string>("id"), "/service/(?<servicename>[a-zA-Z0-9_-]*)/apis/(?<apiname>[a-zA-Z0-9_-]*)");
-                servicename = matches.Groups["servicename"].Value;
-                apiname = matches.Groups["apiname"].Value;
+                servicename = rid.ValueAfter("service");
+                apiname = rid.ValueAfter("apis");
 
-
-                obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/' ,parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}'), '/' ,parameters('{AddParameter($"policy_{name}_name", "string", name)}'))]";
+                apiname = parametrizePropertiesOnly ? $"'{apiname}'" : $"parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}')";
+                obj.name = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/', {apiname}, '/', {name})]";
             }
             else if (type == "Microsoft.ApiManagement/service/apis/operations/policies")
             {
-                var matches = Regex.Match(restObject.Value<string>("id"), "/service/(?<servicename>[a-zA-Z0-9_-]*)/apis/(?<apiname>[a-zA-Z0-9_-]*)/operations/(?<operationname>[a-zA-Z0-9_-]*)");
-                servicename = matches.Groups["servicename"].Value;
-                apiname = matches.Groups["apiname"].Value;
-                operationname = matches.Groups["operationname"].Value;
-                obj.name = $"[concat(parameters('{AddParameter($"service_{servicename}_name", "string", servicename)}'), '/' ,parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}'), '/' ,parameters('{AddParameter($"operations_{operationname}_name", "string", operationname)}'), '/' ,parameters('{AddParameter($"policy_{name}_name", "string", name)}'))]";
+                servicename = rid.ValueAfter("service");
+                apiname = rid.ValueAfter("apis");
+                operationname = rid.ValueAfter("operations");
+                apiname = parametrizePropertiesOnly ? $"'{apiname}'" : $"parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}')";
+                operationname = $"'{operationname}'";
+                obj.name = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/', {apiname}, '/', {operationname}, '/', {name})]";
+            }
+            else if (type == "Microsoft.ApiManagement/service/policies")
+            {
+                servicename = rid.ValueAfter("service");
+                obj.name = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/', 'policy')]";
+                servicePolicy = true;
             }
 
             obj.type = type;
@@ -422,19 +824,287 @@ namespace APIManagementTemplate.Models
             var dependsOn = new JArray();
             if (APIMInstanceAdded)
             {
-                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('service_{servicename}_name'))]");
-
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
             }
-            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_{servicename}_name') ,parameters('api_{apiname}_name'))]");
+
+            if (!servicePolicy)
+            {
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}') , {apiname})]");
+            }
 
             if (type == "Microsoft.ApiManagement/service/apis/operations/policies")
             {
-                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('service_{servicename}_name'), parameters('api_{apiname}_name'), parameters('operations_{operationname}_name'))]");
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('{GetServiceName(servicename)}'), {apiname}, {operationname})]");
             }
 
             resource["dependsOn"] = dependsOn;
             return resource;
             //this.resources.Add(resource);
+        }
+
+        public JObject AddApplicationInsightsInstance(JObject restObject)
+        {
+            var obj = new ResourceTemplate
+            {
+                comments = "Generated for resource " + restObject.Value<string>("id"),
+                type = "Microsoft.Insights/components",
+            };
+            var rid = new AzureResourceId(restObject.Value<string>("id"));
+            var servicename = rid.ValueAfter("service");
+            string name = restObject.Value<string>("name");
+            obj.name = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_applicationInsights", "string", name));
+            var resource = JObject.FromObject(obj);
+            resource["location"] = WrapParameterName($"{GetServiceName(servicename, false)}_location");
+            resource["apiVersion"] = "2015-05-01";
+            resource["kind"] = "other";
+            resource["properties"] = JObject.FromObject(new { Application_Type = "other" });
+            if (APIMInstanceAdded)
+            {
+                resource["dependsOn"] = new JArray
+                {
+                    $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]"
+                };
+            }
+            return resource;
+        }
+
+        public JObject CreateServiceResource(JObject restObject, string resourceType, bool addResource)
+        {
+            var obj = new ResourceTemplate
+            {
+                comments = "Generated for resource " + restObject.Value<string>("id"),
+                type = resourceType
+            };
+            var rid = new AzureResourceId(restObject.Value<string>("id"));
+            var servicename = rid.ValueAfter("service");
+            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
+            string name = GetServiceResourceName(restObject, resourceType);
+            obj.AddName(name);
+            var resource = JObject.FromObject(obj);
+            resource["properties"] = restObject["properties"];
+            var dependsOn = new JArray();
+            if (APIMInstanceAdded)
+            {
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
+            }
+            resource["dependsOn"] = dependsOn;
+            if (addResource)
+            {
+                if (resources.All(x => x.Value<string>("name") != resource.Value<string>("name")))
+                    resources.Add(resource);
+            }
+
+            return resource;
+        }
+
+        private string GetServiceResourceName(JObject restObject, string resourceType)
+        {
+            var rid = new AzureResourceId(restObject.Value<string>("id"));
+            var servicename = rid.ValueAfter("service");
+            var name = restObject.Value<string>("name");
+            var resourceTypeShort = GetResourceTypeShort(resourceType);
+            bool applicationInsightsLogger = IsApplicationInsightsLogger(restObject);
+            if (applicationInsightsLogger)
+                name = $"parameters('{AddParameter($"{GetServiceName(servicename, false)}_applicationInsights", "string", name)}')";
+            else
+                name = parametrizePropertiesOnly ? $"'{name}'" : $"parameters('{AddParameter($"{resourceTypeShort}_{name}_name", "string", name)}')";
+            return name;
+        }
+
+        private bool IsApplicationInsightsLogger(JObject restObject)
+        {
+            if (restObject.Value<string>("type") != "Microsoft.ApiManagement/service/loggers")
+                return false;
+            if (restObject["properties"]?["loggerType"]?.Value<string>() != "applicationInsights")
+                return false;
+            return true;
+        }
+
+        private string GetResourceTypeShort(string resourceType)
+        {
+            var split = resourceType.Split('/');
+            var type = split[split.Length - 1];
+            if (type.EndsWith("s"))
+                return type.Substring(0, type.Length - 1);
+            return type;
+        }
+
+        public JObject CreateCertificate(JObject restObject, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/certificates", addResource);
+            var certificatename = new AzureResourceId(restObject.Value<string>("id")).ValueAfter("certificates");
+            var properties = new
+            {
+                data = WrapParameterName(AddParameter($"certificate_{certificatename}_data", "securestring", String.Empty)),
+                password = WrapParameterName(AddParameter($"certificate_{certificatename}_password", "securestring", String.Empty))
+            };
+            resource["properties"] = JObject.FromObject(properties);
+            return resource;
+        }
+
+        public JObject CreateLogger(JObject restObject, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/loggers", addResource);
+            var azureResourceId = new AzureResourceId(restObject.Value<string>("id"));
+            var loggerName = azureResourceId.ValueAfter("loggers");
+            var serviceName = azureResourceId.ValueAfter("service");
+            var credentials = resource["properties"]?["credentials"];
+            if (credentials != null)
+            {
+                if (credentials.Value<string>("connectionString") != null)
+                {
+                    credentials["connectionString"] = WrapParameterName(AddParameter($"logger_{loggerName}_connectionString", "securestring", String.Empty));
+                }
+                var loggerType = resource["properties"]?["loggerType"]?.Value<string>() ?? string.Empty;
+                if (referenceApplicationInsightsInstrumentationKey && loggerType == "applicationInsights" && credentials.Value<string>("instrumentationKey") != null)
+                {
+                    string parameter = AddParameter($"{GetServiceName(serviceName, false)}_applicationInsights", "string", loggerName);
+                    credentials["instrumentationKey"] = $"[reference(resourceId('Microsoft.Insights/components', parameters('{parameter}')), '2014-04-01').InstrumentationKey]";
+                    var dependsOn = resource.Value<JArray>("dependsOn") ?? new JArray();
+                    dependsOn.Add($"[resourceId('Microsoft.Insights/components',parameters('{GetServiceName(serviceName, false)}_applicationInsights'))]");
+                    resource["dependsOn"] = dependsOn;
+
+                }
+                if (credentials.Value<string>("name") != null)
+                {
+                    credentials["name"] = WrapParameterName(AddParameter($"logger_{loggerName}_credentialName", "string", GetDefaultValue(resource, "credentials", "name")));
+                }
+            }
+
+            if (resource["properties"] is JObject properties)
+            {
+                //remove resourceId, because this is not used.
+                properties.Remove("resourceId");
+            }
+
+            return resource;
+        }
+        public JObject CreateIdentityProvider(JObject restObject, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/identityProviders", addResource);
+            var properties = resource["properties"];
+            var name = restObject.Value<string>("name");
+            if (properties?.Value<string>("clientId") != null)
+            {
+                properties["clientId"] = WrapParameterName(AddParameter($"identityProvider_{name}_clientId", "string", properties.Value<string>("clientId")));
+            }
+            if (properties?.Value<string>("clientSecret") != null)
+            {
+                properties["clientSecret"] = WrapParameterName(AddParameter($"identityProvider_{name}_clientSecret", "securestring", String.Empty));
+            }
+            return resource;
+        }
+        public JObject CreateTags(JObject restObject, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/tags", addResource);
+            var properties = resource["properties"];
+
+            return resource;
+        }
+
+        public JObject CreateApiDiagnostic(JObject restObject, JArray loggers, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/apis/diagnostics", addResource);
+            ResourceTemplate obj = restObject.ToObject<ResourceTemplate>();
+            obj.comments = resource.Value<string>("comments");
+            AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
+            string servicename = apiid.ValueAfter("service");
+            string apiname = apiid.ValueAfter("apis");
+            apiname = parametrizePropertiesOnly ? $"'{apiname}'" : $"parameters('{AddParameter($"api_{apiname}_name", "string", apiname)}')";
+
+            var loggerId = restObject["properties"]?.Value<string>("loggerId") ?? String.Empty;
+            var logger = loggers.FirstOrDefault(x => x.Value<string>("id") == loggerId);
+
+
+
+            //redefine name
+            string name = obj.name;
+            obj.name = null;
+            obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
+            obj.AddName(apiname);
+            obj.AddName($"parameters('{AddParameter($"diagnostic_{name}_name", "string", name)}')");
+
+            if (logger != null)
+            {
+                var rid = new AzureResourceId(restObject.Value<string>("id"));
+                JObject loggerObject = JObject.FromObject(logger);
+                var loggerName = GetServiceResourceName(loggerObject, "Microsoft.ApiManagement/service/loggers");
+                string loggerResource = $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), {loggerName})]";
+
+                //set apiVersion to 2018-06-01-preview
+                obj.apiVersion = "2018-06-01-preview";
+
+                obj.properties["loggerId"] = loggerResource;
+                obj.properties["alwaysLog"] = WrapParameterName(AddParameter($"diagnostic_{name}_alwaysLog", "string", GetDefaultValue(restObject, "alwaysLog")), true);
+
+                obj.properties["sampling"]["percentage"] = WrapParameterName(AddParameter($"diagnostic_{name}_samplingPercentage", "string", GetDefaultValue(restObject, "sampling", "percentage")));
+
+
+                obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'), {apiname})]");
+                //add when logger object is added
+                //obj.dependsOn.Add(loggerResource);
+                if (IsApplicationInsightsLogger(loggerObject))
+                {
+                    obj.properties["enableHttpCorrelationHeaders"] = WrapParameterName(AddParameter($"diagnostic_{name}_enableHttpCorrelationHeaders", "string", GetDefaultValue(restObject, "enableHttpCorrelationHeaders")));
+                }
+            }
+            return JObject.FromObject(obj);
+        }
+
+        public JObject CreateDiagnostic(JObject restObject, JArray loggers, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/diagnostics", addResource);
+            var properties = resource["properties"];
+            var name = restObject.Value<string>("name");
+            var loggerId = restObject["properties"]?.Value<string>("loggerId") ?? String.Empty;
+            var logger = loggers.FirstOrDefault(x => x.Value<string>("id") == loggerId);
+            resource["apiVersion"] = "2018-06-01-preview";
+            if (logger != null)
+            {
+                var rid = new AzureResourceId(restObject.Value<string>("id"));
+                var servicename = rid.ValueAfter("service");
+                JObject loggerObject = JObject.FromObject(logger);
+                var loggerName = GetServiceResourceName(loggerObject, "Microsoft.ApiManagement/service/loggers");
+                string loggerResource = $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), {loggerName})]";
+                properties["loggerId"] = loggerResource;
+                resource.Value<JArray>("dependsOn").Add(loggerResource);
+                resource["properties"]["alwaysLog"] = WrapParameterName(AddParameter($"diagnostic_{name}_alwaysLog", "string", GetDefaultValue(resource, "alwaysLog")));
+                resource["properties"]["sampling"]["percentage"] = WrapParameterName(AddParameter($"diagnostic_{name}_samplingPercentage", "string", GetDefaultValue(resource, "sampling", "percentage")));
+                if (IsApplicationInsightsLogger(loggerObject))
+                {
+                    resource["properties"]["enableHttpCorrelationHeaders"] = WrapParameterName(AddParameter($"diagnostic_{name}_enableHttpCorrelationHeaders", "string", GetDefaultValue(resource, "enableHttpCorrelationHeaders")));
+                }
+            }
+            return resource;
+        }
+
+        public JObject CreateOpenIDConnectProvider(JObject restObject, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/openidConnectProviders", addResource);
+            var providerName = new AzureResourceId(restObject.Value<string>("id")).ValueAfter("openidConnectProviders");
+            resource["properties"]["displayName"] = WrapParameterName(AddParameter($"openidConnectProvider_{providerName}_displayname", "string", GetDefaultValue(resource, "displayName")));
+            resource["properties"]["metadataEndpoint"] = WrapParameterName(AddParameter($"openidConnectProvider_{providerName}_metadataEndpoint", "string", GetDefaultValue(resource, "metadataEndpoint")));
+            resource["properties"]["clientId"] = WrapParameterName(AddParameter($"openidConnectProvider_{providerName}_clientId", "string", GetDefaultValue(resource, "clientId")));
+            resource["properties"]["clientSecret"] = WrapParameterName(AddParameter($"openidConnectProvider_{providerName}_clientSecret", "securestring", String.Empty));
+            return resource;
+        }
+
+        private static string GetDefaultValue(JObject resource, params string[] names)
+        {
+            var prop = resource["properties"];
+            foreach (var name in names)
+            {
+                prop = prop[name];
+                if (prop == null)
+                    return string.Empty;
+            }
+            return prop.Value<string>() ?? String.Empty;
+        }
+
+        public JObject CreateBackend(JObject restObject)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/backends", false);
+            return resource;
         }
 
         public void RemoveResources_BuiltInGroups()

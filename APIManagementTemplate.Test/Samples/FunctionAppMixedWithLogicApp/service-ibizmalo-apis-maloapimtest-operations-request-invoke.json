@@ -1,0 +1,44 @@
+{
+  "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/apis/maloapimtest/operations/request-invoke",
+  "type": "Microsoft.ApiManagement/service/apis/operations",
+  "name": "request-invoke",
+  "properties": {
+    "displayName": "Send Order",
+    "method": "POST",
+    "urlTemplate": "/order",
+    "templateParameters": [],
+    "description": "Utlös en körning av logikappen.",
+    "request": {
+      "description": null,
+      "queryParameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "description": "",
+          "type": "string",
+          "defaultValue": "application/json",
+          "required": true,
+          "values": [
+            "application/json"
+          ]
+        }
+      ],
+      "representations": []
+    },
+    "responses": [
+      {
+        "statusCode": 200,
+        "description": "Åtgärdens logikappssvar med statuskoden 200.",
+        "representations": [],
+        "headers": []
+      },
+      {
+        "statusCode": 400,
+        "description": "Logikapp-reponsen.",
+        "representations": [],
+        "headers": []
+      }
+    ],
+    "policies": null
+  }
+}

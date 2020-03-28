@@ -12,11 +12,14 @@ namespace APIManagementTemplate.Models
         public string name;
         public string extraInfo;
         public List<string> apis = new List<string>();
+        public string operationName;
 
         public enum PropertyType
         {
             Standard,
-            LogicApp
+            LogicApp,
+            LogicAppRevisionGa,
+            Function
         }
     }
 

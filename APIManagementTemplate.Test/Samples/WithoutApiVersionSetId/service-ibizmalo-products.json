@@ -1,0 +1,19 @@
+{
+  "value": [
+    {
+        "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/products/unlimited",
+        "type": "Microsoft.ApiManagement/service/products",
+        "name": "unlimited",
+        "properties": {
+            "displayName": "Unlimited",
+            "description": "Subscribers have completely unlimited access to the API. Administrator approval is required.",
+            "terms": null,
+            "subscriptionRequired": true,
+            "approvalRequired": true,
+            "subscriptionsLimit": 1,
+            "state": "published"
+        }
+    }
+  ],
+  "nextLink": ""
+}

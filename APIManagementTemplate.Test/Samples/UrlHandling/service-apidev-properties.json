@@ -1,0 +1,16 @@
+{
+  "value": [    
+    {
+      "id": "/subscriptions/1fake145-d7fa-4d0f-b406-7394a2b64fb4/resourceGroups/Api-Default-West-Europe/providers/Microsoft.ApiManagement/service/apidev/properties/int0001functionkey",
+      "type": "Microsoft.ApiManagement/service/properties",
+      "name": "int0001functionkey",
+      "properties": {
+        "displayName": "int0001functionkey",
+        "value": "bXljdXN0b21rZXk=",
+        "tags": null,
+        "secret": true
+      }
+    }
+  ],
+  "nextLink": ""
+}

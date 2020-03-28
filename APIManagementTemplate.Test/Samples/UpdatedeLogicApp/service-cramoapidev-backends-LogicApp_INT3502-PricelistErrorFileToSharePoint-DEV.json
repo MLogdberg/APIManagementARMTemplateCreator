@@ -1,0 +1,12 @@
+{
+  "id": "/subscriptions/13ea6125-d7f4-4d0f-b406-7394a2b64fb4/resourceGroups/Api-Default-West-Europe/providers/Microsoft.ApiManagement/service/cramoapidev/backends/LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV",
+  "type": "Microsoft.ApiManagement/service/backends",
+  "name": "LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV",
+  "properties": {
+    "title": "INT3502-PricelistErrorFileToSharePoint-DEV (Logic App)",
+    "description": "INT3502-PricelistErrorFileToSharePoint-DEV (Logic App)",
+    "url": "https://prod-36.westeurope.logic.azure.com/workflows/78896b210a4a4841b93f814080ef171e/triggers",
+    "protocol": "http",
+    "resourceId": "https://management.azure.com//subscriptions/13ea6125-d7f4-4d0f-b406-7394a2b64fb4/resourceGroups/Integration-Test/providers/Microsoft.Logic/workflows/INT3502-PricelistErrorFileToSharePoint-DEV"
+  }
+}
