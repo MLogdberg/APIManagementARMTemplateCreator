@@ -50,7 +50,7 @@ Example when user is connected to multitenants:
 | ApiVersion | If set, api result will be filtered based on this value i.e: v2 | false | |
 | ClaimsDump | A dump of claims piped in from `armclient` - should not be manually set | false | |
 | ParameterizeBackendFunctionKey | Set to 'true' if you want the backend function key to be parameterized | false | false |
-| SeparatePolicyOutputFolder | Set to an output folder if you want to save the policies in a separate file. This is useful when the policy size exceeds the 16KB limit and you do not want separate ARM templates for all objects. | false | "" |
+| SeparatePolicyOutputFolder | Set to an output folder if you want to save the policies in a separate file. The output folder must be relative to the directory _artifactsLocation/_artifactsBlobPrefix. Parameters _artifactsLocation, _artifactsBlobPrefix and _artifactsSASToken are added to the template automatically. This parameter is useful when the policy size exceeds the 16KB limit and you do not want separate ARM templates for all objects. | false | |
   
 After extraction a parameters file can be created off the ARMTemplate.
 
