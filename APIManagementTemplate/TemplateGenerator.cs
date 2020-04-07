@@ -385,18 +385,20 @@ namespace APIManagementTemplate
                             productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'), {apiname})]");
                         }
 
-                        var groups = await resourceCollector.GetResource(id + "/groups");
-                        foreach (JObject group in (groups == null ? new JArray() : groups.Value<JArray>("value")))
-                        {
-                            if (group["properties"].Value<bool>("builtIn") == false)
+                        if (exportGroups)
+                        { 
+                            var groups = await resourceCollector.GetResource(id + "/groups");
+                            foreach (JObject group in (groups == null ? new JArray() : groups.Value<JArray>("value")))
                             {
-                                // Add group resource
-                                var groupObject = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/groups/" + group.Value<string>("name"));
-                                template.AddGroup(groupObject);
-                                productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/groups', parameters('{GetServiceName(servicename)}'), parameters('{template.AddParameter($"group_{group.Value<string>("name")}_name", "string", group.Value<string>("name"))}'))]");
+                                if (group["properties"].Value<bool>("builtIn") == false)
+                                {
+                                    // Add group resource
+                                    var groupObject = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/groups/" + group.Value<string>("name"));
+                                    template.AddGroup(groupObject);
+                                    productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/groups', parameters('{GetServiceName(servicename)}'), parameters('{template.AddParameter($"group_{group.Value<string>("name")}_name", "string", group.Value<string>("name"))}'))]");
+                                }
                                 productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(group));
                             }
-
                         }
                         var policies = await resourceCollector.GetResource(id + "/policies");
                         foreach (JObject policy in (policies == null ? new JArray() : policies.Value<JArray>("value")))

@@ -24,12 +24,12 @@ namespace APIManagementTemplate.Test
 
         private JObject GetTemplate(bool exportProducts = false, bool parametrizePropertiesOnly = true,
             bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false,
-            bool createApplicationInsightsInstance = false, bool exportSwaggerDefinition = false)
+            bool createApplicationInsightsInstance = false, bool exportSwaggerDefinition = false, bool exportGroups = false)
         {
             if (this._template != null)
                 return this._template;
             var generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest",
-                "maloapimtestclean", false, exportProducts, true, parametrizePropertiesOnly, this.collector,
+                "maloapimtestclean", exportGroups, exportProducts, true, parametrizePropertiesOnly, this.collector,
                 replaceSetBackendServiceBaseUrlAsProperty, fixedServiceNameParameter,
                 createApplicationInsightsInstance, exportSwaggerDefinition: exportSwaggerDefinition);
             this._template = generator.GenerateTemplate().GetAwaiter().GetResult();
@@ -80,7 +80,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestProductContains4Groups()
         {
-            var template = GetTemplate(true, true, false, true, false);
+            var template = GetTemplate(true, true, false, true, false, false, true);
             var productGroups = template.WithResources(ResourceType.ProductGroup);
             Assert.IsNotNull(productGroups);
 
@@ -98,7 +98,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestContains1Group()
         {
-            var template = GetTemplate(true, true, false, true, false);
+            var template = GetTemplate(true, true, false, true, false, false, true);
             var policyGroup = template.WithResource(ResourceType.Group);
             Assert.IsNotNull(policyGroup);
 
