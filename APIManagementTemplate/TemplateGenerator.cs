@@ -757,7 +757,7 @@ namespace APIManagementTemplate
         {
             var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
             File.WriteAllText(Path.Combine(separatePolicyOutputFolder, $"{policyName}.xml"), policy["properties"].Value<string>(policyPropertyName));
-            policy["properties"][policyPropertyName] = $"[concat(parameters('{TemplatesGenerator.TemplatesStorageAccount}'), '/{separatePolicyOutputFolder}/{policyName}.xml', parameters('{TemplatesGenerator.TemplatesStorageAccountSASToken}'))]";
+            policy["properties"][policyPropertyName] = $"[concat(parameters('{TemplatesGenerator.TemplatesStorageAccount}'), parameters('{TemplatesGenerator.TemplatesStorageBlobPrefix}'), '/{separatePolicyOutputFolder}/{policyName}.xml', parameters('{TemplatesGenerator.TemplatesStorageAccountSASToken}'))]";
             policyPropertyName = policy["properties"].Value<string>("format") == null ? "contentFormat" : "format";
             policy["properties"][policyPropertyName] = "xml-link";
 
@@ -765,6 +765,7 @@ namespace APIManagementTemplate
             if (template.parameters[TemplatesGenerator.TemplatesStorageAccount] == null)
             {
                 template.parameters[TemplatesGenerator.TemplatesStorageAccount] = JToken.FromObject(new { type = "string", metadata = new { description = "Base URL of the repository" } });
+                template.parameters[TemplatesGenerator.TemplatesStorageBlobPrefix] = JToken.FromObject(new { type = "string", defaultValue = String.Empty, metadata = new { description = "Subfolder within container" } });
                 template.parameters[TemplatesGenerator.TemplatesStorageAccountSASToken] = JToken.FromObject(new { type = "securestring", defaultValue = String.Empty });
             }
 
