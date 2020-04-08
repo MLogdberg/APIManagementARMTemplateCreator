@@ -687,8 +687,8 @@ namespace APIManagementTemplate
             var backendService = policyXMLDoc.Descendants().Where(dd => dd.Name == "set-backend-service").LastOrDefault();
             if (backendService != null)
             {
-
-                if (backendService.Attribute("base-url") != null && !backendService.Attribute("base-url").Value.Contains("{{"))
+                // No idea why this is, but it makes a mess out of the separate policy files.
+                if (backendService.Attribute("base-url") != null && !backendService.Attribute("base-url").Value.Contains("{{") && String.IsNullOrEmpty(separatePolicyOutputFolder))
                 {
                     string baseUrl = backendService.Attribute("base-url").Value;
                     var paramname = template.AddParameter($"api_{apiname}_backendurl", "string", baseUrl);
