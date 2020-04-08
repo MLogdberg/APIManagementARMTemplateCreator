@@ -264,11 +264,11 @@ namespace APIManagementTemplate
                         var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
                         var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>(policyPropertyName));
 
+                        if (exportCertificates) await AddCertificate(policy, template);
                         PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
                         var policyTemplateResource = template.CreatePolicy(policy);
                         this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"), null);
                         apiTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
-                        if (exportCertificates) await AddCertificate(policy, template);
 
 
                         if (!string.IsNullOrEmpty(backendid))
