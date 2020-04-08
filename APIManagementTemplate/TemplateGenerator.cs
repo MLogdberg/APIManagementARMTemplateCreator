@@ -264,11 +264,11 @@ namespace APIManagementTemplate
                         var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
                         var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>(policyPropertyName));
 
-                        if (exportCertificates) await AddCertificate(policy, template);
                         PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
                         var policyTemplateResource = template.CreatePolicy(policy);
                         this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"), null);
                         apiTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
+                        if (exportCertificates) await AddCertificate(policy, template);
 
 
                         if (!string.IsNullOrEmpty(backendid))
@@ -498,6 +498,16 @@ namespace APIManagementTemplate
                 var certificates = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/certificates");
                 if (certificates != null)
                 {
+                    // If the thumbprint is a property, we must lookup the value of the property first.
+                    var match = Regex.Match(certificateThumbprint, "{{(?<name>[-_.a-zA-Z0-9]*)}}");
+
+                    if (match.Success)
+                    {
+                        string propertyName = match.Groups["name"].Value;
+                        var propertyResource = await resourceCollector.GetResource(GetAPIMResourceIDString() + $"/properties/{propertyName}");
+                        certificateThumbprint = propertyResource["properties"].Value<string>("value");
+                    }
+
                     var certificate = certificates.Value<JArray>("value").FirstOrDefault(x =>
                         x?["properties"]?.Value<string>("thumbprint") == certificateThumbprint);
                     if (certificate != null)
