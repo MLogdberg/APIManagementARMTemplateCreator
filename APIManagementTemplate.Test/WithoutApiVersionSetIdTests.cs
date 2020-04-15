@@ -275,7 +275,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestApiContainsPolicyReplacedSetBaseUrl()
         {
-            var template = GetTemplate();
+            var template = GetTemplate(parametrizePropertiesOnly: false);
             var apiPolicies = template.WithResources(ResourceType.ApiPolicy);
             var policy = apiPolicies.FirstOrDefault();
             Assert.IsNotNull(policy);
@@ -286,7 +286,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestApiContainsPolicyReplacedSetBaseUrlAsPropertyWhenReplaceSetBaseUrlAsPropertyIsTrue()
         {
-            var template = GetTemplate(replaceSetBackendServiceBaseUrlAsProperty: true);
+            var template = GetTemplate(parametrizePropertiesOnly: false, replaceSetBackendServiceBaseUrlAsProperty: true);
             var apiPolicies = template.WithResources(ResourceType.ApiPolicy);
             var policy = apiPolicies.FirstOrDefault();
             Assert.IsNotNull(policy);
@@ -300,7 +300,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestApiContainsPropertyWhenReplaceSetBaseUrlAsPropertyIsTrue()
         {
-            var template = GetTemplate(replaceSetBackendServiceBaseUrlAsProperty: true);
+            var template = GetTemplate(parametrizePropertiesOnly: false, replaceSetBackendServiceBaseUrlAsProperty: true);
             var property = template.WithDirectResources(ResourceType.Property)
                 .SingleOrDefault(x => x.Value(Arm.Name).Contains("api_tfs_backendurl"));
             Assert.IsNotNull(property);
