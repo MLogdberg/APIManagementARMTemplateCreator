@@ -547,7 +547,7 @@ namespace APIManagementTemplate.Test
                 diagnostics.Index(Arm.Properties).Value(Arm.AlwaysLog));
             Assert.AreEqual($"[concat(parameters('service_ibizmalo_name'), '/', {name})]",
                 diagnostics.Value(Arm.Name));
-            Assert.AreEqual($"2018-06-01-preview", diagnostics.Value(Arm.ApiVersion));
+            Assert.AreEqual($"2019-01-01", diagnostics.Value(Arm.ApiVersion));
             var loggerResource =
                 $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('service_ibizmalo_name'), parameters('service_ibizmalo_applicationInsights'))]";
             Assert.AreEqual(loggerResource, diagnostics.Index(Arm.Properties).Value(Arm.LoggerId));
@@ -579,7 +579,7 @@ namespace APIManagementTemplate.Test
             var template = GetTemplate(true, false);
             AssertParameter(template, "diagnostic_appInsights_samplingPercentage", "100", "string");
             AssertParameter(template, "diagnostic_appInsights_alwaysLog", "allErrors", "string");
-            AssertParameter(template, "diagnostic_appInsights_enableHttpCorrelationHeaders", "True", "string");
+            AssertParameter(template, "diagnostic_appInsights_enableHttpCorrelationHeaders", "True", "bool");
         }
 
         [TestMethod]

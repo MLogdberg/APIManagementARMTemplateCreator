@@ -209,6 +209,11 @@ namespace APIManagementTemplate
         {
             var generatedTemplate = new GeneratedTemplate { Directory = directory, FileName = fileName };
             DeploymentTemplate template = new DeploymentTemplate(true, true);
+
+            //move servicetemplate to the top of the list
+            filteredTemplates = filteredTemplates.AsEnumerable().OrderBy(t => t.FileName != "service.template.json");
+
+
             foreach (GeneratedTemplate template2 in filteredTemplates)
             {
                 template.resources.Add(GenerateDeployment(template2, generatedTemplates));
@@ -694,7 +699,7 @@ namespace APIManagementTemplate
         private static void ReplaceSwaggerWithFileLink(JToken policy, FileInfo fileInfo)
         {
             policy["properties"]["contentFormat"] = "swagger-link-json";
-            policy["apiVersion"] = "2018-06-01-preview";
+            policy["apiVersion"] = "2019-01-01";
             string formattedDirectory = fileInfo.Directory.Replace(@"\", "/");
             var directory = $"/{formattedDirectory}";
             policy["properties"]["contentValue"] =
