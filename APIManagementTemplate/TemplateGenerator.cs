@@ -2,6 +2,7 @@ using APIManagementTemplate.Models;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -31,8 +32,9 @@ namespace APIManagementTemplate
         private readonly bool parameterizeBackendFunctionKey;
         private readonly bool exportSwaggerDefinition;
         IResourceCollector resourceCollector;
+        private string separatePolicyOutputFolder;
 
-        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportSwaggerDefinition = false, bool exportCertificates = true, bool exportTags = false)
+        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportSwaggerDefinition = false, bool exportCertificates = true, bool exportTags = false, string separatePolicyOutputFolder = "")
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -51,6 +53,7 @@ namespace APIManagementTemplate
             this.apiVersion = apiVersion;
             this.parameterizeBackendFunctionKey = parameterizeBackendFunctionKey;
             this.exportSwaggerDefinition = exportSwaggerDefinition;
+            this.separatePolicyOutputFolder = separatePolicyOutputFolder;
         }
 
         private string GetAPIMResourceIDString()
@@ -60,7 +63,7 @@ namespace APIManagementTemplate
 
         public async Task<JObject> GenerateTemplate()
         {
-            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly, this.fixedServiceNameParameter, this.createApplicationInsightsInstance, this.parameterizeBackendFunctionKey);
+            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly, this.fixedServiceNameParameter, this.createApplicationInsightsInstance, this.parameterizeBackendFunctionKey, this.separatePolicyOutputFolder);
             if (exportPIManagementInstance)
             {
                 var apim = await resourceCollector.GetResource(GetAPIMResourceIDString());
@@ -221,6 +224,11 @@ namespace APIManagementTemplate
                             }
                             if (exportCertificates) await AddCertificate(policy, template);
 
+                            if (Directory.Exists(separatePolicyOutputFolder))
+                            {
+                                pol = ReplacePolicyWithFileLink(template, pol, operationSuffix);
+                            }
+
                             if (exportSwaggerDefinition)
                                 apiTemplateResource.Value<JArray>("resources").Add(pol);
                             else
@@ -286,6 +294,11 @@ namespace APIManagementTemplate
                             }
                         }
 
+                        if (Directory.Exists(separatePolicyOutputFolder))
+                        {
+                            ReplacePolicyWithFileLink(template, policyTemplateResource, apiInstance.Value<string>("name") + "_AllOperations");
+                        }
+                        
                         //handle nextlink?
                     }
 
@@ -377,21 +390,24 @@ namespace APIManagementTemplate
                             productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(productApi));
 
                             //also add depends On for API
-                            productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'), parameters('api_{productApi.Value<string>("name")}_name'))]");
+                            string apiname = parametrizePropertiesOnly ? $"'{productApi.Value<string>("name")}'" : $"parameters('api_{productApi.Value<string>("name")}_name')";
+                            productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'), {apiname})]");
                         }
 
-                        var groups = await resourceCollector.GetResource(id + "/groups");
-                        foreach (JObject group in (groups == null ? new JArray() : groups.Value<JArray>("value")))
-                        {
-                            if (group["properties"].Value<bool>("builtIn") == false)
+                        if (exportGroups)
+                        { 
+                            var groups = await resourceCollector.GetResource(id + "/groups");
+                            foreach (JObject group in (groups == null ? new JArray() : groups.Value<JArray>("value")))
                             {
-                                // Add group resource
-                                var groupObject = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/groups/" + group.Value<string>("name"));
-                                template.AddGroup(groupObject);
-                                productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/groups', parameters('{GetServiceName(servicename)}'), parameters('{template.AddParameter($"group_{group.Value<string>("name")}_name", "string", group.Value<string>("name"))}'))]");
+                                if (group["properties"].Value<bool>("builtIn") == false)
+                                {
+                                    // Add group resource
+                                    var groupObject = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/groups/" + group.Value<string>("name"));
+                                    template.AddGroup(groupObject);
+                                    productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/groups', parameters('{GetServiceName(servicename)}'), parameters('{template.AddParameter($"group_{group.Value<string>("name")}_name", "string", group.Value<string>("name"))}'))]");
+                                }
+                                productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(group));
                             }
-                            productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(group));
-
                         }
                         var policies = await resourceCollector.GetResource(id + "/policies");
                         foreach (JObject policy in (policies == null ? new JArray() : policies.Value<JArray>("value")))
@@ -491,6 +507,16 @@ namespace APIManagementTemplate
                 var certificates = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/certificates");
                 if (certificates != null)
                 {
+                    // If the thumbprint is a property, we must lookup the value of the property first.
+                    var match = Regex.Match(certificateThumbprint, "{{(?<name>[-_.a-zA-Z0-9]*)}}");
+
+                    if (match.Success)
+                    {
+                        string propertyName = match.Groups["name"].Value;
+                        var propertyResource = await resourceCollector.GetResource(GetAPIMResourceIDString() + $"/properties/{propertyName}");
+                        certificateThumbprint = propertyResource["properties"].Value<string>("value");
+                    }
+
                     var certificate = certificates.Value<JArray>("value").FirstOrDefault(x =>
                         x?["properties"]?.Value<string>("thumbprint") == certificateThumbprint);
                     if (certificate != null)
@@ -680,8 +706,8 @@ namespace APIManagementTemplate
             var backendService = policyXMLDoc.Descendants().Where(dd => dd.Name == "set-backend-service").LastOrDefault();
             if (backendService != null)
             {
-
-                if (backendService.Attribute("base-url") != null && !backendService.Attribute("base-url").Value.Contains("{{"))
+                // This does not work in all cases. If you want to be sure, use a property as placeholder.
+                if (backendService.Attribute("base-url") != null && !backendService.Attribute("base-url").Value.Contains("{{") && !parametrizePropertiesOnly)
                 {
                     string baseUrl = backendService.Attribute("base-url").Value;
                     var paramname = template.AddParameter($"api_{apiname}_backendurl", "string", baseUrl);
@@ -748,8 +774,23 @@ namespace APIManagementTemplate
             return policyContent;
         }
 
+        private JObject ReplacePolicyWithFileLink(DeploymentTemplate template, JObject policy, string policyName)
+        {
+            var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
+            File.WriteAllText(Path.Combine(separatePolicyOutputFolder, $"{policyName}.xml"), policy["properties"].Value<string>(policyPropertyName));
+            policy["properties"][policyPropertyName] = $"[concat(parameters('{TemplatesGenerator.TemplatesStorageAccount}'), parameters('{TemplatesGenerator.TemplatesStorageBlobPrefix}'), '/{separatePolicyOutputFolder}/{policyName}.xml', parameters('{TemplatesGenerator.TemplatesStorageAccountSASToken}'))]";
+            policyPropertyName = policy["properties"].Value<string>("format") == null ? "contentFormat" : "format";
+            policy["properties"][policyPropertyName] = "xml-link";
+
+            // Add repository parameters to the template.
+            if (template.parameters[TemplatesGenerator.TemplatesStorageAccount] == null)
+            {
+                template.parameters[TemplatesGenerator.TemplatesStorageAccount] = JToken.FromObject(new { type = "string", metadata = new { description = "Base URL of the repository" } });
+                template.parameters[TemplatesGenerator.TemplatesStorageBlobPrefix] = JToken.FromObject(new { type = "string", defaultValue = String.Empty, metadata = new { description = "Subfolder within container" } });
+                template.parameters[TemplatesGenerator.TemplatesStorageAccountSASToken] = JToken.FromObject(new { type = "securestring", defaultValue = String.Empty });
+            }
+
+            return policy;
+        }
     }
-
-
-
 }

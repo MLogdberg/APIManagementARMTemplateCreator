@@ -40,8 +40,9 @@ namespace APIManagementTemplate.Models
         private bool fixedServiceNameParameter { get; set; }
         private bool referenceApplicationInsightsInstrumentationKey { get; set; }
         private readonly bool parameterizeBackendFunctionKey;
+        private string separatePolicyOutputFolder { get; set; }
 
-        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false)
+        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false, string separatePolicyOutputFolder = "")
         {
             parameters = new JObject();
             variables = new JObject();
@@ -52,6 +53,7 @@ namespace APIManagementTemplate.Models
             this.fixedServiceNameParameter = fixedServiceNameParameter;
             this.referenceApplicationInsightsInstrumentationKey = referenceApplicationInsightsInstrumentationKey;
             this.parameterizeBackendFunctionKey = parameterizeBackendFunctionKey;
+            this.separatePolicyOutputFolder = separatePolicyOutputFolder;
         }
 
         public static DeploymentTemplate FromString(string template)

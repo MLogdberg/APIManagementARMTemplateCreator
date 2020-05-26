@@ -74,6 +74,8 @@ namespace APIManagementTemplate
         private const string BackendResourceType = "Microsoft.ApiManagement/service/backends";
         private const string OpenIdConnectProviderResourceType = "Microsoft.ApiManagement/service/openidConnectProviders";
         private const string CertificateResourceType = "Microsoft.ApiManagement/service/certificates";
+        public const string TemplatesStorageAccount = "_artifactsLocation"; // Default for generated PowerShell script. In this file, repoBaseUrl is used and I don't want to break compatibility.
+        public const string TemplatesStorageBlobPrefix = "_artifactsBlobPrefix";
         public const string TemplatesStorageAccountSASToken = "_artifactsLocationSasToken";
         private const string MasterTemplateJson = "master.template.json";
         private const string ProductAPIResourceType = "Microsoft.ApiManagement/service/products/apis";

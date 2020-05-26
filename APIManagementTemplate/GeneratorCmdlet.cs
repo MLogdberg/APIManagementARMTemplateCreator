@@ -77,6 +77,9 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false, HelpMessage = "Set to 'true' if you want the backend function key to be parameterized.")]
         public bool ParameterizeBackendFunctionKey = false;
 
+        [Parameter(Mandatory = false, HelpMessage = "SeparatePolicyOutputFolder.")]
+        public string SeparatePolicyOutputFolder = "";
+
         protected override void ProcessRecord()
         {
             AzureResourceCollector resourceCollector = new AzureResourceCollector();
@@ -100,7 +103,7 @@ namespace APIManagementTemplate
 
             try
             {
-                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter, CreateApplicationInsightsInstance, ApiVersion, ParameterizeBackendFunctionKey, ExportSwaggerDefinition, ExportCertificates, ExportTags);
+                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter, CreateApplicationInsightsInstance, ApiVersion, ParameterizeBackendFunctionKey, ExportSwaggerDefinition, ExportCertificates, ExportTags, SeparatePolicyOutputFolder);
                 JObject result = generator.GenerateTemplate().Result;
                 WriteObject(result.ToString());
             }
