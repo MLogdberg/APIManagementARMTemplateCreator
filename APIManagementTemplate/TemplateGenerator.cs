@@ -152,6 +152,7 @@ namespace APIManagementTemplate
                     }
 
                     var operations = await resourceCollector.GetResource(id + "/operations");
+                    string previousOperationName = null;
                     foreach (JObject operation in (operations == null
                         ? new JArray()
                         : operations.Value<JArray>("value")))
@@ -238,12 +239,20 @@ namespace APIManagementTemplate
 
                             //handle nextlink?
                         }
-                        //handle nextlink?                
+                        //handle nextlink?               
+                        
+                        //add dependency to make sure not all operations are deployed at the same time. This results in timeouts when having a lot of operations
+                        if(previousOperationName != null)
+                        {
+                            var dep = $"[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('apimServiceName'), 'IfsGatewayFunctionApp', '{previousOperationName}')]";
+                            operationTemplateResource.Value<JArray>("dependsOn").Add(dep);
+                        }
+                        previousOperationName = operationInstance.Value<string>("name");
                     }
                     if (exportSwaggerDefinition)
                     {
                         apiTemplateResource["properties"]["contentFormat"] = "swagger-json";
-                        var swaggerExport = await resourceCollector.GetResource(id + "?format=swagger-link&export=true", apiversion: "2018-06-01-preview");
+                        var swaggerExport = await resourceCollector.GetResource(id + "?format=swagger-link&export=true", apiversion: "2019-01-01");
                         var swaggerUrl = swaggerExport.Value<string>("link");
                         var swaggerContent = await resourceCollector.GetResourceByURL(swaggerUrl);
                         var serviceUrl = apiInstance["properties"].Value<string>("serviceUrl");
@@ -306,7 +315,7 @@ namespace APIManagementTemplate
                     //diagnostics
                     var loggers = resourceCollector.GetResource(GetAPIMResourceIDString() + "/loggers").Result;
                     var logger = loggers == null ? new JArray() : loggers.Value<JArray>("value");
-                    var diagnostics = await resourceCollector.GetResource(id + "/diagnostics", apiversion: "2018-06-01-preview");
+                    var diagnostics = await resourceCollector.GetResource(id + "/diagnostics", apiversion: "2019-01-01");
                     foreach (JObject diagnostic in diagnostics.Value<JArray>("value"))
                     {
                         if (diagnostic.Value<string>("type") == "Microsoft.ApiManagement/service/apis/diagnostics")
@@ -414,12 +423,12 @@ namespace APIManagementTemplate
             {
 
                 var id = propertyObject.Value<string>("id");
-                var name = propertyObject["properties"].Value<string>("displayName");
+                var displayName = propertyObject["properties"].Value<string>("displayName");
 
-                var identifiedProperty = this.identifiedProperties.Where(idp => name.EndsWith(idp.name)).FirstOrDefault();
+                var identifiedProperty = this.identifiedProperties.Where(idp => displayName.EndsWith(idp.name)).FirstOrDefault();
                 if (identifiedProperty == null)
                 {
-                    identifiedProperty = identifiedProperties.FirstOrDefault(idp => name == $"{idp.name}-key" && idp.type == Property.PropertyType.Function);
+                    identifiedProperty = identifiedProperties.FirstOrDefault(idp => displayName == $"{idp.name}-key" && idp.type == Property.PropertyType.Function);
                 }
                 if (identifiedProperty != null)
                 {
