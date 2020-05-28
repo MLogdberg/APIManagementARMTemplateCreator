@@ -245,7 +245,8 @@ namespace APIManagementTemplate
                         if(previousOperationName != null)
                         {
                             //operationTemplateResource.Value<JArray>("dependsOn").Where(aa => aa.ToString().Contains("'Microsoft.ApiManagement/service/apis'")).First();
-                            var dep = $"[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('{GetServiceName(servicename)}'), parameters('api_{apiInstance.Value<string>("name")}_name'), '{previousOperationName}')]";
+                            string apiname = parametrizePropertiesOnly ? $"'{apiInstance.Value<string>("name")}'" : $"parameters('api_{apiInstance.Value<string>("name")}_name')";
+                            var dep = $"[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('{GetServiceName(servicename)}'), {apiname}, '{previousOperationName}')]";
                             operationTemplateResource.Value<JArray>("dependsOn").Add(dep);
                         }
                         previousOperationName = operationInstance.Value<string>("name");
