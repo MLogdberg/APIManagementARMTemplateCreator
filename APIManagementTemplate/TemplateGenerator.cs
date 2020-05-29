@@ -108,11 +108,12 @@ namespace APIManagementTemplate
             }
 
 
-            var apis = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
-
-            if (apis != null)
+            var apiObjectResult = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
+            IEnumerable<JToken> apis = new List<JToken>();
+            if (apiObjectResult != null)
             {
-                foreach (JObject apiObject in (!string.IsNullOrEmpty(apiVersion) ? apis.Value<JArray>("value").Where(aa => aa["properties"].Value<string>("apiVersion") == this.apiVersion) : apis.Value<JArray>("value")))
+                apis = (!string.IsNullOrEmpty(apiVersion) ? apiObjectResult.Value<JArray>("value").Where(aa => aa["properties"].Value<string>("apiVersion") == this.apiVersion) : apiObjectResult.Value<JArray>("value"));
+                foreach (JObject apiObject in apis)
                 {
 
                     var id = apiObject.Value<string>("id");
@@ -380,8 +381,15 @@ namespace APIManagementTemplate
 
                         var productTemplateResource = template.AddProduct(productObject);
 
+                        var listOfApiNamesInThisSearch = apis.Select(api => api.Value<string>("name")).ToList();
+
                         foreach (JObject productApi in (productApis == null ? new JArray() : productApis.Value<JArray>("value")))
                         {
+                            //only take the api's inside the api query
+                            if(!listOfApiNamesInThisSearch.Contains(productApi.Value<string>("name")) ){
+                                continue;
+                            }
+
                             var productProperties = productApi["properties"];
                             if (productProperties["apiVersionSetId"] != null)
                             {
