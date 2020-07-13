@@ -194,7 +194,7 @@ namespace APIManagementTemplate
                             if (!string.IsNullOrEmpty(backendid))
                             {
                                 BackendObject bo = await HandleBackend(template, operationSuffix, backendid);
-                                JObject backendInstance = bo.backendInstance;
+                                JObject backendInstance = bo?.backendInstance;
                                 if (backendInstance != null)
                                 {
                                     if (apiTemplateResource.Value<JArray>("dependsOn") == null)
@@ -204,7 +204,7 @@ namespace APIManagementTemplate
                                     apiTemplateResource.Value<JArray>("dependsOn").Add(
                                         $"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
                                 }
-                                if (bo.backendProperty != null)
+                                if (bo?.backendProperty != null)
                                 {
                                     if (bo.backendProperty.type == Property.PropertyType.LogicApp)
                                     {
@@ -241,9 +241,9 @@ namespace APIManagementTemplate
                             //handle nextlink?
                         }
                         //handle nextlink?               
-                        
+
                         //add dependency to make sure not all operations are deployed at the same time. This results in timeouts when having a lot of operations
-                        if(previousOperationName != null)
+                        if (previousOperationName != null)
                         {
                             //operationTemplateResource.Value<JArray>("dependsOn").Where(aa => aa.ToString().Contains("'Microsoft.ApiManagement/service/apis'")).First();
                             string apiname = parametrizePropertiesOnly ? $"'{apiInstance.Value<string>("name")}'" : $"parameters('api_{apiInstance.Value<string>("name")}_name')";
@@ -301,7 +301,7 @@ namespace APIManagementTemplate
                         {
                             ReplacePolicyWithFileLink(template, policyTemplateResource, apiInstance.Value<string>("name") + "_AllOperations");
                         }
-                        
+
                         //handle nextlink?
                     }
 
@@ -387,7 +387,8 @@ namespace APIManagementTemplate
                         foreach (JObject productApi in (productApis == null ? new JArray() : productApis.Value<JArray>("value")))
                         {
                             //only take the api's inside the api query
-                            if(!listOfApiNamesInThisSearch.Contains(productApi.Value<string>("name")) ){
+                            if (!listOfApiNamesInThisSearch.Contains(productApi.Value<string>("name")))
+                            {
                                 continue;
                             }
 
@@ -405,7 +406,7 @@ namespace APIManagementTemplate
                         }
 
                         if (exportGroups)
-                        { 
+                        {
                             var groups = await resourceCollector.GetResource(id + "/groups");
                             foreach (JObject group in (groups == null ? new JArray() : groups.Value<JArray>("value")))
                             {
@@ -453,14 +454,17 @@ namespace APIManagementTemplate
                     }
                     else if (identifiedProperty.type == Property.PropertyType.Function)
                     {
-                        var functionSplittedName = identifiedProperty.operationName.Split('-');
-                        var functionName = functionSplittedName.Last();
-                        if (functionSplittedName.Count() > 2)
+                        var functionSplittedName = identifiedProperty.operationName?.Split('-');
+                        if (functionSplittedName != null)
                         {
-                            functionName = string.Join("-", functionSplittedName.Skip(1));
+                            var functionName = functionSplittedName.Last();
+                            if (functionSplittedName.Count() > 2)
+                            {
+                                functionName = string.Join("-", functionSplittedName.Skip(1));
+                            }
+                            //    "replacewithfunctionoperationname"
+                            propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo.Replace("replacewithfunctionoperationname", $"{functionName}")}]";
                         }
-                        //    "replacewithfunctionoperationname"
-                        propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo.Replace("replacewithfunctionoperationname", $"{functionName}")}]";
                     }
                     var propertyTemplate = template.AddProperty(propertyObject);
 
@@ -524,7 +528,8 @@ namespace APIManagementTemplate
                     {
                         string propertyName = match.Groups["name"].Value;
                         var propertyResource = await resourceCollector.GetResource(GetAPIMResourceIDString() + $"/properties/{propertyName}");
-                        certificateThumbprint = propertyResource["properties"].Value<string>("value");
+                        if (propertyResource != null)
+                            certificateThumbprint = propertyResource["properties"].Value<string>("value");
                     }
 
                     var certificate = certificates.Value<JArray>("value").FirstOrDefault(x =>
