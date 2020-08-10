@@ -41,8 +41,11 @@ namespace APIManagementTemplate.Models
         private bool referenceApplicationInsightsInstrumentationKey { get; set; }
         private readonly bool parameterizeBackendFunctionKey;
         private string separatePolicyOutputFolder { get; set; }
+        private bool chainDependencies { get; set; }
+        private string lastProductApi { get; set; }
+        private string lastApi { get; set; }
 
-        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false, string separatePolicyOutputFolder = "")
+        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false, string separatePolicyOutputFolder = "", bool chainDependencies = false)
         {
             parameters = new JObject();
             variables = new JObject();
@@ -54,6 +57,7 @@ namespace APIManagementTemplate.Models
             this.referenceApplicationInsightsInstrumentationKey = referenceApplicationInsightsInstrumentationKey;
             this.parameterizeBackendFunctionKey = parameterizeBackendFunctionKey;
             this.separatePolicyOutputFolder = separatePolicyOutputFolder;
+            this.chainDependencies = chainDependencies;
         }
 
         public static DeploymentTemplate FromString(string template)
@@ -297,20 +301,25 @@ namespace APIManagementTemplate.Models
             AddParameterFromObject((JObject)resource["properties"], "serviceUrl", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "apiVersion", "string", name);
             AddParameterFromObject((JObject)resource["properties"], "isCurrent", "bool", name);
-     /*       Migrated to new version
-      *       if (resource["properties"]?["subscriptionRequired"] != null)
-            {
-                resource["apiVersion"] = "2019-01-01";
-            }*/
+            /*       Migrated to new version
+             *       if (resource["properties"]?["subscriptionRequired"] != null)
+                   {
+                       resource["apiVersion"] = "2019-01-01";
+                   }*/
+
+            var dependsOn = new JArray();
             if (APIMInstanceAdded)
             {
-                resource["dependsOn"] = new JArray(new string[] { $"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]" });
-            }
-            else
-            {
-                resource["dependsOn"] = new JArray(); ;
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
             }
 
+            if (chainDependencies && lastApi != null)
+            {
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'), '{lastApi}')]");
+            }
+
+            lastApi = name;
+            resource["dependsOn"] = dependsOn;
             this.resources.Add(resource);
             return resource;
         }
@@ -766,6 +775,20 @@ namespace APIManagementTemplate.Models
 
             var dependsOn = new JArray();
             dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/products', parameters('{GetServiceName(servicename)}'), {productname})]");
+
+            if (type == "Microsoft.ApiManagement/service/products/apis")
+            {
+                // products/apis have a dependency on the product and the api.
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'), '{name}')]");
+
+                if (chainDependencies && lastProductApi != null)
+                {
+                    dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/products/apis', parameters('{GetServiceName(servicename)}'), {productname}, {lastProductApi})]");
+                }
+
+                lastProductApi = objectname;
+            }
+
             resource["dependsOn"] = dependsOn;
 
             return resource;
