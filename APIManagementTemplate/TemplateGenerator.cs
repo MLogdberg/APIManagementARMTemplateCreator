@@ -33,8 +33,9 @@ namespace APIManagementTemplate
         private readonly bool exportSwaggerDefinition;
         IResourceCollector resourceCollector;
         private string separatePolicyOutputFolder;
+        private bool chainDependencies;
 
-        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportSwaggerDefinition = false, bool exportCertificates = true, bool exportTags = false, string separatePolicyOutputFolder = "")
+        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportSwaggerDefinition = false, bool exportCertificates = true, bool exportTags = false, string separatePolicyOutputFolder = "", bool chainDependencies = false)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -54,6 +55,7 @@ namespace APIManagementTemplate
             this.parameterizeBackendFunctionKey = parameterizeBackendFunctionKey;
             this.exportSwaggerDefinition = exportSwaggerDefinition;
             this.separatePolicyOutputFolder = separatePolicyOutputFolder;
+            this.chainDependencies = chainDependencies;
         }
 
         private string GetAPIMResourceIDString()
@@ -63,7 +65,7 @@ namespace APIManagementTemplate
 
         public async Task<JObject> GenerateTemplate()
         {
-            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly, this.fixedServiceNameParameter, this.createApplicationInsightsInstance, this.parameterizeBackendFunctionKey, this.separatePolicyOutputFolder);
+            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly, this.fixedServiceNameParameter, this.createApplicationInsightsInstance, this.parameterizeBackendFunctionKey, this.separatePolicyOutputFolder, this.chainDependencies);
             if (exportPIManagementInstance)
             {
                 var apim = await resourceCollector.GetResource(GetAPIMResourceIDString());
@@ -194,7 +196,7 @@ namespace APIManagementTemplate
                             if (!string.IsNullOrEmpty(backendid))
                             {
                                 BackendObject bo = await HandleBackend(template, operationSuffix, backendid);
-                                JObject backendInstance = bo?.backendInstance;
+                                JObject backendInstance = bo.backendInstance;
                                 if (backendInstance != null)
                                 {
                                     if (apiTemplateResource.Value<JArray>("dependsOn") == null)
@@ -204,7 +206,7 @@ namespace APIManagementTemplate
                                     apiTemplateResource.Value<JArray>("dependsOn").Add(
                                         $"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
                                 }
-                                if (bo?.backendProperty != null)
+                                if (bo.backendProperty != null)
                                 {
                                     if (bo.backendProperty.type == Property.PropertyType.LogicApp)
                                     {
@@ -241,9 +243,9 @@ namespace APIManagementTemplate
                             //handle nextlink?
                         }
                         //handle nextlink?               
-
+                        
                         //add dependency to make sure not all operations are deployed at the same time. This results in timeouts when having a lot of operations
-                        if (previousOperationName != null)
+                        if(previousOperationName != null)
                         {
                             //operationTemplateResource.Value<JArray>("dependsOn").Where(aa => aa.ToString().Contains("'Microsoft.ApiManagement/service/apis'")).First();
                             string apiname = parametrizePropertiesOnly ? $"'{apiInstance.Value<string>("name")}'" : $"parameters('api_{apiInstance.Value<string>("name")}_name')";

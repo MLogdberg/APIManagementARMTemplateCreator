@@ -80,6 +80,9 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false, HelpMessage = "SeparatePolicyOutputFolder.")]
         public string SeparatePolicyOutputFolder = "";
 
+        [Parameter(Mandatory = false, HelpMessage = "Set to 'true' if you get the error 'Operation on the API is in progress'. This option chains the product apis in order to reduce parallelism.")]
+        public bool ChainDependencies = false;
+
         protected override void ProcessRecord()
         {
             AzureResourceCollector resourceCollector = new AzureResourceCollector();
@@ -103,7 +106,7 @@ namespace APIManagementTemplate
 
             try
             {
-                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter, CreateApplicationInsightsInstance, ApiVersion, ParameterizeBackendFunctionKey, ExportSwaggerDefinition, ExportCertificates, ExportTags, SeparatePolicyOutputFolder);
+                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter, CreateApplicationInsightsInstance, ApiVersion, ParameterizeBackendFunctionKey, ExportSwaggerDefinition, ExportCertificates, ExportTags, SeparatePolicyOutputFolder, ChainDependencies);
                 JObject result = generator.GenerateTemplate().Result;
                 WriteObject(result.ToString());
             }
