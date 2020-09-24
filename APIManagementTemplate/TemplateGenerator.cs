@@ -196,7 +196,7 @@ namespace APIManagementTemplate
                             if (!string.IsNullOrEmpty(backendid))
                             {
                                 BackendObject bo = await HandleBackend(template, operationSuffix, backendid);
-                                JObject backendInstance = bo.backendInstance;
+                                JObject backendInstance = bo?.backendInstance;
                                 if (backendInstance != null)
                                 {
                                     if (apiTemplateResource.Value<JArray>("dependsOn") == null)
@@ -206,7 +206,7 @@ namespace APIManagementTemplate
                                     apiTemplateResource.Value<JArray>("dependsOn").Add(
                                         $"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
                                 }
-                                if (bo.backendProperty != null)
+                                if (bo?.backendProperty != null)
                                 {
                                     if (bo.backendProperty.type == Property.PropertyType.LogicApp)
                                     {
@@ -245,7 +245,7 @@ namespace APIManagementTemplate
                         //handle nextlink?               
                         
                         //add dependency to make sure not all operations are deployed at the same time. This results in timeouts when having a lot of operations
-                        if(previousOperationName != null)
+                        if (previousOperationName != null)
                         {
                             //operationTemplateResource.Value<JArray>("dependsOn").Where(aa => aa.ToString().Contains("'Microsoft.ApiManagement/service/apis'")).First();
                             string apiname = parametrizePropertiesOnly ? $"'{apiInstance.Value<string>("name")}'" : $"parameters('api_{apiInstance.Value<string>("name")}_name')";
