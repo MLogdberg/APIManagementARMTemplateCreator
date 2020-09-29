@@ -80,6 +80,8 @@ namespace APIManagementTemplate
         private const string MasterTemplateJson = "master.template.json";
         private const string ProductAPIResourceType = "Microsoft.ApiManagement/service/products/apis";
 
+        private bool _listApiInProduct;
+
         public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false, bool generateParameterFiles = false, bool replaceListSecretsWithParameter = false, bool listApiInProduct = false, bool separateSwaggerFile = false, bool alwaysAddPropertiesAndBackend = false)
         {
             JObject parsedTemplate = JObject.Parse(sourceTemplate);
@@ -94,6 +96,8 @@ namespace APIManagementTemplate
             templates.Add(GenerateTemplate(parsedTemplate, "groupsUsers.template.json", String.Empty,
                 UserGroupResourceType));
             MoveExternalDependencies(templates);
+
+            _listApiInProduct = listApiInProduct;
             templates.Add(GenerateMasterTemplate(templates.Where(x => x.Type == ContentType.Json).ToList(), parsedTemplate, separatePolicyFile, apiStandalone));
             templates.AddRange(GenerateAPIMasterTemplate(templates, parsedTemplate, separatePolicyFile, apiStandalone));
             MoveExternalDependencies(templates.Where(x => x.FileName.StartsWith("api-") && x.FileName.EndsWith(MasterTemplateJson)).ToList());
@@ -217,7 +221,7 @@ namespace APIManagementTemplate
 
 
             foreach (GeneratedTemplate template2 in filteredTemplates)
-            {
+            {                
                 template.resources.Add(GenerateDeployment(template2, generatedTemplates));
             }
             template.parameters = GetParameters(parsedTemplate["parameters"], template.resources, separatePolicyFile);
@@ -284,7 +288,13 @@ namespace APIManagementTemplate
             var dependsOn = new JArray();
             foreach (string name in template.ExternalDependencies)
             {
-                var matches = generatedTemplates.Where(t => IsLocalDependency(name, t));
+                //check for ListApiInProduct, then skip the dependency to the api resources.
+                if (_listApiInProduct && name.Contains("Microsoft.ApiManagement/service/apis"))
+                {
+                    continue;
+                }
+
+                var matches = generatedTemplates.Where(t => IsLocalDependency(name, t)); 
                 if (matches.Any())
                 {
                     var match = matches.First();
