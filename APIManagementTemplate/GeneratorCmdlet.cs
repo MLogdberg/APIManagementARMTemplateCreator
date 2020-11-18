@@ -83,6 +83,9 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false, HelpMessage = "Set to 'true' if you get the error 'Operation on the API is in progress'. This option chains the product apis in order to reduce parallelism.")]
         public bool ChainDependencies = false;
 
+        [Parameter(Mandatory = false, HelpMessage = "Set to 'false' if you don't want to add sku information to the template. This option only works when ExportPIManagementInstance = 'true'")]
+        public bool AddSkuInformation = true;
+
         protected override void ProcessRecord()
         {
             AzureResourceCollector resourceCollector = new AzureResourceCollector();
@@ -106,7 +109,7 @@ namespace APIManagementTemplate
 
             try
             {
-                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter, CreateApplicationInsightsInstance, ApiVersion, ParameterizeBackendFunctionKey, ExportSwaggerDefinition, ExportCertificates, ExportTags, SeparatePolicyOutputFolder, ChainDependencies);
+                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter, CreateApplicationInsightsInstance, ApiVersion, ParameterizeBackendFunctionKey, ExportSwaggerDefinition, ExportCertificates, ExportTags, SeparatePolicyOutputFolder, ChainDependencies, AddSkuInformation);
                 JObject result = generator.GenerateTemplate().Result;
                 WriteObject(result.ToString());
             }

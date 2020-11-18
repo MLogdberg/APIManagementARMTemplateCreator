@@ -42,10 +42,11 @@ namespace APIManagementTemplate.Models
         private readonly bool parameterizeBackendFunctionKey;
         private string separatePolicyOutputFolder { get; set; }
         private bool chainDependencies { get; set; }
+        private bool addSkuInformation { get; set; }
         private string lastProductApi { get; set; }
         private string lastApi { get; set; }
 
-        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false, string separatePolicyOutputFolder = "", bool chainDependencies = false)
+        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false, string separatePolicyOutputFolder = "", bool chainDependencies = false, bool addSkuInformation = true)
         {
             parameters = new JObject();
             variables = new JObject();
@@ -58,6 +59,7 @@ namespace APIManagementTemplate.Models
             this.parameterizeBackendFunctionKey = parameterizeBackendFunctionKey;
             this.separatePolicyOutputFolder = separatePolicyOutputFolder;
             this.chainDependencies = chainDependencies;
+            this.addSkuInformation = addSkuInformation;
         }
 
         public static DeploymentTemplate FromString(string template)
@@ -219,9 +221,13 @@ namespace APIManagementTemplate.Models
             obj.name = WrapParameterName(AddParameter($"{GetServiceName(servicename)}", "string", servicename));
             obj.type = type;
             var resource = JObject.FromObject(obj);
-            resource["sku"] = restObject["sku"];
-            resource["sku"]["name"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_name", "string", restObject["sku"].Value<string>("name")));
-            resource["sku"]["capacity"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_capacity", "string", restObject["sku"].Value<string>("capacity")));
+            //add sku information
+            if (addSkuInformation)
+            {
+                resource["sku"] = restObject["sku"];
+                resource["sku"]["name"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_name", "string", restObject["sku"].Value<string>("name")));
+                resource["sku"]["capacity"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_capacity", "string", restObject["sku"].Value<string>("capacity")));
+            }
             resource["location"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_location", "string", restObject.Value<string>("location")));
             if (restObject["identity"] != null && restObject["identity"].HasValues && restObject["identity"]["type"] != null)
             {
@@ -553,8 +559,8 @@ namespace APIManagementTemplate.Models
                     if (parameterizeBackendFunctionKey)
                     {
                         var custom = false;
-                        
-                        var xFunctionKey = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();;
+
+                        var xFunctionKey = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();
                         if (xFunctionKey != null)
                         {
                             var value = xFunctionKey.Value<string>();
@@ -570,15 +576,15 @@ namespace APIManagementTemplate.Models
                         if (!custom)
                         {
                             functionAppPropertyName = $"{sitename}-key";
-                            extraInfo = $"parameters('{AddParameter($"{sitename}-key", "string", "")}')";    
+                            extraInfo = $"parameters('{AddParameter($"{sitename}-key", "string", "")}')";
                         }
                     }
-                    
+
                     retval = new Property()
                     {
                         type = Property.PropertyType.Function,
                         name = functionAppPropertyName.ToLower(),
-                        
+
                         extraInfo = extraInfo
                     };
 
@@ -586,9 +592,9 @@ namespace APIManagementTemplate.Models
                     if (code == null)
                     {
                         //Fall back to the x functions key
-                        code = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();;
+                        code = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();
                     }
-                    
+
                     if (code != null)
                     {
                         var value = code.Value<string>();
@@ -1135,7 +1141,7 @@ namespace APIManagementTemplate.Models
                 resource["properties"]["sampling"]["percentage"] = WrapParameterName(AddParameter($"diagnostic_{name}_samplingPercentage", "string", GetDefaultValue(resource, "sampling", "percentage")));
                 if (IsApplicationInsightsLogger(loggerObject))
                 {
-                    var value = 
+                    var value =
                     resource["properties"]["enableHttpCorrelationHeaders"] = WrapParameterName(AddParameter($"diagnostic_{name}_enableHttpCorrelationHeaders", "bool", GetDefaultValue(resource, true, "enableHttpCorrelationHeaders")));
                 }
             }
@@ -1164,7 +1170,7 @@ namespace APIManagementTemplate.Models
             }
             return prop.Value<string>() ?? String.Empty;
         }
-        
+
         private static T GetDefaultValue<T>(JObject resource, T defaultValue, params string[] names)
         {
             var prop = resource["properties"];
@@ -1174,14 +1180,14 @@ namespace APIManagementTemplate.Models
                 if (prop == null)
                     return defaultValue;
             }
-            
+
             var retVal = prop.Value<T>();
 
             if (retVal == null)
             {
                 retVal = defaultValue;
             }
-            
+
             return retVal;
         }
 
