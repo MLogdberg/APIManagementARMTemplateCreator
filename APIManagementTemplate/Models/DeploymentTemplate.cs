@@ -42,11 +42,10 @@ namespace APIManagementTemplate.Models
         private readonly bool parameterizeBackendFunctionKey;
         private string separatePolicyOutputFolder { get; set; }
         private bool chainDependencies { get; set; }
-        private bool addSkuInformation { get; set; }
         private string lastProductApi { get; set; }
         private string lastApi { get; set; }
 
-        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false, string separatePolicyOutputFolder = "", bool chainDependencies = false, bool addSkuInformation = true)
+        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false, string separatePolicyOutputFolder = "", bool chainDependencies = false)
         {
             parameters = new JObject();
             variables = new JObject();
@@ -59,7 +58,6 @@ namespace APIManagementTemplate.Models
             this.parameterizeBackendFunctionKey = parameterizeBackendFunctionKey;
             this.separatePolicyOutputFolder = separatePolicyOutputFolder;
             this.chainDependencies = chainDependencies;
-            this.addSkuInformation = addSkuInformation;
         }
 
         public static DeploymentTemplate FromString(string template)
@@ -221,14 +219,10 @@ namespace APIManagementTemplate.Models
             obj.name = WrapParameterName(AddParameter($"{GetServiceName(servicename)}", "string", servicename));
             obj.type = type;
             var resource = JObject.FromObject(obj);
-            //add sku information
-            if (addSkuInformation)
-            {
                 resource["sku"] = restObject["sku"];
                 resource["sku"]["name"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_name", "string", restObject["sku"].Value<string>("name")));
                 resource["sku"]["capacity"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_capacity", "string", restObject["sku"].Value<string>("capacity")));
-            }
-            resource["location"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_location", "string", restObject.Value<string>("location")));
+                resource["location"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_location", "string", restObject.Value<string>("location")));
             if (restObject["identity"] != null && restObject["identity"].HasValues && restObject["identity"]["type"] != null)
             {
                 resource["identity"] = new JObject();
