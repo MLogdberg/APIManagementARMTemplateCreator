@@ -367,7 +367,7 @@ namespace APIManagementTemplate.Test
         {
             GeneratedTemplate serviceTemplate = _generatedTemplates.Single(x => x.FileName == ServiceFilename && x.Directory == String.Empty);
 
-            var property = serviceTemplate.Content.SelectTokens("$..resources[?(@.type=='Microsoft.ApiManagement/service/properties')]")
+            var property = serviceTemplate.Content.SelectTokens("$..resources[?(@.type=='Microsoft.ApiManagement/service/namedValues')]")
                 .SingleOrDefault(x => x["name"].Value<string>().Contains("myfunctions-key"));
             Assert.IsNotNull(property);
 

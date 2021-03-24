@@ -595,7 +595,7 @@ namespace APIManagementTemplate.Models
                         if (value.StartsWith("{{") && value.EndsWith("}}"))
                         {
                             var parsed = value.Substring(2, value.Length - 4);
-                            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('{GetServiceName(servicename)}'),'{parsed}')]");
+                            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('{GetServiceName(servicename)}'),'{parsed}')]");
                         }
                     }
                 }

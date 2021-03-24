@@ -467,7 +467,7 @@ namespace APIManagementTemplate
 
                     if (!parametrizePropertiesOnly)
                     {
-                        string resourceid = $"[resourceId('Microsoft.ApiManagement/service/properties',{propertyTemplate.GetResourceId()})]";
+                        string resourceid = $"[resourceId('Microsoft.ApiManagement/service/namedValues',{propertyTemplate.GetResourceId()})]";
                         foreach (var apiName in identifiedProperty.apis)
                         {
                             var apiTemplate = template.resources.Where(rr => rr.Value<string>("name") == apiName).FirstOrDefault();
@@ -735,7 +735,7 @@ namespace APIManagementTemplate
                         var property = new
                         {
                             id = $"{serviceId}/properties/{paramname}",
-                            type = "Microsoft.ApiManagement/service/properties",
+                            type = "Microsoft.ApiManagement/service/namedValues",
                             name = paramname,
                             properties = new
                             {

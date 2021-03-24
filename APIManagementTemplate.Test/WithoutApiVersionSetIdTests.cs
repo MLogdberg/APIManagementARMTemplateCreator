@@ -432,7 +432,7 @@ namespace APIManagementTemplate.Test
 
             Assert.AreEqual(2, dependsOn.Count());
             Assert.IsTrue(dependsOn.Contains(
-                "[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_ibizmalo_name'),'myfunctions-key')]"));
+                "[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('service_ibizmalo_name'),'myfunctions-key')]"));
         }
 
         [TestMethod]
