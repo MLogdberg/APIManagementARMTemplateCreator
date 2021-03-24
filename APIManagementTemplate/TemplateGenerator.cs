@@ -431,7 +431,10 @@ namespace APIManagementTemplate
                 }
             }
 
-            var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/properties");
+            var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/namedValues", apiversion: "2020-06-01-preview");
+
+          //  var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/properties",apiversion: "2020-06-01-preview");
+            //has more?
             foreach (JObject propertyObject in (properties == null ? new JArray() : properties.Value<JArray>("value")))
             {
 
@@ -456,19 +459,11 @@ namespace APIManagementTemplate
                     }
                     else if (identifiedProperty.type == Property.PropertyType.Function)
                     {
-                        var functionSplittedName = identifiedProperty.operationName?.Split('-');
-                        if (functionSplittedName != null)
-                        {
-                            var functionName = functionSplittedName.Last();
-                            if (functionSplittedName.Count() > 2)
-                            {
-                                functionName = string.Join("-", functionSplittedName.Skip(1));
-                            }
-                            //    "replacewithfunctionoperationname"
-                            propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo.Replace("replacewithfunctionoperationname", $"{functionName}")}]";
-                        }
+                        propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo}]";
                     }
-                    var propertyTemplate = template.AddProperty(propertyObject);
+
+
+                    var propertyTemplate = template.AddNamedValues(propertyObject);
 
                     if (!parametrizePropertiesOnly)
                     {
@@ -749,7 +744,7 @@ namespace APIManagementTemplate
                                 secret = false
                             }
                         };
-                        template.AddProperty(JObject.FromObject(property));
+                        template.AddNamedValues(JObject.FromObject(property));
                     }
                     else
                     {

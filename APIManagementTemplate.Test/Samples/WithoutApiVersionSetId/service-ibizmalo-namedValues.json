@@ -1,0 +1,42 @@
+{
+    "value": [
+        {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/namedValues/environment",
+            "type": "Microsoft.ApiManagement/service/namedValues",
+            "name": "environment",
+            "properties": {
+                "displayName": "environment",
+                "value": "itest",
+                "tags": null,
+                "secret": false
+            }
+        },
+        {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/namedValues/5b5dbaa35a635f22ac9db431",
+            "type": "Microsoft.ApiManagement/service/namedValues",
+            "name": "5b5dbaa35a635f22ac9db431",
+            "properties": {
+                "displayName": "Logger-Credentials-5b5dbaa35a635f22ac9db432",
+                "value": "8f3de7ad-d9fc-4378-a87f-b17719e303c8",
+                "tags": null,
+                "secret": true
+            }
+        },
+        {
+            "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/namedValues/myfunctions-key",
+            "type": "Microsoft.ApiManagement/service/namedValues",
+            "name": "myfunctions-key",
+            "properties": {
+                "displayName": "myfunctions-key",
+                "value": "s53mqmUmcDhIgg93jfasd3JKS2F2js3KWMmw4lSRl24lKS/KRm1ncA==",
+                "tags": [
+                    "key",
+                    "function",
+                    "auto"
+                ],
+                "secret": true
+            }
+        }
+    ],
+    "nextLink": ""
+}

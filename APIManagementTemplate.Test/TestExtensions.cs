@@ -190,10 +190,10 @@ namespace APIManagementTemplate.Test
         ProductApi,
         [Description("Microsoft.ApiManagement/service/products")]
         Product,
-        [Description("Microsoft.ApiManagement/service/properties")]
-        Property,
         [Description("Microsoft.Resources/deployments")]
-        Deployment
+        Deployment,
+        [Description("Microsoft.ApiManagement/service/namedValues")]
+        NamedValues,
     }
 
     public enum Property

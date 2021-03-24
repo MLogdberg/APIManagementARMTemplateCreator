@@ -301,7 +301,7 @@ namespace APIManagementTemplate.Test
         public void TestApiContainsPropertyWhenReplaceSetBaseUrlAsPropertyIsTrue()
         {
             var template = GetTemplate(parametrizePropertiesOnly: false, replaceSetBackendServiceBaseUrlAsProperty: true);
-            var property = template.WithDirectResources(ResourceType.Property)
+            var property = template.WithDirectResources(ResourceType.NamedValues)
                 .SingleOrDefault(x => x.Value(Arm.Name).Contains("api_tfs_backendurl"));
             Assert.IsNotNull(property);
         }
@@ -310,7 +310,7 @@ namespace APIManagementTemplate.Test
         public void TestServiceContainsPropertyForEnvironment()
         {
             var template = GetTemplate();
-            var property = template.WithDirectResources(ResourceType.Property)
+            var property = template.WithDirectResources(ResourceType.NamedValues)
                 .SingleOrDefault(x => x.Value(Arm.Name).Contains("environment"));
             Assert.IsNotNull(property);
         }
@@ -353,7 +353,7 @@ namespace APIManagementTemplate.Test
         public void TestServiceContainsPropertyForLogger()
         {
             var template = GetTemplate();
-            var property = template.WithDirectResources(ResourceType.Property)
+            var property = template.WithDirectResources(ResourceType.NamedValues)
                 .SingleOrDefault(x => x.Value(Arm.Name).Contains("5b5dbaa35a635f22ac9db431"));
 
             Assert.IsNotNull(property);
@@ -366,7 +366,7 @@ namespace APIManagementTemplate.Test
         public void TestServiceDoesNotContainPropertyForLoggerWhenCreateApplicationInsightsInstanceIsTrue()
         {
             var template = GetTemplate(createApplicationInsightsInstance: true);
-            var property = template.WithResources(ResourceType.Property)
+            var property = template.WithResources(ResourceType.NamedValues)
                 .SingleOrDefault(x => x.Value(Arm.Name).Contains("5b5dbaa35a635f22ac9db431"));
 
             Assert.IsNull(property);
@@ -376,7 +376,7 @@ namespace APIManagementTemplate.Test
         public void TestServiceContainsPropertyForBackend()
         {
             var template = GetTemplate();
-            var property = template.WithResources(ResourceType.Property)
+            var property = template.WithResources(ResourceType.NamedValues)
                 .SingleOrDefault(x => x.Value(Arm.Name).Contains("myfunctions-key"));
 
             Assert.IsNotNull(property);

@@ -159,15 +159,15 @@ namespace APIManagementTemplate.Models
             return JsonConvert.SerializeObject(this);
         }
 
-        public string WrapParameterName(string paramname, bool isNullValue = false)
+        public string WrapParameterName(string paramname, bool isNullValue = false, bool brackets = true)
         {
             if (isNullValue)
             {
-                return $"[if(empty(parameters('{paramname}')), json('null'), parameters('{paramname}'))]";
+                return $"{(brackets ? "[" : String.Empty)}if(empty(parameters('{paramname}')), json('null'), parameters('{paramname}')){(brackets ? "]" : String.Empty)}";
             }
             else
             {
-                return "[parameters('" + paramname + "')]";
+                return $"{(brackets ? "[" : String.Empty)}parameters('" + paramname + $"'){(brackets ? "]" : String.Empty)}";
             }
         }
         public string RemoveWrapParameter(string parameterstring)
@@ -547,8 +547,8 @@ namespace APIManagementTemplate.Models
 
                     //Determine the extrainfo based on the parameterizeBackendFunctionKey. When the backend should be parameterized use the name of the property
                     //in the x-functions-key header
-                    var extraInfo =
-                        $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key";
+                    //var extraInfo = $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key";
+                    var extraInfo = $"listKeys(resourceId(variables('{rgparamname}'),concat('Microsoft.Web/sites/host'),variables('{paramsitename}'),'default'),'2018-02-01').functionKeys.default";
                     var functionAppPropertyName = sitename;
                     if (parameterizeBackendFunctionKey)
                     {
@@ -794,7 +794,7 @@ namespace APIManagementTemplate.Models
             return resource;
         }
 
-        public ResourceTemplate AddProperty(JObject restObject)
+        public ResourceTemplate AddNamedValues(JObject restObject)
         {
             if (restObject == null)
                 return null;
@@ -810,21 +810,47 @@ namespace APIManagementTemplate.Models
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
             obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
             obj.AddName($"'{name}'");
+            obj.apiVersion = "2020-06-01-preview";
 
             obj.type = type;
             obj.properties = restObject.Value<JObject>("properties");
             var resource = JObject.FromObject(obj);
 
-            var propValue = resource["properties"].Value<string>("value");
-            if (!(propValue == null || (propValue.StartsWith("[") && propValue.EndsWith("]"))))
+
+            //is key vault? 
+            var KeyVaultObj = resource["properties"].Value<JObject>("keyVault");
+            if(KeyVaultObj != null)
             {
-                resource["properties"]["value"] = WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "value", secret ? "securestring" : "string", secret ? "secretvalue" : resource["properties"]["value"]));
+                /*
+                 {
+                  "secretIdentifier": "https://kv-re-dev-api-euw.vault.azure.net/secrets/centiro-username",
+                  "identityClientId": null,
+                  "lastStatus": {
+                    "code": "Success",
+                    "timeStampUtc": "2021-03-23T11:39:33.4731812Z"
+                  }
+                 */
+                var kvIdentifier = KeyVaultObj.Value<string>("secretIdentifier");
+                var match = Regex.Match(kvIdentifier, "https://(?<keyvaultname>.*).vault.azure.net/secrets/(?<secretname>[^*#&+:<>?/]+)(/(?<secretversion>.*))?");
+                if(match.Success)
+                {
+                    var keyvaultName = match.Groups["keyvaultname"].Value;
+                    var secretname = match.Groups["secretname"].Value;                    
+                    var secretversion = match.Groups["secretversion"];
+                    resource["properties"]["keyVault"] = new JObject();
+                    resource["properties"]["keyVault"]["secretIdentifier"] = $"[concat('https://',{WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "keyVaultName","string",keyvaultName),brackets:false)}, '.vault.azure.net/secrets/',{WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "secretName", "string", secretname), brackets: false)}{(secretversion.Success ? (",'/'," + WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "secretVersion", "string", secretversion.Value), brackets: false)) : String.Empty )})]";
+                }
             }
+            else
+            {
+                var propValue = resource["properties"].Value<string>("value") ?? "";
 
-
-
-            //AddParameterFromObject((JObject)resource["properties"], "value", secret ? "securestring" : "string", restObject["properties"].Value<string>("displayName"));
-
+                if (!((propValue.StartsWith("[") && propValue.EndsWith("]"))))
+                {
+                    resource["properties"]["value"] = WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "value", secret ? "securestring" : "string", secret ? "secretvalue" : propValue));
+                }
+            }
+            
             var dependsOn = new JArray();
             if (APIMInstanceAdded)
             {
