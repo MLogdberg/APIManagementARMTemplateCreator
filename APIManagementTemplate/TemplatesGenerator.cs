@@ -70,7 +70,7 @@ namespace APIManagementTemplate
         private const string ApiOperationPolicyResourceType = "Microsoft.ApiManagement/service/apis/operations/policies";
         private const string ApiPolicyResourceType = "Microsoft.ApiManagement/service/apis/policies";
         private const string ServicePolicyFileName = "service.policy.xml";
-        private const string PropertyResourceType = "Microsoft.ApiManagement/service/properties";
+        private const string PropertyResourceType = "Microsoft.ApiManagement/service/namedValues";
         private const string BackendResourceType = "Microsoft.ApiManagement/service/backends";
         private const string OpenIdConnectProviderResourceType = "Microsoft.ApiManagement/service/openidConnectProviders";
         private const string CertificateResourceType = "Microsoft.ApiManagement/service/certificates";
@@ -114,7 +114,7 @@ namespace APIManagementTemplate
 
         private void ReplaceListSecretsWithParameter(JObject parsedTemplate)
         {
-            var properties = parsedTemplate.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/properties')]").Where(x =>
+            var properties = parsedTemplate.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/namedValues')]").Where(x =>
                     x["properties"]?.Value<string>("value").StartsWith("[listsecrets(") ?? false);
             foreach (JToken property in properties)
             {

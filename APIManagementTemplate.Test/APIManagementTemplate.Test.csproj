@@ -292,6 +292,14 @@
     <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-products.json" />
     <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-properties.json" />
     <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\workflows-salesinvoice-la.json" />
+    <EmbeddedResource Include="Samples\FunctionAppMixedWithLogicApp\service-ibizmalo-namedValues.json" />
+    <EmbeddedResource Include="Samples\FunctionAppUnedited\service-ibizmalo-namedValues.json" />
+    <EmbeddedResource Include="Samples\LogicAppAddedAsOperation\service-iBizUtbildningAPIM-namedValues.json" />
+    <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-namedValues.json" />
+    <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-namedValues.json" />
+    <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-namedValues.json" />
+    <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-namedValues.json" />
+    <EmbeddedResource Include="Samples\UrlHandling\service-apidev-namedValues.json" />
     <None Include="Samples\workflows-salesinvoice-la.json" />
   </ItemGroup>
   <ItemGroup>
