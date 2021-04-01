@@ -119,16 +119,16 @@ namespace APIManagementTemplate.Test
                 var prop = obj["properties"];
                 if (prop.Value<string>("displayName") == "maloapimtest_GenericWebhook_query_5b418f4619afb685dc8de379")
                 {
-                    Assert.AreEqual("[listKeys(resourceId(variables('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),variables('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
+                    Assert.AreEqual("[listKeys(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),parameters('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
                 }
                 else if (prop.Value<string>("displayName") == "maloapimtest_HTTPTrigger_query_5b418f463f37b79bfde7eebe")
                 {
-                    Assert.AreEqual("[listKeys(resourceId(variables('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),variables('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
+                    Assert.AreEqual("[listKeys(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),parameters('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
                 }
                 else if (prop.Value<string>("displayName") == "maloapimtest_HttpTriggerAdminKey_query_5b418f46b3882daea0919d26")
                 {
                     //hwo to fix the admin key?????
-                    Assert.AreEqual("[listKeys(resourceId(variables('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),variables('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
+                    Assert.AreEqual("[listKeys(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),parameters('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
                 }
                 else if (prop.Value<string>("displayName") == "maloapimtest_request-invoke_5b4192e76a19ef3c6dbf2466")
                 {
