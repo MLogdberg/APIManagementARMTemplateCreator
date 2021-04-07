@@ -50,6 +50,9 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false,HelpMessage = "Export the API operations and schemas as a swagger/Open API 2.0 definition")]
         public bool ExportSwaggerDefinition = false;
 
+        [Parameter(Mandatory = false,HelpMessage = "Export the API properties and backend used in the API policy")]
+        public bool ExportApiPropertiesAndBackend = true;
+
         [Parameter(Mandatory = false,HelpMessage = "A Bearer token value")]
         public string Token = "";
 
@@ -61,6 +64,9 @@ namespace APIManagementTemplate
 
         [Parameter(Mandatory = false,HelpMessage = "If the parameter for the service name always should be called apimServiceName or depend on the name of the service")]
         public bool FixedServiceNameParameter = false;
+
+        [Parameter(Mandatory = false,HelpMessage = "If the parameter for the keyvault name always should be called keyVaultName or depend on the name of the nameValue")]
+        public bool FixedKeyVaultNameParameter = false;
 
         [Parameter(Mandatory = false,HelpMessage = "If an Application Insights instance should be created. Otherwise you need to provide the instrumentation key of an existing Application Insights instance as a parameter")]
         public bool CreateApplicationInsightsInstance = false;
@@ -106,7 +112,7 @@ namespace APIManagementTemplate
 
             try
             {
-                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter, CreateApplicationInsightsInstance, ApiVersion, ParameterizeBackendFunctionKey, ExportSwaggerDefinition, ExportCertificates, ExportTags, SeparatePolicyOutputFolder, ChainDependencies);
+                TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup, APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly, resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter, CreateApplicationInsightsInstance, ApiVersion, ParameterizeBackendFunctionKey, ExportSwaggerDefinition, ExportCertificates, ExportTags, SeparatePolicyOutputFolder, ChainDependencies, ExportApiPropertiesAndBackend, FixedKeyVaultNameParameter);
                 JObject result = generator.GenerateTemplate().Result;
                 WriteObject(result.ToString());
             }
