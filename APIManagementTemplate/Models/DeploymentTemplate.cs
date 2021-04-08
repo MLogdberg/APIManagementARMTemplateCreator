@@ -550,7 +550,7 @@ namespace APIManagementTemplate.Models
                     //Determine the extrainfo based on the parameterizeBackendFunctionKey. When the backend should be parameterized use the name of the property
                     //in the x-functions-key header
                     //var extraInfo = $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key";
-                    var extraInfo = $"listKeys(resourceId(variables('{rgparamname}'),concat('Microsoft.Web/sites/host'),variables('{paramsitename}'),'default'),'2018-02-01').functionKeys.default";
+                    var extraInfo = $"listKeys(resourceId(parameters('{rgparamname}'),concat('Microsoft.Web/sites/host'),parameters('{paramsitename}'),'default'),'2018-02-01').functionKeys.default";
                     var functionAppPropertyName = sitename;
                     if (parameterizeBackendFunctionKey)
                     {
