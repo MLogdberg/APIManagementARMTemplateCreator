@@ -46,7 +46,7 @@ namespace APIManagementTemplate.Models
         private string lastProductApi { get; set; }
         private string lastApi { get; set; }
 
-        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false, string separatePolicyOutputFolder = "", bool chainDependencies = false, bool fixedKeyVaultNameParameter = false)
+        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false, string separatePolicyOutputFolder = "", bool chainDependencies = false, bool addSku = false, bool fixedKeyVaultNameParameter = false)
         {
             parameters = new JObject();
             variables = new JObject();

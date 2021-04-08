@@ -35,9 +35,11 @@ namespace APIManagementTemplate
         IResourceCollector resourceCollector;
         private string separatePolicyOutputFolder;
         private bool chainDependencies;
+        private bool addSkuInformation;
         private bool exportApiPropertiesAndBackend;
 
-        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportSwaggerDefinition = false, bool exportCertificates = true, bool exportTags = false, string separatePolicyOutputFolder = "", bool chainDependencies = false, bool exportApiPropertiesAndBackend = true, bool fixedKeyVaultNameParameter = false)
+
+        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportSwaggerDefinition = false, bool exportCertificates = true, bool exportTags = false, string separatePolicyOutputFolder = "", bool chainDependencies = false, bool addSkuInformation = true, bool exportApiPropertiesAndBackend = true, bool fixedKeyVaultNameParameter = false)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -59,6 +61,7 @@ namespace APIManagementTemplate
             this.exportSwaggerDefinition = exportSwaggerDefinition;
             this.separatePolicyOutputFolder = separatePolicyOutputFolder;
             this.chainDependencies = chainDependencies;
+            this.addSkuInformation = addSkuInformation;
             this.exportApiPropertiesAndBackend = exportApiPropertiesAndBackend;
         }
 
@@ -69,7 +72,7 @@ namespace APIManagementTemplate
 
         public async Task<JObject> GenerateTemplate()
         {
-            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly, this.fixedServiceNameParameter, this.createApplicationInsightsInstance, this.parameterizeBackendFunctionKey, this.separatePolicyOutputFolder, this.chainDependencies, this.fixedKeyVaultNameParameter);
+            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly, this.fixedServiceNameParameter, this.createApplicationInsightsInstance, this.parameterizeBackendFunctionKey, this.separatePolicyOutputFolder, this.chainDependencies, addSkuInformation, this.fixedKeyVaultNameParameter);
             if (exportPIManagementInstance)
             {
                 var apim = await resourceCollector.GetResource(GetAPIMResourceIDString());
@@ -247,7 +250,7 @@ namespace APIManagementTemplate
                             //handle nextlink?
                         }
                         //handle nextlink?               
-
+                        
                         //add dependency to make sure not all operations are deployed at the same time. This results in timeouts when having a lot of operations
                         if (previousOperationName != null)
                         {
@@ -287,7 +290,7 @@ namespace APIManagementTemplate
                             if (exportCertificates) await AddCertificate(policy, template);
                             PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
                             var policyTemplateResource = template.CreatePolicy(policy);
-                            this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"), null); //todo: gert test
+                            this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"), null);
                             apiTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
 
 
@@ -431,9 +434,8 @@ namespace APIManagementTemplate
                         var policies = await resourceCollector.GetResource(id + "/policies");
                         foreach (JObject policy in (policies == null ? new JArray() : policies.Value<JArray>("value")))
                         {
-                            //var policyTemplateResource = template.CreatePolicy(policy);
                             productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(policy));
-                            this.PolicyHandleProperties(policy, productTemplateResource.Value<string>("name"), null); //todo: gert test
+                            this.PolicyHandleProperties(policy, productTemplateResource.Value<string>("name"), null);
                         }
                     }
                 }
@@ -441,7 +443,7 @@ namespace APIManagementTemplate
 
             var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/namedValues", apiversion: "2020-06-01-preview");
 
-            //  var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/properties",apiversion: "2020-06-01-preview");
+          //  var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/properties",apiversion: "2020-06-01-preview");
             //has more?
             foreach (JObject propertyObject in (properties == null ? new JArray() : properties.Value<JArray>("value")))
             {
