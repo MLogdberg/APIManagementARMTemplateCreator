@@ -38,6 +38,7 @@ namespace APIManagementTemplate.Models
 
         private bool parametrizePropertiesOnly { get; set; }
         private bool fixedServiceNameParameter { get; set; }
+        private bool fixedKeyVaultNameParameter { get; set; }
         private bool referenceApplicationInsightsInstrumentationKey { get; set; }
         private readonly bool parameterizeBackendFunctionKey;
         private string separatePolicyOutputFolder { get; set; }
@@ -45,7 +46,7 @@ namespace APIManagementTemplate.Models
         private string lastProductApi { get; set; }
         private string lastApi { get; set; }
 
-        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false, string separatePolicyOutputFolder = "", bool chainDependencies = false)
+        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false, string separatePolicyOutputFolder = "", bool chainDependencies = false, bool fixedKeyVaultNameParameter = false)
         {
             parameters = new JObject();
             variables = new JObject();
@@ -58,6 +59,7 @@ namespace APIManagementTemplate.Models
             this.parameterizeBackendFunctionKey = parameterizeBackendFunctionKey;
             this.separatePolicyOutputFolder = separatePolicyOutputFolder;
             this.chainDependencies = chainDependencies;
+            this.fixedKeyVaultNameParameter = fixedKeyVaultNameParameter;
         }
 
         public static DeploymentTemplate FromString(string template)
@@ -219,10 +221,10 @@ namespace APIManagementTemplate.Models
             obj.name = WrapParameterName(AddParameter($"{GetServiceName(servicename)}", "string", servicename));
             obj.type = type;
             var resource = JObject.FromObject(obj);
-            resource["sku"] = restObject["sku"];
-            resource["sku"]["name"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_name", "string", restObject["sku"].Value<string>("name")));
-            resource["sku"]["capacity"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_capacity", "string", restObject["sku"].Value<string>("capacity")));
-            resource["location"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_location", "string", restObject.Value<string>("location")));
+                resource["sku"] = restObject["sku"];
+                resource["sku"]["name"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_name", "string", restObject["sku"].Value<string>("name")));
+                resource["sku"]["capacity"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_capacity", "string", restObject["sku"].Value<string>("capacity")));
+                resource["location"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_location", "string", restObject.Value<string>("location")));
             if (restObject["identity"] != null && restObject["identity"].HasValues && restObject["identity"]["type"] != null)
             {
                 resource["identity"] = new JObject();
@@ -838,7 +840,11 @@ namespace APIManagementTemplate.Models
                     var secretname = match.Groups["secretname"].Value;                    
                     var secretversion = match.Groups["secretversion"];
                     resource["properties"]["keyVault"] = new JObject();
-                    resource["properties"]["keyVault"]["secretIdentifier"] = $"[concat('https://',{WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "keyVaultName","string",keyvaultName),brackets:false)}, '.vault.azure.net/secrets/',{WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "secretName", "string", secretname), brackets: false)}{(secretversion.Success ? (",'/'," + WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "secretVersion", "string", secretversion.Value), brackets: false)) : String.Empty )})]";
+                    var parameterKeyVaultName = (fixedKeyVaultNameParameter) ? "keyVaultName" : restObject["properties"].Value<string>("displayName") + "_" + "keyVaultName";
+                    resource["properties"]["keyVault"]["secretIdentifier"] = $"[concat('https://'," +
+                        $"{WrapParameterName(this.AddParameter(parameterKeyVaultName,"string",keyvaultName),brackets:false)}, '.vault.azure.net/secrets/'," +
+                        $"{WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "secretName", "string", secretname), brackets: false)}" +
+                        $"{(secretversion.Success ? (",'/'," + WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "secretVersion", "string", secretversion.Value), brackets: false)) : String.Empty )})]";
                 }
             }
             else

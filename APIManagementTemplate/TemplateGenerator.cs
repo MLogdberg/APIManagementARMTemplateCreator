@@ -27,6 +27,7 @@ namespace APIManagementTemplate
         private bool parametrizePropertiesOnly;
         private bool replaceSetBackendServiceBaseUrlAsProperty;
         private bool fixedServiceNameParameter;
+        private bool fixedKeyVaultNameParameter;
         private bool createApplicationInsightsInstance;
         private string apiVersion;
         private readonly bool parameterizeBackendFunctionKey;
@@ -34,8 +35,10 @@ namespace APIManagementTemplate
         IResourceCollector resourceCollector;
         private string separatePolicyOutputFolder;
         private bool chainDependencies;
+        private bool exportApiPropertiesAndBackend;
 
-        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportSwaggerDefinition = false, bool exportCertificates = true, bool exportTags = false, string separatePolicyOutputFolder = "", bool chainDependencies = false)
+
+        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportSwaggerDefinition = false, bool exportCertificates = true, bool exportTags = false, string separatePolicyOutputFolder = "", bool chainDependencies = false, bool exportApiPropertiesAndBackend = true, bool fixedKeyVaultNameParameter = false)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -50,12 +53,14 @@ namespace APIManagementTemplate
             this.replaceSetBackendServiceBaseUrlAsProperty = replaceSetBackendServiceBaseUrlAsProperty;
             this.resourceCollector = resourceCollector;
             this.fixedServiceNameParameter = fixedServiceNameParameter;
+            this.fixedKeyVaultNameParameter = fixedKeyVaultNameParameter;
             this.createApplicationInsightsInstance = createApplicationInsightsInstance;
             this.apiVersion = apiVersion;
             this.parameterizeBackendFunctionKey = parameterizeBackendFunctionKey;
             this.exportSwaggerDefinition = exportSwaggerDefinition;
             this.separatePolicyOutputFolder = separatePolicyOutputFolder;
             this.chainDependencies = chainDependencies;
+            this.exportApiPropertiesAndBackend = exportApiPropertiesAndBackend;
         }
 
         private string GetAPIMResourceIDString()
@@ -65,7 +70,7 @@ namespace APIManagementTemplate
 
         public async Task<JObject> GenerateTemplate()
         {
-            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly, this.fixedServiceNameParameter, this.createApplicationInsightsInstance, this.parameterizeBackendFunctionKey, this.separatePolicyOutputFolder, this.chainDependencies);
+            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly, this.fixedServiceNameParameter, this.createApplicationInsightsInstance, this.parameterizeBackendFunctionKey, this.separatePolicyOutputFolder, this.chainDependencies, this.fixedKeyVaultNameParameter);
             if (exportPIManagementInstance)
             {
                 var apim = await resourceCollector.GetResource(GetAPIMResourceIDString());
@@ -271,42 +276,44 @@ namespace APIManagementTemplate
                         apiTemplateResource["properties"]["contentValue"] = swaggerContent.ToString();
                     }
 
-                    var apiPolicies = await resourceCollector.GetResource(id + "/policies");
-                    foreach (JObject policy in (apiPolicies == null ? new JArray() : apiPolicies.Value<JArray>("value")))
+                    if (exportApiPropertiesAndBackend)
                     {
-                        //Handle SOAP Backend
-                        var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
-                        var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>(policyPropertyName));
-
-                        if (exportCertificates) await AddCertificate(policy, template);
-                        PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
-                        var policyTemplateResource = template.CreatePolicy(policy);
-                        this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"), null);
-                        apiTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
-
-
-                        if (!string.IsNullOrEmpty(backendid))
+                        var apiPolicies = await resourceCollector.GetResource(id + "/policies");
+                        foreach (JObject policy in (apiPolicies == null ? new JArray() : apiPolicies.Value<JArray>("value")))
                         {
-                            var bo = await HandleBackend(template, apiObject.Value<string>("name"), backendid);
-                            JObject backendInstance = bo.backendInstance;
-                            if (backendInstance == null)
+                            //Handle SOAP Backend
+                            var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
+                            var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>(policyPropertyName));
+
+                            if (exportCertificates) await AddCertificate(policy, template);
+                            PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
+                            var policyTemplateResource = template.CreatePolicy(policy);
+                            this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"), null);
+                            apiTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
+
+
+                            if (!string.IsNullOrEmpty(backendid))
                             {
-                                if (apiTemplateResource.Value<JArray>("dependsOn") == null)
-                                    apiTemplateResource["dependsOn"] = new JArray();
+                                var bo = await HandleBackend(template, apiObject.Value<string>("name"), backendid);
+                                JObject backendInstance = bo.backendInstance;
+                                if (backendInstance == null)
+                                {
+                                    if (apiTemplateResource.Value<JArray>("dependsOn") == null)
+                                        apiTemplateResource["dependsOn"] = new JArray();
 
-                                //add dependeOn
-                                apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
+                                    //add dependeOn
+                                    apiTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
+                                }
                             }
-                        }
 
-                        if (Directory.Exists(separatePolicyOutputFolder))
-                        {
-                            ReplacePolicyWithFileLink(template, policyTemplateResource, apiInstance.Value<string>("name") + "_AllOperations");
-                        }
+                            if (Directory.Exists(separatePolicyOutputFolder))
+                            {
+                                ReplacePolicyWithFileLink(template, policyTemplateResource, apiInstance.Value<string>("name") + "_AllOperations");
+                            }
 
-                        //handle nextlink?
+                            //handle nextlink?
+                        }
                     }
-
                     if (!exportSwaggerDefinition)
                     {
                         var apiSchemas = await resourceCollector.GetResource(id + "/schemas");
@@ -426,6 +433,7 @@ namespace APIManagementTemplate
                         foreach (JObject policy in (policies == null ? new JArray() : policies.Value<JArray>("value")))
                         {
                             productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(policy));
+                            this.PolicyHandleProperties(policy, productTemplateResource.Value<string>("name"), null);
                         }
                     }
                 }

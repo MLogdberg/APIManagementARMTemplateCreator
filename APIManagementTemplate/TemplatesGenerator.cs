@@ -340,6 +340,7 @@ namespace APIManagementTemplate
             DeploymentTemplate template = new DeploymentTemplate(true, true);
             var resources = parsedTemplate.SelectTokens("$.resources[*]")
                 .Where(r => wantedResources.Any(w => w == r.Value<string>("type")));
+
             foreach (JToken resource in resources)
             {
                 if (resource.Value<string>("type") == ServiceResourceType)
