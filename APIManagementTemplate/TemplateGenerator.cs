@@ -248,7 +248,7 @@ namespace APIManagementTemplate
                             //handle nextlink?
                         }
                         //handle nextlink?               
-                        
+
                         //add dependency to make sure not all operations are deployed at the same time. This results in timeouts when having a lot of operations
                         if (previousOperationName != null)
                         {
@@ -296,7 +296,7 @@ namespace APIManagementTemplate
                             {
                                 var bo = await HandleBackend(template, apiObject.Value<string>("name"), backendid);
                                 JObject backendInstance = bo.backendInstance;
-                                if (backendInstance == null)
+                                if (backendInstance != null)
                                 {
                                     if (apiTemplateResource.Value<JArray>("dependsOn") == null)
                                         apiTemplateResource["dependsOn"] = new JArray();
@@ -441,7 +441,7 @@ namespace APIManagementTemplate
 
             var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/namedValues", apiversion: "2020-06-01-preview");
 
-          //  var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/properties",apiversion: "2020-06-01-preview");
+            //  var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/properties",apiversion: "2020-06-01-preview");
             //has more?
             foreach (JObject propertyObject in (properties == null ? new JArray() : properties.Value<JArray>("value")))
             {
@@ -578,9 +578,6 @@ namespace APIManagementTemplate
             }
 
             //sometime old endpoint are not cleaned-up, this will result in null. So skip these resources
-            if (azureResource == null)
-                return null;
-
             var property = template.AddBackend(backendInstance, azureResource);
 
             if (property != null)
