@@ -288,8 +288,8 @@ namespace APIManagementTemplate
                         if (!string.IsNullOrEmpty(backendid))
                         {
                             var bo = await HandleBackend(template, apiObject.Value<string>("name"), backendid);
-                            JObject backendInstance = bo.backendInstance;
-                            if (backendInstance == null)
+                            JObject backendInstance = bo?.backendInstance;
+                            if (backendInstance != null)
                             {
                                 if (apiTemplateResource.Value<JArray>("dependsOn") == null)
                                     apiTemplateResource["dependsOn"] = new JArray();
