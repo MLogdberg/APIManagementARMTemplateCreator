@@ -24,25 +24,27 @@ namespace APIManagementTemplate.Test
 
         private JObject GetTemplate(bool exportProducts = false, bool parametrizePropertiesOnly = true,
             bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false,
-            bool createApplicationInsightsInstance = false, bool exportSwaggerDefinition = false, bool exportGroups = false)
+            bool createApplicationInsightsInstance = false, bool exportSwaggerDefinition = false, bool exportGroups = false, 
+            bool parameterizeBackendFunctionKey = false)
         {
             if (this._template != null)
                 return this._template;
             var generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest",
                 "maloapimtestclean", exportGroups, exportProducts, true, parametrizePropertiesOnly, this.collector,
                 replaceSetBackendServiceBaseUrlAsProperty, fixedServiceNameParameter,
-                createApplicationInsightsInstance, exportSwaggerDefinition: exportSwaggerDefinition);
+                createApplicationInsightsInstance, exportSwaggerDefinition: exportSwaggerDefinition, parameterizeBackendFunctionKey: parameterizeBackendFunctionKey);
             this._template = generator.GenerateTemplate().GetAwaiter().GetResult();
             return this._template;
         }
 
 
         private JToken GetResourceFromTemplate(ResourceType resourceType, bool createApplicationInsightsInstance = false,
-            bool parametrizePropertiesOnly = true, bool fixedServiceNameParameter = false, bool exportSwaggerDefinition = false, bool replaceSetBackendServiceBaseUrlAsProperty=false)
+            bool parametrizePropertiesOnly = true, bool fixedServiceNameParameter = false, bool exportSwaggerDefinition = false, bool replaceSetBackendServiceBaseUrlAsProperty=false, bool parameterizeBackendFunctionKey = false)
         {
             var template = GetTemplate(true, parametrizePropertiesOnly,
                 fixedServiceNameParameter: fixedServiceNameParameter,
-                createApplicationInsightsInstance: createApplicationInsightsInstance, exportSwaggerDefinition: exportSwaggerDefinition, replaceSetBackendServiceBaseUrlAsProperty:replaceSetBackendServiceBaseUrlAsProperty);
+                createApplicationInsightsInstance: createApplicationInsightsInstance, exportSwaggerDefinition: exportSwaggerDefinition, replaceSetBackendServiceBaseUrlAsProperty:replaceSetBackendServiceBaseUrlAsProperty,
+                parameterizeBackendFunctionKey:parameterizeBackendFunctionKey);
             return template.WithDirectResource(resourceType);
         }
 
@@ -425,9 +427,18 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
-        public void TestServiceContainsBackendWith2DependsOn()
+        public void TestServiceContainsBackendWith1DependsOnWhenFunctionKeyIsNotParameterized()
         {
-            var backend = GetResourceFromTemplate(ResourceType.Backend, false, true);
+            var backend = GetResourceFromTemplate(ResourceType.Backend, false, true, parameterizeBackendFunctionKey: false);
+            var dependsOn = backend.DependsOn();
+
+            Assert.AreEqual(1, dependsOn.Count());
+        }
+        
+        [TestMethod]
+        public void TestServiceContainsBackendWithDependsOnWhenFunctionKeyIsParameterized()
+        {
+            var backend = GetResourceFromTemplate(ResourceType.Backend, false, true, parameterizeBackendFunctionKey: true);
             var dependsOn = backend.DependsOn();
 
             Assert.AreEqual(2, dependsOn.Count());

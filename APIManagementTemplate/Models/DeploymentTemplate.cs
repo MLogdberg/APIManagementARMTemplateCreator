@@ -555,8 +555,8 @@ namespace APIManagementTemplate.Models
                     if (parameterizeBackendFunctionKey)
                     {
                         var custom = false;
-
-                        var xFunctionKey = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();
+                        
+                        var xFunctionKey = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();;
                         if (xFunctionKey != null)
                         {
                             var value = xFunctionKey.Value<string>();
@@ -572,15 +572,15 @@ namespace APIManagementTemplate.Models
                         if (!custom)
                         {
                             functionAppPropertyName = $"{sitename}-key";
-                            extraInfo = $"parameters('{AddParameter($"{sitename}-key", "string", "")}')";
+                            extraInfo = $"parameters('{AddParameter($"{sitename}-key", "string", "")}')";    
                         }
                     }
-
+                    
                     retval = new Property()
                     {
                         type = Property.PropertyType.Function,
                         name = functionAppPropertyName.ToLower(),
-
+                        
                         extraInfo = extraInfo
                     };
 
@@ -588,13 +588,13 @@ namespace APIManagementTemplate.Models
                     if (code == null)
                     {
                         //Fall back to the x functions key
-                        code = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();
+                        code = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();;
                     }
-
+                    
                     if (code != null)
                     {
                         var value = code.Value<string>();
-                        if (value.StartsWith("{{") && value.EndsWith("}}"))
+                        if (value.StartsWith("{{") && value.EndsWith("}}") && parameterizeBackendFunctionKey)
                         {
                             var parsed = value.Substring(2, value.Length - 4);
                             dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('{GetServiceName(servicename)}'),'{parsed}')]");
@@ -836,13 +836,11 @@ namespace APIManagementTemplate.Models
                 var match = Regex.Match(kvIdentifier, "https://(?<keyvaultname>.*).vault.azure.net/secrets/(?<secretname>[^*#&+:<>?/]+)(/(?<secretversion>.*))?");
                 if(match.Success)
                 {
-                    
                     var keyvaultName = match.Groups["keyvaultname"].Value;
                     var secretname = match.Groups["secretname"].Value;                    
                     var secretversion = match.Groups["secretversion"];
                     resource["properties"]["keyVault"] = new JObject();
                     var parameterKeyVaultName = (fixedKeyVaultNameParameter) ? "keyVaultName" : restObject["properties"].Value<string>("displayName") + "_" + "keyVaultName";
-
                     resource["properties"]["keyVault"]["secretIdentifier"] = $"[concat('https://'," +
                         $"{WrapParameterName(this.AddParameter(parameterKeyVaultName,"string",keyvaultName),brackets:false)}, '.vault.azure.net/secrets/'," +
                         $"{WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "secretName", "string", secretname), brackets: false)}" +
@@ -1169,7 +1167,7 @@ namespace APIManagementTemplate.Models
                 resource["properties"]["sampling"]["percentage"] = WrapParameterName(AddParameter($"diagnostic_{name}_samplingPercentage", "string", GetDefaultValue(resource, "sampling", "percentage")));
                 if (IsApplicationInsightsLogger(loggerObject))
                 {
-                    var value =
+                    var value = 
                     resource["properties"]["enableHttpCorrelationHeaders"] = WrapParameterName(AddParameter($"diagnostic_{name}_enableHttpCorrelationHeaders", "bool", GetDefaultValue(resource, true, "enableHttpCorrelationHeaders")));
                 }
             }
@@ -1198,7 +1196,7 @@ namespace APIManagementTemplate.Models
             }
             return prop.Value<string>() ?? String.Empty;
         }
-
+        
         private static T GetDefaultValue<T>(JObject resource, T defaultValue, params string[] names)
         {
             var prop = resource["properties"];
@@ -1208,14 +1206,14 @@ namespace APIManagementTemplate.Models
                 if (prop == null)
                     return defaultValue;
             }
-
+            
             var retVal = prop.Value<T>();
 
             if (retVal == null)
             {
                 retVal = defaultValue;
             }
-
+            
             return retVal;
         }
 
