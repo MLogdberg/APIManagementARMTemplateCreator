@@ -28,6 +28,7 @@ namespace APIManagementTemplate
         private bool replaceSetBackendServiceBaseUrlAsProperty;
         private bool fixedServiceNameParameter;
         private bool fixedKeyVaultNameParameter;
+        private readonly bool exportBackendInstances;
         private bool createApplicationInsightsInstance;
         private string apiVersion;
         private readonly bool parameterizeBackendFunctionKey;
@@ -38,7 +39,14 @@ namespace APIManagementTemplate
         private bool exportApiPropertiesAndBackend;
 
 
-        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters, bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly, IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false, string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportSwaggerDefinition = false, bool exportCertificates = true, bool exportTags = false, string separatePolicyOutputFolder = "", bool chainDependencies = false, bool exportApiPropertiesAndBackend = true, bool fixedKeyVaultNameParameter = false)
+        public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters,
+            bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly,
+            IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false,
+            bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false,
+            string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportSwaggerDefinition = false,
+            bool exportCertificates = true, bool exportTags = false, string separatePolicyOutputFolder = "",
+            bool chainDependencies = false, bool exportApiPropertiesAndBackend = true,
+            bool fixedKeyVaultNameParameter = false, bool exportBackendInstances = true)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -54,6 +62,7 @@ namespace APIManagementTemplate
             this.resourceCollector = resourceCollector;
             this.fixedServiceNameParameter = fixedServiceNameParameter;
             this.fixedKeyVaultNameParameter = fixedKeyVaultNameParameter;
+            this.exportBackendInstances = exportBackendInstances;
             this.createApplicationInsightsInstance = createApplicationInsightsInstance;
             this.apiVersion = apiVersion;
             this.parameterizeBackendFunctionKey = parameterizeBackendFunctionKey;
@@ -198,7 +207,7 @@ namespace APIManagementTemplate
 
                             var backendid = TemplateHelper.GetBackendIdFromnPolicy(policyContent);
 
-                            if (!string.IsNullOrEmpty(backendid))
+                            if (!string.IsNullOrEmpty(backendid) && exportBackendInstances)
                             {
                                 BackendObject bo = await HandleBackend(template, operationSuffix, backendid);
                                 JObject backendInstance = bo?.backendInstance;
@@ -292,7 +301,7 @@ namespace APIManagementTemplate
                             apiTemplateResource.Value<JArray>("resources").Add(policyTemplateResource);
 
 
-                            if (!string.IsNullOrEmpty(backendid))
+                            if (!string.IsNullOrEmpty(backendid) && exportBackendInstances)
                             {
                                 var bo = await HandleBackend(template, apiObject.Value<string>("name"), backendid);
                                 JObject backendInstance = bo.backendInstance;
