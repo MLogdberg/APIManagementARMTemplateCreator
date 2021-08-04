@@ -37,6 +37,7 @@ namespace APIManagementTemplate
         private string separatePolicyOutputFolder;
         private bool chainDependencies;
         private bool exportApiPropertiesAndBackend;
+        private readonly string[] ignoreProperties;
 
 
         public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters,
@@ -46,7 +47,7 @@ namespace APIManagementTemplate
             string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportSwaggerDefinition = false,
             bool exportCertificates = true, bool exportTags = false, string separatePolicyOutputFolder = "",
             bool chainDependencies = false, bool exportApiPropertiesAndBackend = true,
-            bool fixedKeyVaultNameParameter = false, bool exportBackendInstances = true)
+            bool fixedKeyVaultNameParameter = false, bool exportBackendInstances = true, string[] ignoreProperties = null)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -70,6 +71,7 @@ namespace APIManagementTemplate
             this.separatePolicyOutputFolder = separatePolicyOutputFolder;
             this.chainDependencies = chainDependencies;
             this.exportApiPropertiesAndBackend = exportApiPropertiesAndBackend;
+            this.ignoreProperties = ignoreProperties;
         }
 
         private string GetAPIMResourceIDString()
@@ -457,6 +459,10 @@ namespace APIManagementTemplate
 
                 var id = propertyObject.Value<string>("id");
                 var displayName = propertyObject["properties"].Value<string>("displayName");
+                if (ignoreProperties.Contains(displayName))
+                {
+                    continue;
+                }
 
                 var identifiedProperty = this.identifiedProperties.Where(idp => displayName.EndsWith(idp.name)).FirstOrDefault();
                 if (identifiedProperty == null)
