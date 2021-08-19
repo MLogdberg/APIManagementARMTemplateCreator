@@ -193,10 +193,11 @@ namespace APIManagementTemplate.Models
         public void AddParameterFromObject(JObject obj, string propertyName, string propertyType, string paramNamePrefix = "")
         {
 
-            var propValue = (string)obj[propertyName];
+            var propValue = obj[propertyName] == null ? null : obj[propertyName].ToString();
             if (propValue == null || (propValue.StartsWith("[") && propValue.EndsWith("]")))
                 return;
-            obj[propertyName] = WrapParameterName(this.AddParameter(paramNamePrefix + "_" + propertyName, propertyType, obj[propertyName]));
+            var defaultValue = propertyType == "secureobject" ? null : obj[propertyName];
+            obj[propertyName] = WrapParameterName(this.AddParameter(paramNamePrefix + "_" + propertyName, propertyType, defaultValue));
         }
 
         /**
@@ -606,6 +607,7 @@ namespace APIManagementTemplate.Models
             else
             {
                 AddParameterFromObject((JObject)resource["properties"], "url", "string", name);
+                AddParameterFromObject((JObject)resource["properties"], "credentials", "secureobject", name);
             }
 
             if (APIMInstanceAdded)
