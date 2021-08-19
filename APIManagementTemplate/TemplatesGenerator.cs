@@ -70,7 +70,7 @@ namespace APIManagementTemplate
         private const string ApiOperationPolicyResourceType = "Microsoft.ApiManagement/service/apis/operations/policies";
         private const string ApiPolicyResourceType = "Microsoft.ApiManagement/service/apis/policies";
         private const string ServicePolicyFileName = "service.policy.xml";
-        private const string PropertyResourceType = "Microsoft.ApiManagement/service/properties";
+        private const string PropertyResourceType = "Microsoft.ApiManagement/service/namedValues";
         private const string BackendResourceType = "Microsoft.ApiManagement/service/backends";
         private const string OpenIdConnectProviderResourceType = "Microsoft.ApiManagement/service/openidConnectProviders";
         private const string CertificateResourceType = "Microsoft.ApiManagement/service/certificates";
@@ -79,6 +79,8 @@ namespace APIManagementTemplate
         public const string TemplatesStorageAccountSASToken = "_artifactsLocationSasToken";
         private const string MasterTemplateJson = "master.template.json";
         private const string ProductAPIResourceType = "Microsoft.ApiManagement/service/products/apis";
+
+        private bool _listApiInProduct;
 
         public IList<GeneratedTemplate> Generate(string sourceTemplate, bool apiStandalone, bool separatePolicyFile = false, bool generateParameterFiles = false, bool replaceListSecretsWithParameter = false, bool listApiInProduct = false, bool separateSwaggerFile = false, bool alwaysAddPropertiesAndBackend = false)
         {
@@ -94,6 +96,8 @@ namespace APIManagementTemplate
             templates.Add(GenerateTemplate(parsedTemplate, "groupsUsers.template.json", String.Empty,
                 UserGroupResourceType));
             MoveExternalDependencies(templates);
+
+            _listApiInProduct = listApiInProduct;
             templates.Add(GenerateMasterTemplate(templates.Where(x => x.Type == ContentType.Json).ToList(), parsedTemplate, separatePolicyFile, apiStandalone));
             templates.AddRange(GenerateAPIMasterTemplate(templates, parsedTemplate, separatePolicyFile, apiStandalone));
             MoveExternalDependencies(templates.Where(x => x.FileName.StartsWith("api-") && x.FileName.EndsWith(MasterTemplateJson)).ToList());
@@ -110,7 +114,7 @@ namespace APIManagementTemplate
 
         private void ReplaceListSecretsWithParameter(JObject parsedTemplate)
         {
-            var properties = parsedTemplate.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/properties')]").Where(x =>
+            var properties = parsedTemplate.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/namedValues')]").Where(x =>
                     x["properties"]?.Value<string>("value").StartsWith("[listsecrets(") ?? false);
             foreach (JToken property in properties)
             {
@@ -217,7 +221,7 @@ namespace APIManagementTemplate
 
 
             foreach (GeneratedTemplate template2 in filteredTemplates)
-            {
+            {                
                 template.resources.Add(GenerateDeployment(template2, generatedTemplates));
             }
             template.parameters = GetParameters(parsedTemplate["parameters"], template.resources, separatePolicyFile);
@@ -284,7 +288,13 @@ namespace APIManagementTemplate
             var dependsOn = new JArray();
             foreach (string name in template.ExternalDependencies)
             {
-                var matches = generatedTemplates.Where(t => IsLocalDependency(name, t));
+                //check for ListApiInProduct, then skip the dependency to the api resources.
+                if (_listApiInProduct && name.Contains("Microsoft.ApiManagement/service/apis"))
+                {
+                    continue;
+                }
+
+                var matches = generatedTemplates.Where(t => IsLocalDependency(name, t)); 
                 if (matches.Any())
                 {
                     var match = matches.First();
@@ -330,6 +340,7 @@ namespace APIManagementTemplate
             DeploymentTemplate template = new DeploymentTemplate(true, true);
             var resources = parsedTemplate.SelectTokens("$.resources[*]")
                 .Where(r => wantedResources.Any(w => w == r.Value<string>("type")));
+
             foreach (JToken resource in resources)
             {
                 if (resource.Value<string>("type") == ServiceResourceType)

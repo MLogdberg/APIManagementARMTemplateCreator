@@ -24,25 +24,27 @@ namespace APIManagementTemplate.Test
 
         private JObject GetTemplate(bool exportProducts = false, bool parametrizePropertiesOnly = true,
             bool replaceSetBackendServiceBaseUrlAsProperty = false, bool fixedServiceNameParameter = false,
-            bool createApplicationInsightsInstance = false, bool exportSwaggerDefinition = false, bool exportGroups = false)
+            bool createApplicationInsightsInstance = false, bool exportSwaggerDefinition = false, bool exportGroups = false, 
+            bool parameterizeBackendFunctionKey = false)
         {
             if (this._template != null)
                 return this._template;
             var generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest",
                 "maloapimtestclean", exportGroups, exportProducts, true, parametrizePropertiesOnly, this.collector,
                 replaceSetBackendServiceBaseUrlAsProperty, fixedServiceNameParameter,
-                createApplicationInsightsInstance, exportSwaggerDefinition: exportSwaggerDefinition);
+                createApplicationInsightsInstance, exportSwaggerDefinition: exportSwaggerDefinition, parameterizeBackendFunctionKey: parameterizeBackendFunctionKey);
             this._template = generator.GenerateTemplate().GetAwaiter().GetResult();
             return this._template;
         }
 
 
         private JToken GetResourceFromTemplate(ResourceType resourceType, bool createApplicationInsightsInstance = false,
-            bool parametrizePropertiesOnly = true, bool fixedServiceNameParameter = false, bool exportSwaggerDefinition = false, bool replaceSetBackendServiceBaseUrlAsProperty=false)
+            bool parametrizePropertiesOnly = true, bool fixedServiceNameParameter = false, bool exportSwaggerDefinition = false, bool replaceSetBackendServiceBaseUrlAsProperty=false, bool parameterizeBackendFunctionKey = false)
         {
             var template = GetTemplate(true, parametrizePropertiesOnly,
                 fixedServiceNameParameter: fixedServiceNameParameter,
-                createApplicationInsightsInstance: createApplicationInsightsInstance, exportSwaggerDefinition: exportSwaggerDefinition, replaceSetBackendServiceBaseUrlAsProperty:replaceSetBackendServiceBaseUrlAsProperty);
+                createApplicationInsightsInstance: createApplicationInsightsInstance, exportSwaggerDefinition: exportSwaggerDefinition, replaceSetBackendServiceBaseUrlAsProperty:replaceSetBackendServiceBaseUrlAsProperty,
+                parameterizeBackendFunctionKey:parameterizeBackendFunctionKey);
             return template.WithDirectResource(resourceType);
         }
 
@@ -301,7 +303,7 @@ namespace APIManagementTemplate.Test
         public void TestApiContainsPropertyWhenReplaceSetBaseUrlAsPropertyIsTrue()
         {
             var template = GetTemplate(parametrizePropertiesOnly: false, replaceSetBackendServiceBaseUrlAsProperty: true);
-            var property = template.WithDirectResources(ResourceType.Property)
+            var property = template.WithDirectResources(ResourceType.NamedValues)
                 .SingleOrDefault(x => x.Value(Arm.Name).Contains("api_tfs_backendurl"));
             Assert.IsNotNull(property);
         }
@@ -310,7 +312,7 @@ namespace APIManagementTemplate.Test
         public void TestServiceContainsPropertyForEnvironment()
         {
             var template = GetTemplate();
-            var property = template.WithDirectResources(ResourceType.Property)
+            var property = template.WithDirectResources(ResourceType.NamedValues)
                 .SingleOrDefault(x => x.Value(Arm.Name).Contains("environment"));
             Assert.IsNotNull(property);
         }
@@ -353,7 +355,7 @@ namespace APIManagementTemplate.Test
         public void TestServiceContainsPropertyForLogger()
         {
             var template = GetTemplate();
-            var property = template.WithDirectResources(ResourceType.Property)
+            var property = template.WithDirectResources(ResourceType.NamedValues)
                 .SingleOrDefault(x => x.Value(Arm.Name).Contains("5b5dbaa35a635f22ac9db431"));
 
             Assert.IsNotNull(property);
@@ -366,7 +368,7 @@ namespace APIManagementTemplate.Test
         public void TestServiceDoesNotContainPropertyForLoggerWhenCreateApplicationInsightsInstanceIsTrue()
         {
             var template = GetTemplate(createApplicationInsightsInstance: true);
-            var property = template.WithResources(ResourceType.Property)
+            var property = template.WithResources(ResourceType.NamedValues)
                 .SingleOrDefault(x => x.Value(Arm.Name).Contains("5b5dbaa35a635f22ac9db431"));
 
             Assert.IsNull(property);
@@ -376,7 +378,7 @@ namespace APIManagementTemplate.Test
         public void TestServiceContainsPropertyForBackend()
         {
             var template = GetTemplate();
-            var property = template.WithResources(ResourceType.Property)
+            var property = template.WithResources(ResourceType.NamedValues)
                 .SingleOrDefault(x => x.Value(Arm.Name).Contains("myfunctions-key"));
 
             Assert.IsNotNull(property);
@@ -425,14 +427,23 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
-        public void TestServiceContainsBackendWith2DependsOn()
+        public void TestServiceContainsBackendWith1DependsOnWhenFunctionKeyIsNotParameterized()
         {
-            var backend = GetResourceFromTemplate(ResourceType.Backend, false, true);
+            var backend = GetResourceFromTemplate(ResourceType.Backend, false, true, parameterizeBackendFunctionKey: false);
+            var dependsOn = backend.DependsOn();
+
+            Assert.AreEqual(1, dependsOn.Count());
+        }
+        
+        [TestMethod]
+        public void TestServiceContainsBackendWithDependsOnWhenFunctionKeyIsParameterized()
+        {
+            var backend = GetResourceFromTemplate(ResourceType.Backend, false, true, parameterizeBackendFunctionKey: true);
             var dependsOn = backend.DependsOn();
 
             Assert.AreEqual(2, dependsOn.Count());
             Assert.IsTrue(dependsOn.Contains(
-                "[resourceId('Microsoft.ApiManagement/service/properties', parameters('service_ibizmalo_name'),'myfunctions-key')]"));
+                "[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('service_ibizmalo_name'),'myfunctions-key')]"));
         }
 
         [TestMethod]

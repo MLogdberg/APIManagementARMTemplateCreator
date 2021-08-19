@@ -1,0 +1,15 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/a4525dcb-b7ac-4677-b104-97bde6a8f41d/resourceGroups/LabResources/providers/Microsoft.ApiManagement/service/iBizUtbildningAPIM/properties/5cc9f8a843285d9c7cdc3e3d",
+      "type": "Microsoft.ApiManagement/service/namedValues",
+      "name": "5cc9f8a843285d9c7cdc3e3d",
+      "properties": {
+        "displayName": "sales-orders_create-sales-order_5cc9f8a843285d9c7cdc3e3d",
+        "value": "secretvalue",
+        "tags": [],
+        "secret": true
+      }
+    }
+  ]
+}

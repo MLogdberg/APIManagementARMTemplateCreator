@@ -6,7 +6,7 @@ $modulePath = Join-Path $PSScriptRoot "bin\APIManagementTemplate"
 $manifestPath = Join-Path $PSScriptRoot "APIManagementTemplate.psd1"
 $manifest = Test-ModuleManifest -Path $manifestPath
 
-Update-ModuleManifest -Path $manifestPath -CmdletsToExport '*' -ModuleVersion $version
+Update-ModuleManifest -Path $manifestPath -CmdletsToExport 'Get-ParameterTemplate','Get-APIManagementTemplate','Write-APIManagementTemplates' -ModuleVersion $version
 
 Write-Host "Preparing module"
 

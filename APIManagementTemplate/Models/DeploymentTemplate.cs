@@ -38,6 +38,7 @@ namespace APIManagementTemplate.Models
 
         private bool parametrizePropertiesOnly { get; set; }
         private bool fixedServiceNameParameter { get; set; }
+        private bool fixedKeyVaultNameParameter { get; set; }
         private bool referenceApplicationInsightsInstrumentationKey { get; set; }
         private readonly bool parameterizeBackendFunctionKey;
         private string separatePolicyOutputFolder { get; set; }
@@ -45,7 +46,7 @@ namespace APIManagementTemplate.Models
         private string lastProductApi { get; set; }
         private string lastApi { get; set; }
 
-        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false, string separatePolicyOutputFolder = "", bool chainDependencies = false)
+        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false, string separatePolicyOutputFolder = "", bool chainDependencies = false, bool fixedKeyVaultNameParameter = false)
         {
             parameters = new JObject();
             variables = new JObject();
@@ -58,6 +59,7 @@ namespace APIManagementTemplate.Models
             this.parameterizeBackendFunctionKey = parameterizeBackendFunctionKey;
             this.separatePolicyOutputFolder = separatePolicyOutputFolder;
             this.chainDependencies = chainDependencies;
+            this.fixedKeyVaultNameParameter = fixedKeyVaultNameParameter;
         }
 
         public static DeploymentTemplate FromString(string template)
@@ -159,15 +161,15 @@ namespace APIManagementTemplate.Models
             return JsonConvert.SerializeObject(this);
         }
 
-        public string WrapParameterName(string paramname, bool isNullValue = false)
+        public string WrapParameterName(string paramname, bool isNullValue = false, bool brackets = true)
         {
             if (isNullValue)
             {
-                return $"[if(empty(parameters('{paramname}')), json('null'), parameters('{paramname}'))]";
+                return $"{(brackets ? "[" : String.Empty)}if(empty(parameters('{paramname}')), json('null'), parameters('{paramname}')){(brackets ? "]" : String.Empty)}";
             }
             else
             {
-                return "[parameters('" + paramname + "')]";
+                return $"{(brackets ? "[" : String.Empty)}parameters('" + paramname + $"'){(brackets ? "]" : String.Empty)}";
             }
         }
         public string RemoveWrapParameter(string parameterstring)
@@ -219,10 +221,10 @@ namespace APIManagementTemplate.Models
             obj.name = WrapParameterName(AddParameter($"{GetServiceName(servicename)}", "string", servicename));
             obj.type = type;
             var resource = JObject.FromObject(obj);
-            resource["sku"] = restObject["sku"];
-            resource["sku"]["name"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_name", "string", restObject["sku"].Value<string>("name")));
-            resource["sku"]["capacity"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_capacity", "string", restObject["sku"].Value<string>("capacity")));
-            resource["location"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_location", "string", restObject.Value<string>("location")));
+                resource["sku"] = restObject["sku"];
+                resource["sku"]["name"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_name", "string", restObject["sku"].Value<string>("name")));
+                resource["sku"]["capacity"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_capacity", "string", restObject["sku"].Value<string>("capacity")));
+                resource["location"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_location", "string", restObject.Value<string>("location")));
             if (restObject["identity"] != null && restObject["identity"].HasValues && restObject["identity"]["type"] != null)
             {
                 resource["identity"] = new JObject();
@@ -547,8 +549,8 @@ namespace APIManagementTemplate.Models
 
                     //Determine the extrainfo based on the parameterizeBackendFunctionKey. When the backend should be parameterized use the name of the property
                     //in the x-functions-key header
-                    var extraInfo =
-                        $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key";
+                    //var extraInfo = $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key";
+                    var extraInfo = $"listKeys(resourceId(parameters('{rgparamname}'),concat('Microsoft.Web/sites/host'),parameters('{paramsitename}'),'default'),'2018-02-01').functionKeys.default";
                     var functionAppPropertyName = sitename;
                     if (parameterizeBackendFunctionKey)
                     {
@@ -592,10 +594,10 @@ namespace APIManagementTemplate.Models
                     if (code != null)
                     {
                         var value = code.Value<string>();
-                        if (value.StartsWith("{{") && value.EndsWith("}}"))
+                        if (value.StartsWith("{{") && value.EndsWith("}}") && parameterizeBackendFunctionKey)
                         {
                             var parsed = value.Substring(2, value.Length - 4);
-                            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/properties', parameters('{GetServiceName(servicename)}'),'{parsed}')]");
+                            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('{GetServiceName(servicename)}'),'{parsed}')]");
                         }
                     }
                 }
@@ -794,7 +796,7 @@ namespace APIManagementTemplate.Models
             return resource;
         }
 
-        public ResourceTemplate AddProperty(JObject restObject)
+        public ResourceTemplate AddNamedValues(JObject restObject)
         {
             if (restObject == null)
                 return null;
@@ -810,21 +812,51 @@ namespace APIManagementTemplate.Models
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
             obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
             obj.AddName($"'{name}'");
+            obj.apiVersion = "2020-06-01-preview";
 
             obj.type = type;
             obj.properties = restObject.Value<JObject>("properties");
             var resource = JObject.FromObject(obj);
 
-            var propValue = resource["properties"].Value<string>("value");
-            if (!(propValue == null || (propValue.StartsWith("[") && propValue.EndsWith("]"))))
+
+            //is key vault? 
+            var KeyVaultObj = resource["properties"].Value<JObject>("keyVault");
+            if(KeyVaultObj != null)
             {
-                resource["properties"]["value"] = WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "value", secret ? "securestring" : "string", secret ? "secretvalue" : resource["properties"]["value"]));
+                /*
+                 {
+                  "secretIdentifier": "https://kv-re-dev-api-euw.vault.azure.net/secrets/centiro-username",
+                  "identityClientId": null,
+                  "lastStatus": {
+                    "code": "Success",
+                    "timeStampUtc": "2021-03-23T11:39:33.4731812Z"
+                  }
+                 */
+                var kvIdentifier = KeyVaultObj.Value<string>("secretIdentifier");
+                var match = Regex.Match(kvIdentifier, "https://(?<keyvaultname>.*).vault.azure.net/secrets/(?<secretname>[^*#&+:<>?/]+)(/(?<secretversion>.*))?");
+                if(match.Success)
+                {
+                    var keyvaultName = match.Groups["keyvaultname"].Value;
+                    var secretname = match.Groups["secretname"].Value;                    
+                    var secretversion = match.Groups["secretversion"];
+                    resource["properties"]["keyVault"] = new JObject();
+                    var parameterKeyVaultName = (fixedKeyVaultNameParameter) ? "keyVaultName" : restObject["properties"].Value<string>("displayName") + "_" + "keyVaultName";
+                    resource["properties"]["keyVault"]["secretIdentifier"] = $"[concat('https://'," +
+                        $"{WrapParameterName(this.AddParameter(parameterKeyVaultName,"string",keyvaultName),brackets:false)}, '.vault.azure.net/secrets/'," +
+                        $"{WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "secretName", "string", secretname), brackets: false)}" +
+                        $"{(secretversion.Success ? (",'/'," + WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "secretVersion", "string", secretversion.Value), brackets: false)) : String.Empty )})]";
+                }
             }
+            else
+            {
+                var propValue = resource["properties"].Value<string>("value") ?? "";
 
-
-
-            //AddParameterFromObject((JObject)resource["properties"], "value", secret ? "securestring" : "string", restObject["properties"].Value<string>("displayName"));
-
+                if (!((propValue.StartsWith("[") && propValue.EndsWith("]"))))
+                {
+                    resource["properties"]["value"] = WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "value", secret ? "securestring" : "string", secret ? "secretvalue" : propValue));
+                }
+            }
+            
             var dependsOn = new JArray();
             if (APIMInstanceAdded)
             {
