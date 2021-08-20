@@ -196,7 +196,7 @@ namespace APIManagementTemplate.Models
             var propValue = obj[propertyName] == null ? null : obj[propertyName].ToString();
             if (propValue == null || (propValue.StartsWith("[") && propValue.EndsWith("]")))
                 return;
-            var defaultValue = propertyType == "secureobject" ? null : obj[propertyName];
+            var defaultValue = propertyType == "secureobject" ? "" : obj[propertyName];
             obj[propertyName] = WrapParameterName(this.AddParameter(paramNamePrefix + "_" + propertyName, propertyType, defaultValue));
         }
 
