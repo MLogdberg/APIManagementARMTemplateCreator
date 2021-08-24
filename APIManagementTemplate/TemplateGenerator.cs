@@ -459,7 +459,7 @@ namespace APIManagementTemplate
 
                 var id = propertyObject.Value<string>("id");
                 var displayName = propertyObject["properties"].Value<string>("displayName");
-                if (ignoreProperties.Contains(displayName))
+                if (ignoreProperties != null && ignoreProperties.Contains(displayName))
                 {
                     continue;
                 }
