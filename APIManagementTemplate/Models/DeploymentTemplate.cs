@@ -193,7 +193,7 @@ namespace APIManagementTemplate.Models
         public void AddParameterFromObject(JObject obj, string propertyName, string propertyType, string paramNamePrefix = "")
         {
 
-            var propValue = obj[propertyName] == null ? null : obj[propertyName].ToString();
+            var propValue = (string)obj[propertyName];
             if (propValue == null || (propValue.StartsWith("[") && propValue.EndsWith("]")))
                 return;
             var defaultValue = propertyType == "secureobject" ? "" : obj[propertyName];
