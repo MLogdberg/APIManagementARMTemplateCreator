@@ -275,6 +275,11 @@ namespace APIManagementTemplate
                         apiTemplateResource["properties"]["contentFormat"] = "swagger-json";
                         var swaggerExport = await resourceCollector.GetResource(id + "?format=swagger-link&export=true", apiversion: "2019-01-01");
                         var swaggerUrl = swaggerExport.Value<string>("link");
+                        // On my system, the link is in a value object. Not sure if this is changed in APIM. Therefore keep the old assigment and check for null.
+                        if (swaggerUrl == null)
+                        {
+                            swaggerUrl = swaggerExport["value"].Value<string>("link");
+                        }
                         var swaggerContent = await resourceCollector.GetResourceByURL(swaggerUrl);
                         var serviceUrl = apiInstance["properties"].Value<string>("serviceUrl");
                         if (!String.IsNullOrWhiteSpace(serviceUrl))
