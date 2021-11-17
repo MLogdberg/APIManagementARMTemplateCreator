@@ -446,7 +446,14 @@ namespace APIManagementTemplate
                         var policies = await resourceCollector.GetResource(id + "/policies");
                         foreach (JObject policy in (policies == null ? new JArray() : policies.Value<JArray>("value")))
                         {
-                            productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(policy));
+                            JObject pol = template.AddProductSubObject(policy);
+
+                            if (Directory.Exists(separatePolicyOutputFolder))
+                            {
+                                pol = ReplacePolicyWithFileLink(template, pol, productObject.Value<string>("name"));
+                            }
+
+                            productTemplateResource.Value<JArray>("resources").Add(pol);
                             this.PolicyHandleProperties(policy, productTemplateResource.Value<string>("name"), null);
                         }
                     }
