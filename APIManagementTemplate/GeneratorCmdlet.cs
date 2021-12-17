@@ -56,6 +56,9 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false,HelpMessage = "Export the API backend instances used in the API policy. Requires ExportApiPropertiesAndBackend to be true.")]
         public bool ExportBackendInstances = true;
 
+        [Parameter(Mandatory = false,HelpMessage = "List of named values to skip exporting. Has no effect if ExportApiPropertiesAndBackend is false")]
+        public string[] IgnoreProperties = new string[0];
+        
         [Parameter(Mandatory = false,HelpMessage = "A Bearer token value")]
         public string Token = "";
 
@@ -120,7 +123,8 @@ namespace APIManagementTemplate
                     resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter,
                     CreateApplicationInsightsInstance, ApiVersion, ParameterizeBackendFunctionKey,
                     ExportSwaggerDefinition, ExportCertificates, ExportTags, SeparatePolicyOutputFolder,
-                    ChainDependencies, ExportApiPropertiesAndBackend, FixedKeyVaultNameParameter, ExportBackendInstances);
+                    ChainDependencies, ExportApiPropertiesAndBackend, FixedKeyVaultNameParameter, ExportBackendInstances,
+                    IgnoreProperties);
                 JObject result = generator.GenerateTemplate().Result;
                 WriteObject(result.ToString());
             }
