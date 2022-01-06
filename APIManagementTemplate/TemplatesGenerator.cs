@@ -88,8 +88,8 @@ namespace APIManagementTemplate
             if (replaceListSecretsWithParameter)
                 ReplaceListSecretsWithParameter(parsedTemplate);
             List<GeneratedTemplate> templates = GenerateAPIsAndVersionSets(apiStandalone, parsedTemplate, separatePolicyFile, separateSwaggerFile);
-            templates.AddRange(GenerateProducts(parsedTemplate, separatePolicyFile, apiStandalone, listApiInProduct));
-            templates.AddRange(GenerateService(parsedTemplate, separatePolicyFile, alwaysAddPropertiesAndBackend));
+            templates.AddRange(GenerateProducts(parsedTemplate, separatePolicyFile, apiStandalone, listApiInProduct, out var usedNamedValueInProduct));
+            templates.AddRange(GenerateService(parsedTemplate, separatePolicyFile, alwaysAddPropertiesAndBackend, usedNamedValueInProduct));
             templates.Add(GenerateTemplate(parsedTemplate, "subscriptions.template.json", String.Empty, SubscriptionResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "users.template.json", String.Empty, UserResourceType));
             templates.Add(GenerateTemplate(parsedTemplate, "groups.template.json", String.Empty, GroupResourceType));
@@ -324,7 +324,7 @@ namespace APIManagementTemplate
             return parameters;
         }
 
-        private IEnumerable<GeneratedTemplate> GenerateService(JObject parsedTemplate, bool separatePolicyFile, bool alwaysAddPropertiesAndBackend)
+        private IEnumerable<GeneratedTemplate> GenerateService(JObject parsedTemplate, bool separatePolicyFile, bool alwaysAddPropertiesAndBackend, string[] usedNamedValueInProduct)
         {
             List<GeneratedTemplate> templates = new List<GeneratedTemplate>();
             List<string> wantedResources = new List<string>{
@@ -334,6 +334,10 @@ namespace APIManagementTemplate
             if (alwaysAddPropertiesAndBackend)
             {
                 wantedResources.AddRange(new[]{ PropertyResourceType, BackendResourceType});
+            }
+            else if (usedNamedValueInProduct.Any())
+            {
+                wantedResources.AddRange(new[]{ PropertyResourceType});
             }
 
             var generatedTemplate = new GeneratedTemplate { FileName = "service.template.json", Directory = String.Empty };
@@ -359,13 +363,23 @@ namespace APIManagementTemplate
                         }
                     }
                 }
+
+                //When listApiInProduct is used usedNamedValueInProduct will be filled with the namedValues that are used within
+                //the product. When a namedValue is not present in the list it will be skipped.
+                if (!alwaysAddPropertiesAndBackend && usedNamedValueInProduct.Any() && resource.Value<string>("type") == PropertyResourceType)
+                {
+                    if (!usedNamedValueInProduct.Contains(resource["properties"]?.Value<string>("displayName")))
+                    {
+                        continue;
+                    }
+                }
+
                 template.parameters.Merge(GetParameters(parsedTemplate["parameters"], resource));
                 template.variables.Merge(GetParameters(parsedTemplate["variables"], resource, "variables"));
                 var variableParameters = GetParameters(parsedTemplate["parameters"], parsedTemplate["variables"]);
                 foreach (var parameter in variableParameters)
                 {
-                    if (template.parameters[parameter.Key] == null)
-                        template.parameters[parameter.Key] = parameter.Value;
+                    template.parameters[parameter.Key] ??= parameter.Value;
                 }
                 template.resources.Add(JObject.FromObject(resource));
             }
@@ -493,9 +507,23 @@ namespace APIManagementTemplate
             return template;
         }
 
-        private IEnumerable<GeneratedTemplate> GenerateProducts(JObject parsedTemplate, bool separatePolicyFile, bool apiStandalone, bool listApiInProduct)
+        private IEnumerable<GeneratedTemplate> GenerateProducts(JObject parsedTemplate, bool separatePolicyFile, bool apiStandalone, bool listApiInProduct, out string[] usedNamedValuesInProduct)
         {
-            var products = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == ProductResourceType);
+            var products = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == ProductResourceType).ToList();;
+           
+            //get the used NamedValues in product when listApiInProduct is enabled
+            usedNamedValuesInProduct = new string[0];
+            if (listApiInProduct)
+            {
+                usedNamedValuesInProduct = (from product in products
+                    from p in product.SelectTokens($"$..[?(@.type=='{ProductPolicyResourceType}')]")
+                    select Regex.Match(p["properties"]?["value"]?.ToString() ?? string.Empty,
+                        "{{(?<name>[-_.a-zA-Z0-9]*)}}")
+                    into match
+                    where match.Success
+                    select match.Groups["name"].Value).ToArray();
+            }
+
             List<GeneratedTemplate> templates = new List<GeneratedTemplate>();
             if (separatePolicyFile)
             {
