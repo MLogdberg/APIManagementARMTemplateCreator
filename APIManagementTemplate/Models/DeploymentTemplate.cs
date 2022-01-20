@@ -192,10 +192,12 @@ namespace APIManagementTemplate.Models
 
         public void AddParameterFromObject(JObject obj, string propertyName, string propertyType, string paramNamePrefix = "")
         {
-            var propValue = (string)obj[propertyName];
+            // Fix issue "Can not convert Object to String" when obj[propertyName] is of type object.
+            // At the moment, propertyType is either "string" or "secureobject".
+            string propValue = propertyType == "secureobject" ? obj[propertyName].ToString() : (string)obj[propertyName];
             if (propValue == null || (propValue.StartsWith("[") && propValue.EndsWith("]")))
                 return;
-            var defaultValue = propertyType == "secureobject" ? "" : obj[propertyName];
+            var defaultValue = propertyType == "secureobject" ? new JObject() : obj[propertyName];
             obj[propertyName] = WrapParameterName(this.AddParameter(paramNamePrefix + "_" + propertyName, propertyType, defaultValue));
         }
 

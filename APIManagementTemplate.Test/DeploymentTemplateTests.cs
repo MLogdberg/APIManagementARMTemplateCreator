@@ -254,6 +254,29 @@ namespace APIManagementTemplate.Test
 
         }
 
+        [TestMethod]
+        public void ScenarioTestBackendCustomURLWithoutCredentials()
+        {
+            var collector = new MockResourceCollector("CustomURLBackends");
+            var dtemplate = new DeploymentTemplate();
+
+            var document = JObject.Parse(Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.CustomURLBackends.service-cramoapidev-backends-CustomUrlWithoutCredentials.json"));
+            dtemplate.AddBackend(document, null);
+            Assert.AreEqual("{}", dtemplate.parameters["Backend_CustomUrlWithoutCredentials_credentials"].Value<JObject>("defaultValue").ToString());
+            Assert.AreEqual(dtemplate.resources[0]["properties"].Value<string>("credentials"), "[parameters('Backend_CustomUrlWithoutCredentials_credentials')]");
+         }
+
+        [TestMethod]
+        public void ScenarioTestBackendCustomURLWithCredentials()
+        {
+            var collector = new MockResourceCollector("CustomURLBackends");
+            var dtemplate = new DeploymentTemplate();
+
+            var document = JObject.Parse(Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.CustomURLBackends.service-cramoapidev-backends-CustomUrlWithCredentials.json"));
+            dtemplate.AddBackend(document, null);
+            Assert.AreEqual("{}", dtemplate.parameters["Backend_CustomUrlWithoutCredentials_credentials"].Value<JObject>("defaultValue").ToString());
+            Assert.AreEqual(dtemplate.resources[0]["properties"].Value<string>("credentials"), "[parameters('Backend_CustomUrlWithoutCredentials_credentials')]");
+        }
     }
 
 }
