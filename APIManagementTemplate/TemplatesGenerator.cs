@@ -511,18 +511,18 @@ namespace APIManagementTemplate
         {
             var products = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == ProductResourceType).ToList();;
            
-            //get the used NamedValues in product when listApiInProduct is enabled
+            //get the used NamedValues in product
             usedNamedValuesInProduct = new string[0];
-            if (listApiInProduct)
-            {
-                usedNamedValuesInProduct = (from product in products
-                    from p in product.SelectTokens($"$..[?(@.type=='{ProductPolicyResourceType}')]")
-                    select Regex.Match(p["properties"]?["value"]?.ToString() ?? string.Empty,
-                        "{{(?<name>[-_.a-zA-Z0-9]*)}}")
-                    into match
-                    where match.Success
-                    select match.Groups["name"].Value).ToArray();
-            }
+           
+            List<string> list = new List<string>();
+            foreach (
+                var matches in from product 
+                    in products from p 
+                    in product.SelectTokens($"$..[?(@.type=='{ProductPolicyResourceType}')]") 
+                select Regex.Matches(p["properties"]?["value"]?.ToString() ?? string.Empty, "{{(?<name>[-_.a-zA-Z0-9]*)}}"))
+                list.AddRange(from Match match in matches where match.Success select match.Groups["name"].Value);
+
+            usedNamedValuesInProduct = list.ToArray();
 
             List<GeneratedTemplate> templates = new List<GeneratedTemplate>();
             if (separatePolicyFile)
