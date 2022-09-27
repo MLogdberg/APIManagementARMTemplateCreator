@@ -662,10 +662,18 @@ namespace APIManagementTemplate
 
         private void RemoveProductAPIs(JObject content)
         {
+            //Remove the api refs
             var apis = content.SelectTokens($"$..resources[?(@.type=='{ProductAPIResourceType}')]");
             foreach (var api in apis.ToArray())
             {
                 api.Remove();
+            }
+
+            //Remove api dependencies 
+            var depends = content.SelectTokens($"$..dependsOn[?(@=~'/{ApiResourceType}/')]");
+            foreach (var d in depends.ToArray())
+            {
+                d.Remove();
             }
         }
 
