@@ -230,8 +230,8 @@ namespace APIManagementTemplate
                                         var match = Regex.Match(urltemplatestring, "{{(?<name>[-_.a-zA-Z0-9]*)}}");
                                         if (match.Success)
                                         {
-                                            string name = match.Groups["name"].Value;
-                                            var idp = identifiedProperties.Where(pp => pp.name == name).FirstOrDefault();
+                                            var name = match.Groups["name"].Value;
+                                            var idp = identifiedProperties.FirstOrDefault(pp => pp.name == name);
                                             if (idp != null)
                                             {
                                                 idp.extraInfo = bo.backendProperty.extraInfo;
