@@ -462,7 +462,7 @@ namespace APIManagementTemplate
                 }
             }
 
-            var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/namedValues", apiversion: "2020-06-01-preview");
+            var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/namedValues", suffix: "$top=1000", apiversion: "2020-06-01-preview");
 
             //  var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/properties",apiversion: "2020-06-01-preview");
             //has more?
