@@ -69,6 +69,7 @@ namespace APIManagementTemplate
         private const string ApiOperationResourceType = "Microsoft.ApiManagement/service/apis/operations";
         private const string ApiOperationPolicyResourceType = "Microsoft.ApiManagement/service/apis/operations/policies";
         private const string ApiPolicyResourceType = "Microsoft.ApiManagement/service/apis/policies";
+        private const string ApiSchemasResourceType = "Microsoft.ApiManagement/service/apis/schemas";
         private const string ServicePolicyFileName = "service.policy.xml";
         private const string PropertyResourceType = "Microsoft.ApiManagement/service/namedValues";
         private const string BackendResourceType = "Microsoft.ApiManagement/service/backends";
@@ -809,6 +810,24 @@ namespace APIManagementTemplate
                 apiObject["resources"].Where(x => _swaggerTemplateApiResourceTypes.Any(p => p == x.Value<string>("type")))
                     .ToList().ForEach(x => x.Remove());
             }
+         
+            //fix ARM template problem in pattern in swagger-definition
+            var t = apiObject["resources"].FirstOrDefault(x => x.Value<string>("type") == ApiSchemasResourceType);
+            //Find the schemas object and continue when found
+            if (t?["properties"]?["document"]?["components"]?["schemas"] is JObject schemas)
+            {
+                //loop through the patterns and search for patterns starting with [
+                foreach (var pattern in schemas.SelectTokens("$..properties..pattern").Where(_ => _ is JValue))
+                {
+                    //When pattern is found, add a additional [
+                    if (pattern is JValue child && child.Value<string>().StartsWith("["))
+                    {
+                        child.Value = $"[{child.Value}";
+                    }
+                }
+                
+            }
+
             template.parameters = GetParameters(parsedTemplate["parameters"], apiObject);
             SetFilenameAndDirectory(apiObject, parsedTemplate, generatedTemplate, false);
             template.resources.Add(apiStandalone ? RemoveServiceDependencies(apiObject) : apiObject);
