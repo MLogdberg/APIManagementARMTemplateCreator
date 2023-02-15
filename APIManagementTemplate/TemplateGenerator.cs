@@ -500,6 +500,7 @@ namespace APIManagementTemplate
 
                     var propertyTemplate = template.AddNamedValues(propertyObject);
 
+
                     if (!parametrizePropertiesOnly)
                     {
                         string resourceid = $"[resourceId('Microsoft.ApiManagement/service/namedValues',{propertyTemplate.GetResourceId()})]";
@@ -509,6 +510,11 @@ namespace APIManagementTemplate
                             if (apiTemplate != null)
                                 apiTemplate.Value<JArray>("dependsOn").Add(resourceid);
                         }
+                        foreach (var resorce in identifiedProperty.dependencies)
+                        {
+                            resorce.Value<JArray>("dependsOn").Add(resourceid);
+                        }
+
                     }
                 }
             }
