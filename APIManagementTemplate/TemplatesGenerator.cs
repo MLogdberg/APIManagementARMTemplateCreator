@@ -69,6 +69,7 @@ namespace APIManagementTemplate
         private const string ApiOperationResourceType = "Microsoft.ApiManagement/service/apis/operations";
         private const string ApiOperationPolicyResourceType = "Microsoft.ApiManagement/service/apis/operations/policies";
         private const string ApiPolicyResourceType = "Microsoft.ApiManagement/service/apis/policies";
+        private const string ApiSchemasResourceType = "Microsoft.ApiManagement/service/apis/schemas";
         private const string ServicePolicyFileName = "service.policy.xml";
         private const string PropertyResourceType = "Microsoft.ApiManagement/service/namedValues";
         private const string BackendResourceType = "Microsoft.ApiManagement/service/backends";
@@ -221,7 +222,7 @@ namespace APIManagementTemplate
 
 
             foreach (GeneratedTemplate template2 in filteredTemplates)
-            {                
+            {
                 template.resources.Add(GenerateDeployment(template2, generatedTemplates));
             }
             template.parameters = GetParameters(parsedTemplate["parameters"], template.resources, separatePolicyFile);
@@ -294,7 +295,7 @@ namespace APIManagementTemplate
                     continue;
                 }
 
-                var matches = generatedTemplates.Where(t => IsLocalDependency(name, t)); 
+                var matches = generatedTemplates.Where(t => IsLocalDependency(name, t));
                 if (matches.Any())
                 {
                     var match = matches.First();
@@ -333,11 +334,11 @@ namespace APIManagementTemplate
 
             if (alwaysAddPropertiesAndBackend)
             {
-                wantedResources.AddRange(new[]{ PropertyResourceType, BackendResourceType});
+                wantedResources.AddRange(new[] { PropertyResourceType, BackendResourceType });
             }
             else if (usedNamedValueInProduct.Any())
             {
-                wantedResources.AddRange(new[]{ PropertyResourceType});
+                wantedResources.AddRange(new[] { PropertyResourceType });
             }
 
             var generatedTemplate = new GeneratedTemplate { FileName = "service.template.json", Directory = String.Empty };
@@ -405,7 +406,7 @@ namespace APIManagementTemplate
             ReplaceSwaggerWithFileLink(item, fileInfo);
             var allowed = new[] { "contentFormat", "contentValue", "path" };
             item["properties"].Cast<JProperty>().Where(p => !allowed.Any(a => a == p.Name)).ToList().ForEach(x => x.Remove());
-            item["resources"].Where(x => _swaggerTemplateApiResourceTypes.All(r => r != x.Value<string>("type")) )
+            item["resources"].Where(x => _swaggerTemplateApiResourceTypes.All(r => r != x.Value<string>("type")))
                 .ToList().ForEach(x => x.Remove());
             return item;
         }
@@ -509,17 +510,17 @@ namespace APIManagementTemplate
 
         private IEnumerable<GeneratedTemplate> GenerateProducts(JObject parsedTemplate, bool separatePolicyFile, bool apiStandalone, bool listApiInProduct, out string[] usedNamedValuesInProduct)
         {
-            var products = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == ProductResourceType).ToList();;
-           
+            var products = parsedTemplate["resources"].Where(rr => rr["type"].Value<string>() == ProductResourceType).ToList();
+
             //get the used NamedValues in product
             usedNamedValuesInProduct = new string[0];
-           
+
             List<string> list = new List<string>();
             foreach (
-                var matches in from product 
-                    in products from p 
-                    in product.SelectTokens($"$..[?(@.type=='{ProductPolicyResourceType}')]") 
-                select Regex.Matches(p["properties"]?["value"]?.ToString() ?? string.Empty, "{{(?<name>[-_.a-zA-Z0-9]*)}}"))
+                var matches in from product
+                    in products from p
+                    in product.SelectTokens($"$..[?(@.type=='{ProductPolicyResourceType}')]")
+                               select Regex.Matches(p["properties"]?["value"]?.ToString() ?? string.Empty, "{{(?<name>[-_.a-zA-Z0-9]*)}}"))
                 list.AddRange(from Match match in matches where match.Success select match.Groups["name"].Value);
 
             usedNamedValuesInProduct = list.ToArray();
@@ -634,7 +635,7 @@ namespace APIManagementTemplate
                         new JProperty("defaultValue", new JArray(apiNames))
                     )));
                 ((JObject)parsedTemplate["parameters"]).Add(parameterObject.Last);
-                
+
                 var apisResource = new JObject
                 {
                     new JProperty("name", productName.Replace(")]", $", '/', parameters('{apisListParameterName}')[copyIndex()])]")),
@@ -809,6 +810,53 @@ namespace APIManagementTemplate
                 apiObject["resources"].Where(x => _swaggerTemplateApiResourceTypes.Any(p => p == x.Value<string>("type")))
                     .ToList().ForEach(x => x.Remove());
             }
+
+            //fix ARM template problem in pattern in swagger-definition
+            var t = apiObject["resources"].FirstOrDefault(x => x.Value<string>("type") == ApiSchemasResourceType);
+            //Find the schemas object and continue when found
+            if (t?["properties"]?["document"]?["components"]?["schemas"] is JObject schemas)
+            {
+                //loop through the patterns and search for patterns starting with [
+                foreach (var pattern in schemas.SelectTokens("$..properties..pattern").Where(_ => _ is JValue))
+                {
+                    //When pattern is found, add a additional [
+                    if (pattern is JValue child && child.Value<string>().StartsWith("["))
+                    {
+                        /* Only checking for a [ is not enough, to determine if a escape character has to be set we use a regex
+                        * ARM function (so escape)
+                        *    [1]
+                        *    [eh]
+                        *    [54654]
+                        *    [(df)]
+                        *    [1df(df)]
+                        *    [sdf]{df}
+                        *    [sdf]{dfs}[df]
+                        *    [sdf]dfs[df]
+                        *    [sdf]_[df]
+                        *    [sdf]{dfs}[df]{dsf}
+                        *    [A-Z]
+                        
+                            
+                        * not ARM function (don't escape)
+                        *    [sdf][df]
+                        *    [sdf](dsf)[]
+                        *    [sdf](df)[df]
+                        *    [sdf]/[df]
+                        *    [sdf]|[df]
+                        *    [sdf][df]{dsf}
+                        */
+
+                        //Regex to match ARM function
+                        var regEx = new Regex(
+                            @"(^\[\w*\]$)|(^\[(\w*\(\w*\))\]$)|(^\[[\w-]*\]\{{\w*\}}$)|(^\[[\w-]*\]\{{?\w+\}}?\[\w*\](\{{\w*\}})?$)|(^\[[\w-]*\]$)", RegexOptions.Compiled);
+
+                        if (regEx.IsMatch(child.Value<string>()))
+                            child.Value = $"[{child.Value}";
+                    }
+                }
+
+            }
+
             template.parameters = GetParameters(parsedTemplate["parameters"], apiObject);
             SetFilenameAndDirectory(apiObject, parsedTemplate, generatedTemplate, false);
             template.resources.Add(apiStandalone ? RemoveServiceDependencies(apiObject) : apiObject);
