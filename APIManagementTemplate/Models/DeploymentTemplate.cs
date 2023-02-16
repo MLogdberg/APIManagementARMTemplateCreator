@@ -551,8 +551,18 @@ namespace APIManagementTemplate.Models
                     string path = GetPathFromUrl(resource["properties"]?.Value<string>("url"));
                     //resource["properties"]["url"] = $"[concat('https://',toLower(parameters('{paramsitename}')),'.azurewebsites.net/{path}')]";
                     //hostNames
-                    resource["properties"]["url"] = $"[concat('https://',first(reference(resourceId(parameters('{rgparamname}'),concat('Microsoft.Web/sites'),parameters('{paramsitename}')),'2022-03-01').hostNames))]";
-
+                    var url = resource["properties"].Value<string>("url")?.Replace("https://", "");
+                    var urlsegments = url.Contains('/') ? url.Split('/').Skip(1) : new string[0];
+                    string urlSuffix = "/" + string.Join("/", urlsegments);
+                    if (urlSuffix.Length > 1)
+                    {
+                        
+                        resource["properties"]["url"] = $"[concat('https://',first(reference(resourceId(parameters('{rgparamname}'),concat('Microsoft.Web/sites'),parameters('{paramsitename}')),'2022-03-01').hostNames),'{urlSuffix}')]";
+                    }
+                    else
+                    {
+                        resource["properties"]["url"] = $"[concat('https://',first(reference(resourceId(parameters('{rgparamname}'),concat('Microsoft.Web/sites'),parameters('{paramsitename}')),'2022-03-01').hostNames))]";
+                    }
                     //Determine the extrainfo based on the parameterizeBackendFunctionKey. When the backend should be parameterized use the name of the property
                     //in the x-functions-key header
                     //var extraInfo = $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key";

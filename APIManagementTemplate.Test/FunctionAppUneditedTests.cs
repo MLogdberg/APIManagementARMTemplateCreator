@@ -77,7 +77,7 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual(0, obj["dependsOn"].Count());
 
             var prop = obj["properties"];
-            Assert.AreEqual("[concat('https://',toLower(parameters('FunctionApp_maloapimtest_siteName')),'.azurewebsites.net/')]", prop.Value<string>("url"));
+            Assert.AreEqual("[concat('https://',first(reference(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites'),parameters('FunctionApp_maloapimtest_siteName')),'2022-03-01').hostNames))]", prop.Value<string>("url"));
             Assert.AreEqual("http", prop.Value<string>("protocol"));
             Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',subscription().subscriptionId,'/resourceGroups/',parameters('FunctionApp_maloapimtest_resourceGroup'),'/providers/Microsoft.Web/sites/',parameters('FunctionApp_maloapimtest_siteName'))]", prop.Value<string>("resourceId"));
         }
