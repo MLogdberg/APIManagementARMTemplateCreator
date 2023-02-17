@@ -91,8 +91,9 @@ namespace APIManagementTemplate
                     PolicyHandleProperties(policy, "Global", "Global");
                     return template.CreatePolicy(policy);
                 });
-                await AddServiceResource(apimTemplateResource, "/identityProviders",
-                    identityProvider => template.CreateIdentityProvider(identityProvider, false));
+                if (apim["sku"].Value<string>("name") != "Consumption")
+                    await AddServiceResource(apimTemplateResource, "/identityProviders",identityProvider => template.CreateIdentityProvider(identityProvider, false));
+                
                 var loggers = await AddServiceResource(apimTemplateResource, "/loggers", logger =>
                 {
                     bool isApplicationInsightsLogger = (logger["properties"]?["loggerType"]?.Value<string>() ?? string.Empty) == "applicationInsights";
