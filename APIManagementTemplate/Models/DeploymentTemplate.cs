@@ -192,12 +192,10 @@ namespace APIManagementTemplate.Models
 
         public void AddParameterFromObject(JObject obj, string propertyName, string propertyType, string paramNamePrefix = "")
         {
-            // Fix issue "Can not convert Object to String" when obj[propertyName] is of type object.
-            // At the moment, propertyType is either "string" or "secureobject".
-            string propValue = propertyType == "secureobject" ? obj[propertyName].ToString() : (string)obj[propertyName];
+            string propValue = propertyType == "secureobject" || propertyType == "object" ? obj[propertyName].ToString() : (string)obj[propertyName];
             if (propValue == null || (propValue.StartsWith("[") && propValue.EndsWith("]")))
                 return;
-            var defaultValue = propertyType == "secureobject" ? new JObject() : obj[propertyName];
+            var defaultValue = propertyType == "secureobject" ? new JObject() : propertyType == "object" ? JObject.Parse(propValue) : obj[propertyName];
             obj[propertyName] = WrapParameterName(this.AddParameter(paramNamePrefix + "_" + propertyName, propertyType, defaultValue));
         }
 
@@ -223,10 +221,10 @@ namespace APIManagementTemplate.Models
             obj.name = WrapParameterName(AddParameter($"{GetServiceName(servicename)}", "string", servicename));
             obj.type = type;
             var resource = JObject.FromObject(obj);
-                resource["sku"] = restObject["sku"];
-                resource["sku"]["name"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_name", "string", restObject["sku"].Value<string>("name")));
-                resource["sku"]["capacity"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_capacity", "string", restObject["sku"].Value<string>("capacity")));
-                resource["location"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_location", "string", restObject.Value<string>("location")));
+            resource["sku"] = restObject["sku"];
+            resource["sku"]["name"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_name", "string", restObject["sku"].Value<string>("name")));
+            resource["sku"]["capacity"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_sku_capacity", "string", restObject["sku"].Value<string>("capacity")));
+            resource["location"] = WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_location", "string", restObject.Value<string>("location")));
             if (restObject["identity"] != null && restObject["identity"].HasValues && restObject["identity"]["type"] != null)
             {
                 resource["identity"] = new JObject();
@@ -272,7 +270,7 @@ namespace APIManagementTemplate.Models
         private string GetVirtualnetworkParameter(string servicename, JToken virtualNetworkConfiguration, string propertyName)
         {
             return WrapParameterName(AddParameter($"{GetServiceName(servicename, false)}_virtualNetwork_{propertyName}",
-                "string",virtualNetworkConfiguration.Type == JTokenType.Null
+                "string", virtualNetworkConfiguration.Type == JTokenType.Null
                     ? string.Empty
                     : virtualNetworkConfiguration.Value<string>(propertyName)), true);
         }
@@ -331,7 +329,7 @@ namespace APIManagementTemplate.Models
         private JObject GetVirtualNetworkConfigurationVariable(string servicename, JToken virtualNetworkConfiguration)
         {
             var subnetnameParameter = AddParameter($"{GetServiceName(servicename, false)}_virtualNetwork_subnetname",
-                "string", virtualNetworkConfiguration.Type == JTokenType.Null ? String.Empty : virtualNetworkConfiguration.Value<string>("subnetname")?? String.Empty);
+                "string", virtualNetworkConfiguration.Type == JTokenType.Null ? String.Empty : virtualNetworkConfiguration.Value<string>("subnetname") ?? String.Empty);
             return new JObject
             {
                 ["subnetResourceId"] = GetVirtualnetworkParameter(servicename, virtualNetworkConfiguration, "subnetResourceId"),
@@ -557,8 +555,8 @@ namespace APIManagementTemplate.Models
                     if (parameterizeBackendFunctionKey)
                     {
                         var custom = false;
-                        
-                        var xFunctionKey = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();;
+
+                        var xFunctionKey = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault(); ;
                         if (xFunctionKey != null)
                         {
                             var value = xFunctionKey.Value<string>();
@@ -574,15 +572,15 @@ namespace APIManagementTemplate.Models
                         if (!custom)
                         {
                             functionAppPropertyName = $"{sitename}-key";
-                            extraInfo = $"parameters('{AddParameter($"{sitename}-key", "string", "")}')";    
+                            extraInfo = $"parameters('{AddParameter($"{sitename}-key", "string", "")}')";
                         }
                     }
-                    
+
                     retval = new Property()
                     {
                         type = Property.PropertyType.Function,
                         name = functionAppPropertyName.ToLower(),
-                        
+
                         extraInfo = extraInfo
                     };
 
@@ -590,9 +588,9 @@ namespace APIManagementTemplate.Models
                     if (code == null)
                     {
                         //Fall back to the x functions key
-                        code = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();;
+                        code = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault(); ;
                     }
-                    
+
                     if (code != null)
                     {
                         var value = code.Value<string>();
@@ -608,6 +606,29 @@ namespace APIManagementTemplate.Models
             else
             {
                 AddParameterFromObject((JObject)resource["properties"], "url", "string", name);
+
+                //todo: tried to add namedvalues used in credetials to template. Doesn't work yet.
+                //var queries = resource["properties"]?["credentials"]?.Value<JObject>("query");
+                //if (queries != null)
+                //{
+                    
+                //    //HandleProperties(logger.Value<string>("name"), "Logger", logger["properties"].ToString());
+
+
+                //    foreach (var query in queries.Properties())
+                //    {
+                //        foreach (string value in query.Value)
+                //        {
+                //            if (!value.StartsWith("{{") || !value.EndsWith("}}"))
+                //                continue;
+
+                //            var parsed = value.Substring(2, value.Length - 4);
+                //            dependsOn.Add(
+                //                $"[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('{GetServiceName(servicename)}'),'{parsed}')]");
+                //        }
+                //    }
+                //}
+
                 AddParameterFromObject((JObject)resource["properties"], "credentials", "secureobject", name);
             }
 
@@ -750,7 +771,8 @@ namespace APIManagementTemplate.Models
             {
                 objectname = $"'{name}'";
             }
-            else {
+            else
+            {
                 switch (type)
                 {
                     case "Microsoft.ApiManagement/service/products/apis":
@@ -824,7 +846,7 @@ namespace APIManagementTemplate.Models
 
             //is key vault? 
             var KeyVaultObj = resource["properties"].Value<JObject>("keyVault");
-            if(KeyVaultObj != null)
+            if (KeyVaultObj != null)
             {
                 /*
                  {
@@ -837,17 +859,17 @@ namespace APIManagementTemplate.Models
                  */
                 var kvIdentifier = KeyVaultObj.Value<string>("secretIdentifier");
                 var match = Regex.Match(kvIdentifier, "https://(?<keyvaultname>.*).vault.azure.net/secrets/(?<secretname>[^*#&+:<>?/]+)(/(?<secretversion>.*))?");
-                if(match.Success)
+                if (match.Success)
                 {
                     var keyvaultName = match.Groups["keyvaultname"].Value;
-                    var secretname = match.Groups["secretname"].Value;                    
+                    var secretname = match.Groups["secretname"].Value;
                     var secretversion = match.Groups["secretversion"];
                     resource["properties"]["keyVault"] = new JObject();
                     var parameterKeyVaultName = (fixedKeyVaultNameParameter) ? "keyVaultName" : restObject["properties"].Value<string>("displayName") + "_" + "keyVaultName";
                     resource["properties"]["keyVault"]["secretIdentifier"] = $"[concat('https://'," +
-                        $"{WrapParameterName(this.AddParameter(parameterKeyVaultName,"string",keyvaultName),brackets:false)}, '.vault.azure.net/secrets/'," +
+                        $"{WrapParameterName(this.AddParameter(parameterKeyVaultName, "string", keyvaultName), brackets: false)}, '.vault.azure.net/secrets/'," +
                         $"{WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "secretName", "string", secretname), brackets: false)}" +
-                        $"{(secretversion.Success ? (",'/'," + WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "secretVersion", "string", secretversion.Value), brackets: false)) : String.Empty )})]";
+                        $"{(secretversion.Success ? (",'/'," + WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "secretVersion", "string", secretversion.Value), brackets: false)) : String.Empty)})]";
                 }
             }
             else
@@ -859,7 +881,7 @@ namespace APIManagementTemplate.Models
                     resource["properties"]["value"] = WrapParameterName(this.AddParameter(restObject["properties"].Value<string>("displayName") + "_" + "value", secret ? "securestring" : "string", secret ? "secretvalue" : propValue));
                 }
             }
-            
+
             var dependsOn = new JArray();
             if (APIMInstanceAdded)
             {
@@ -1170,7 +1192,7 @@ namespace APIManagementTemplate.Models
                 resource["properties"]["sampling"]["percentage"] = WrapParameterName(AddParameter($"diagnostic_{name}_samplingPercentage", "string", GetDefaultValue(resource, "sampling", "percentage")));
                 if (IsApplicationInsightsLogger(loggerObject))
                 {
-                    var value = 
+                    var value =
                     resource["properties"]["enableHttpCorrelationHeaders"] = WrapParameterName(AddParameter($"diagnostic_{name}_enableHttpCorrelationHeaders", "bool", GetDefaultValue(resource, true, "enableHttpCorrelationHeaders")));
                 }
             }
@@ -1199,7 +1221,7 @@ namespace APIManagementTemplate.Models
             }
             return prop.Value<string>() ?? String.Empty;
         }
-        
+
         private static T GetDefaultValue<T>(JObject resource, T defaultValue, params string[] names)
         {
             var prop = resource["properties"];
@@ -1209,14 +1231,14 @@ namespace APIManagementTemplate.Models
                 if (prop == null)
                     return defaultValue;
             }
-            
+
             var retVal = prop.Value<T>();
 
             if (retVal == null)
             {
                 retVal = defaultValue;
             }
-            
+
             return retVal;
         }
 
