@@ -530,13 +530,6 @@ namespace APIManagementTemplate
         private async Task<JObject> AddServiceResource(JObject apimTemplateResource, string resourceName, Func<JObject, JObject> createResource)
         {
             var resources = await resourceCollector.GetResource(GetAPIMResourceIDString() + resourceName);
-            
-            //Ignore when MethodNotAllowedInPricingTier error is thrown
-            if (resources.Value<JObject>("error")?["code"]?.Value<string>() == "MethodNotAllowedInPricingTier")
-            {
-                return null;
-            }
-            
             foreach (JObject resource in (resources == null ? new JArray() : resources.Value<JArray>("value")))
             {
                 var newResource = createResource(resource);
