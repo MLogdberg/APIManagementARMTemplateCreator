@@ -536,7 +536,9 @@ namespace APIManagementTemplate.Models
                         type = Property.PropertyType.LogicApp,
                         name = laname.ToLower(),
                         extraInfo = listcallbackref
+                        
                     };
+                    retval.dependencies.Add(resource);
                 }
                 else if (resourceid.Contains("providers/Microsoft.Web/sites")) //Web App/Function
                 {
@@ -545,18 +547,40 @@ namespace APIManagementTemplate.Models
                     aid.ReplaceValueAfter("sites", "',parameters('" + paramsitename + "')");
                     resource["properties"]["description"] = $"[parameters('{paramsitename}')]";
                     string path = GetPathFromUrl(resource["properties"]?.Value<string>("url"));
-                    resource["properties"]["url"] = $"[concat('https://',toLower(parameters('{paramsitename}')),'.azurewebsites.net/{path}')]";
-
+                    //resource["properties"]["url"] = $"[concat('https://',toLower(parameters('{paramsitename}')),'.azurewebsites.net/{path}')]";
+                    //hostNames
+                    var url = resource["properties"].Value<string>("url")?.Replace("https://", "");
+                    var urlsegments = url.Contains('/') ? url.Split('/').Skip(1) : new string[0];
+                    string urlSuffix = "/" + string.Join("/", urlsegments);
+                    if (urlSuffix.Length > 1)
+                    {
+                        
+                        resource["properties"]["url"] = $"[concat('https://',first(reference(resourceId(parameters('{rgparamname}'),concat('Microsoft.Web/sites'),parameters('{paramsitename}')),'2022-03-01').hostNames),'{urlSuffix}')]";
+                    }
+                    else
+                    {
+                        resource["properties"]["url"] = $"[concat('https://',first(reference(resourceId(parameters('{rgparamname}'),concat('Microsoft.Web/sites'),parameters('{paramsitename}')),'2022-03-01').hostNames))]";
+                    }
                     //Determine the extrainfo based on the parameterizeBackendFunctionKey. When the backend should be parameterized use the name of the property
                     //in the x-functions-key header
                     //var extraInfo = $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key";
                     var extraInfo = $"listKeys(resourceId(parameters('{rgparamname}'),concat('Microsoft.Web/sites/host'),parameters('{paramsitename}'),'default'),'2018-02-01').functionKeys.default";
                     var functionAppPropertyName = sitename;
+                    var xFunctionKey = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();
+                    if (xFunctionKey != null)
+                    {
+                        var value = xFunctionKey.Value<string>();
+                        
+                        if (value.StartsWith("{{") && value.EndsWith("}}"))
+                        {
+                            var parsed = value.Substring(2, value.Length - 4);
+                            functionAppPropertyName = parsed;
+                        }
+                    }
                     if (parameterizeBackendFunctionKey)
                     {
                         var custom = false;
 
-                        var xFunctionKey = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault(); ;
                         if (xFunctionKey != null)
                         {
                             var value = xFunctionKey.Value<string>();
@@ -574,6 +598,10 @@ namespace APIManagementTemplate.Models
                             functionAppPropertyName = $"{sitename}-key";
                             extraInfo = $"parameters('{AddParameter($"{sitename}-key", "string", "")}')";
                         }
+                    }else
+                    {
+                        //make sure to have dependency correct
+
                     }
 
                     retval = new Property()
@@ -583,7 +611,7 @@ namespace APIManagementTemplate.Models
 
                         extraInfo = extraInfo
                     };
-
+                    retval.dependencies.Add(resource);
                     var code = (resource["properties"]?["credentials"]?["query"]?.Value<JArray>("code") ?? new JArray()).FirstOrDefault();
                     if (code == null)
                     {

@@ -91,8 +91,9 @@ namespace APIManagementTemplate
                     PolicyHandleProperties(policy, "Global", "Global");
                     return template.CreatePolicy(policy);
                 });
-                await AddServiceResource(apimTemplateResource, "/identityProviders",
-                    identityProvider => template.CreateIdentityProvider(identityProvider, false));
+                if (apim["sku"].Value<string>("name") != "Consumption")
+                    await AddServiceResource(apimTemplateResource, "/identityProviders",identityProvider => template.CreateIdentityProvider(identityProvider, false));
+                
                 var loggers = await AddServiceResource(apimTemplateResource, "/loggers", logger =>
                 {
                     bool isApplicationInsightsLogger = (logger["properties"]?["loggerType"]?.Value<string>() ?? string.Empty) == "applicationInsights";
@@ -500,6 +501,7 @@ namespace APIManagementTemplate
 
                     var propertyTemplate = template.AddNamedValues(propertyObject);
 
+
                     if (!parametrizePropertiesOnly)
                     {
                         string resourceid = $"[resourceId('Microsoft.ApiManagement/service/namedValues',{propertyTemplate.GetResourceId()})]";
@@ -509,6 +511,11 @@ namespace APIManagementTemplate
                             if (apiTemplate != null)
                                 apiTemplate.Value<JArray>("dependsOn").Add(resourceid);
                         }
+                        foreach (var resorce in identifiedProperty.dependencies)
+                        {
+                            resorce.Value<JArray>("dependsOn").Add(resourceid);
+                        }
+
                     }
                 }
             }
