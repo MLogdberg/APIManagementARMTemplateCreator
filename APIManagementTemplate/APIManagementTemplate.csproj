@@ -63,11 +63,12 @@
     <Compile Include="Models\ParameterTemplate.cs" />
     <Compile Include="ParamGeneratorCmdlet.cs" />
     <Compile Include="TemplatesGenerator.cs" />
+    <Compile Include="Models\ResourceTemplate.cs" />
     <Compile Include="WriteApiManagementTemplatesCmdlet.cs" />
     <Compile Include="GeneratorCmdlet.cs" />
     <Compile Include="Models\DeploymentTemplate.cs" />
     <Compile Include="Models\Property.cs" />
-    <Compile Include="Models\ResourceTemplate.cs" />
+    <Compile Include="Templates\AuthorizationResourceTemplate.cs" />
     <Compile Include="AzureResourceCollector.cs" />
     <Compile Include="IResourceCollector.cs" />
     <Compile Include="AzureResourceId.cs" />
@@ -78,9 +79,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Templates\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
