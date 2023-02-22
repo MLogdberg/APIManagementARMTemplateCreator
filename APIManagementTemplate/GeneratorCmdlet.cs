@@ -56,6 +56,9 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false,HelpMessage = "Export the API backend instances used in the API policy. Requires ExportApiPropertiesAndBackend to be true.")]
         public bool ExportBackendInstances = true;
 
+        [Parameter(Mandatory = false,HelpMessage = "Export the Authorization Providers.")]
+        public bool ExportAuthorizationProviders = false;
+
         [Parameter(Mandatory = false,HelpMessage = "List of named values to skip exporting. Has no effect if ExportApiPropertiesAndBackend is false")]
         public string[] IgnoreProperties = new string[0];
         
@@ -120,11 +123,11 @@ namespace APIManagementTemplate
             {
                 TemplateGenerator generator = new TemplateGenerator(APIManagement, SubscriptionId, ResourceGroup,
                     APIFilters, ExportGroups, ExportProducts, ExportPIManagementInstance, ParametrizePropertiesOnly,
-                    resourceCollector, ReplaceSetBackendServiceBaseUrlWithProperty, FixedServiceNameParameter,
-                    CreateApplicationInsightsInstance, ApiVersion, ParameterizeBackendFunctionKey,
-                    ExportSwaggerDefinition, ExportCertificates, ExportTags, SeparatePolicyOutputFolder,
-                    ChainDependencies, ExportApiPropertiesAndBackend, FixedKeyVaultNameParameter, ExportBackendInstances,
-                    IgnoreProperties);
+                    resourceCollector, replaceSetBackendServiceBaseUrlAsProperty: ReplaceSetBackendServiceBaseUrlWithProperty, fixedServiceNameParameter: FixedServiceNameParameter,
+                    createApplicationInsightsInstance: CreateApplicationInsightsInstance, apiVersion: ApiVersion, parameterizeBackendFunctionKey: ParameterizeBackendFunctionKey,
+                    exportSwaggerDefinition: ExportSwaggerDefinition, exportCertificates: ExportCertificates, exportTags: ExportTags, separatePolicyOutputFolder: SeparatePolicyOutputFolder,
+                    chainDependencies: ChainDependencies, exportApiPropertiesAndBackend: ExportApiPropertiesAndBackend, fixedKeyVaultNameParameter: FixedKeyVaultNameParameter, exportBackendInstances: ExportBackendInstances,
+                    ignoreProperties: IgnoreProperties, exportAuthorizationProviders:ExportAuthorizationProviders);
                 JObject result = generator.GenerateTemplate().Result;
                 WriteObject(result.ToString());
             }

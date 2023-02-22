@@ -38,16 +38,19 @@ namespace APIManagementTemplate
         private bool chainDependencies;
         private bool exportApiPropertiesAndBackend;
         private readonly string[] ignoreProperties;
+        private bool exportAuthorizationProviders;
 
 
         public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters,
             bool exportGroups, bool exportProducts, bool exportPIManagementInstance, bool parametrizePropertiesOnly,
-            IResourceCollector resourceCollector, bool replaceSetBackendServiceBaseUrlAsProperty = false,
+            IResourceCollector resourceCollector,
+            bool replaceSetBackendServiceBaseUrlAsProperty = false,
             bool fixedServiceNameParameter = false, bool createApplicationInsightsInstance = false,
             string apiVersion = null, bool parameterizeBackendFunctionKey = false, bool exportSwaggerDefinition = false,
             bool exportCertificates = true, bool exportTags = false, string separatePolicyOutputFolder = "",
             bool chainDependencies = false, bool exportApiPropertiesAndBackend = true,
-            bool fixedKeyVaultNameParameter = false, bool exportBackendInstances = true, string[] ignoreProperties = null)
+            bool fixedKeyVaultNameParameter = false, bool exportBackendInstances = true,
+            string[] ignoreProperties = null, bool exportAuthorizationProviders = false)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -72,6 +75,7 @@ namespace APIManagementTemplate
             this.chainDependencies = chainDependencies;
             this.exportApiPropertiesAndBackend = exportApiPropertiesAndBackend;
             this.ignoreProperties = ignoreProperties;
+            this.exportAuthorizationProviders = exportAuthorizationProviders;
         }
 
         private string GetAPIMResourceIDString()
@@ -92,8 +96,8 @@ namespace APIManagementTemplate
                     return template.CreatePolicy(policy);
                 });
                 if (apim["sku"].Value<string>("name") != "Consumption")
-                    await AddServiceResource(apimTemplateResource, "/identityProviders",identityProvider => template.CreateIdentityProvider(identityProvider, false));
-                
+                    await AddServiceResource(apimTemplateResource, "/identityProviders", identityProvider => template.CreateIdentityProvider(identityProvider, false));
+
                 var loggers = await AddServiceResource(apimTemplateResource, "/loggers", logger =>
                 {
                     bool isApplicationInsightsLogger = (logger["properties"]?["loggerType"]?.Value<string>() ?? string.Empty) == "applicationInsights";
@@ -109,6 +113,13 @@ namespace APIManagementTemplate
                 if (this.exportTags)
                     await AddServiceResource(apimTemplateResource, "/tags",
                     tags => template.CreateTags(tags, false));
+
+                if (this.exportAuthorizationProviders)
+                {
+                    await AddServiceResource(apimTemplateResource, "/authorizationProviders", 
+                        authorizationProviders => template.CreateAuthorizationProviders(resourceCollector, authorizationProviders, false), "2022-04-01-preview");
+                    
+                }
             }
             //check for special productname filter
             var getProductname = Regex.Match(apiFilters, "(?<=productname\\s*eq\\s*\\')(.+?)(?=\\')", RegexOptions.IgnoreCase);
@@ -534,9 +545,9 @@ namespace APIManagementTemplate
             return length > 0 ? operationName.Substring(4, length) : operationName;
         }
 
-        private async Task<JObject> AddServiceResource(JObject apimTemplateResource, string resourceName, Func<JObject, JObject> createResource)
+        private async Task<JObject> AddServiceResource(JObject apimTemplateResource, string resourceName, Func<JObject, JObject> createResource, string apiversion = "2019-01-01")
         {
-            var resources = await resourceCollector.GetResource(GetAPIMResourceIDString() + resourceName);
+            var resources = await resourceCollector.GetResource(GetAPIMResourceIDString() + resourceName, apiversion: apiversion);
             foreach (JObject resource in (resources == null ? new JArray() : resources.Value<JArray>("value")))
             {
                 var newResource = createResource(resource);

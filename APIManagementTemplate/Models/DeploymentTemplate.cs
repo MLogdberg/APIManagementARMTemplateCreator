@@ -7,6 +7,7 @@ using System.Management.Automation;
 using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
+using APIManagementTemplate.Templates;
 
 namespace APIManagementTemplate.Models
 {
@@ -192,12 +193,10 @@ namespace APIManagementTemplate.Models
 
         public void AddParameterFromObject(JObject obj, string propertyName, string propertyType, string paramNamePrefix = "")
         {
-            // Fix issue "Can not convert Object to String" when obj[propertyName] is of type object.
-            // At the moment, propertyType is either "string" or "secureobject".
-            string propValue = propertyType == "secureobject" ? obj[propertyName].ToString() : (string)obj[propertyName];
+            string propValue = propertyType == "secureobject" || propertyType == "object" ? obj[propertyName].ToString() : (string)obj[propertyName];
             if (propValue == null || (propValue.StartsWith("[") && propValue.EndsWith("]")))
                 return;
-            var defaultValue = propertyType == "secureobject" ? new JObject() : obj[propertyName];
+            var defaultValue = propertyType == "secureobject" ? new JObject() : propertyType == "object" ? JObject.Parse(propValue) : obj[propertyName];
             obj[propertyName] = WrapParameterName(this.AddParameter(paramNamePrefix + "_" + propertyName, propertyType, defaultValue));
         }
 
@@ -538,7 +537,7 @@ namespace APIManagementTemplate.Models
                         type = Property.PropertyType.LogicApp,
                         name = laname.ToLower(),
                         extraInfo = listcallbackref
-                        
+
                     };
                     retval.dependencies.Add(resource);
                 }
@@ -556,7 +555,7 @@ namespace APIManagementTemplate.Models
                     string urlSuffix = "/" + string.Join("/", urlsegments);
                     if (urlSuffix.Length > 1)
                     {
-                        
+
                         resource["properties"]["url"] = $"[concat('https://',first(reference(resourceId(parameters('{rgparamname}'),concat('Microsoft.Web/sites'),parameters('{paramsitename}')),'2022-03-01').hostNames),'{urlSuffix}')]";
                     }
                     else
@@ -572,7 +571,7 @@ namespace APIManagementTemplate.Models
                     if (xFunctionKey != null)
                     {
                         var value = xFunctionKey.Value<string>();
-                        
+
                         if (value.StartsWith("{{") && value.EndsWith("}}"))
                         {
                             var parsed = value.Substring(2, value.Length - 4);
@@ -636,6 +635,29 @@ namespace APIManagementTemplate.Models
             else
             {
                 AddParameterFromObject((JObject)resource["properties"], "url", "string", name);
+
+                //todo: tried to add namedvalues used in credetials to template. Doesn't work yet.
+                //var queries = resource["properties"]?["credentials"]?.Value<JObject>("query");
+                //if (queries != null)
+                //{
+
+                //    //HandleProperties(logger.Value<string>("name"), "Logger", logger["properties"].ToString());
+
+
+                //    foreach (var query in queries.Properties())
+                //    {
+                //        foreach (string value in query.Value)
+                //        {
+                //            if (!value.StartsWith("{{") || !value.EndsWith("}}"))
+                //                continue;
+
+                //            var parsed = value.Substring(2, value.Length - 4);
+                //            dependsOn.Add(
+                //                $"[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('{GetServiceName(servicename)}'),'{parsed}')]");
+                //        }
+                //    }
+                //}
+
                 AddParameterFromObject((JObject)resource["properties"], "credentials", "secureobject", name);
             }
 
@@ -1127,6 +1149,58 @@ namespace APIManagementTemplate.Models
             var properties = resource["properties"];
 
             return resource;
+        }
+
+        public JObject CreateAuthorizationProviders(IResourceCollector resourceCollector, JObject restObject, bool addResource)
+        {
+
+            var jObject = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/authorizationProviders", addResource);
+            var azureResourceId = new AzureResourceId(restObject.Value<string>("id"));
+            var service = azureResourceId.ValueAfter("service");
+            var name = restObject.Value<string>("name");
+
+
+            var serviceName = AddParameter(GetServiceName(service) ?? "", "string", service);
+            var redirectUrl = jObject["properties"]?["oauth2"]?.Value<string>("redirectUrl");
+            if (redirectUrl != null)
+            {
+                jObject["properties"]["oauth2"]["redirectUrl"] = $"[concat('{redirectUrl.Replace(service, "")}', {WrapParameterName(serviceName, false, false)})]";
+            }
+
+            var tokenUrl = jObject["properties"]?["oauth2"]?["grantTypes"]?["clientCredentials"]?.Value<string>("tokenUrl");
+            if (tokenUrl != null)
+            {
+                jObject["properties"]["oauth2"]["grantTypes"]["clientCredentials"]["tokenUrl"] =
+                    WrapParameterName(AddParameter($"authorizationProvider_{name}_tokenUrl", "string", tokenUrl));
+            }
+
+
+            var obj = jObject.ToObject<ResourceTemplate>();
+            obj.apiVersion = "2021-04-01-preview";
+            var authorizations = resourceCollector.GetResource($"{azureResourceId}/authorizations", apiversion: "2021-04-01-preview")
+                .Result?.Value<JArray>("value").Select(j => j.ToObject<AuthorizationResourceTemplate>()).ToList();
+            if (authorizations != null && authorizations.Any())
+            {
+                foreach (var authorization in authorizations)
+                {
+                    var clientId = authorization?.properties?.parameters?.clientId;
+                    if (clientId != null)
+                    {
+                        authorization.properties.parameters.clientId =
+                            WrapParameterName(AddParameter($"authorizationProvider_{name}_{authorization.name}_clientId", "string", clientId));
+
+                        authorization.properties.parameters.clientSecret =
+                            WrapParameterName(AddParameter($"authorizationProvider_{name}_{authorization.name}_clientSecret", "securestring", "secretvalue"));
+                    }
+                                     
+                    authorization.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/authorizationProviders', parameters('{GetServiceName(service)}'), '{name}')]");
+
+                    var authorizationObject = JObject.FromObject(authorization);
+                    obj.resources.Add(authorizationObject);
+                }
+            }
+
+            return JObject.FromObject(obj);
         }
 
         public JObject CreateApiDiagnostic(JObject restObject, JArray loggers, bool addResource)
