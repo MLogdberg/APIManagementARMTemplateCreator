@@ -117,7 +117,7 @@ namespace APIManagementTemplate
                 if (this.exportAuthorizationProviders)
                 {
                     await AddServiceResource(apimTemplateResource, "/authorizationProviders", 
-                        authorizationProviders => template.CreateAuthorizationProviders(resourceCollector, authorizationProviders, false), "2022-04-01-preview");
+                        authorizationProviders => template.CreateAuthorizationProviders(resourceCollector, authorizationProviders, false), "2021-08-01");
                     
                 }
             }

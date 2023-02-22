@@ -1176,14 +1176,14 @@ namespace APIManagementTemplate.Models
 
 
             var obj = jObject.ToObject<ResourceTemplate>();
-            obj.apiVersion = "2021-04-01-preview";
-            var authorizations = resourceCollector.GetResource($"{azureResourceId}/authorizations", apiversion: "2021-04-01-preview")
+            obj.apiVersion = "2021-08-01";
+            var authorizations = resourceCollector.GetResource($"{azureResourceId}/authorizations", apiversion: "2021-08-01")
                 .Result?.Value<JArray>("value").Select(j => j.ToObject<AuthorizationResourceTemplate>()).ToList();
             if (authorizations != null && authorizations.Any())
             {
                 foreach (var authorization in authorizations)
                 {
-                    var clientId = authorization?.properties?.parameters?.clientId;
+                    var clientId = authorization.properties?.parameters?.clientId;
                     if (clientId != null)
                     {
                         authorization.properties.parameters.clientId =
@@ -1191,9 +1191,34 @@ namespace APIManagementTemplate.Models
 
                         authorization.properties.parameters.clientSecret =
                             WrapParameterName(AddParameter($"authorizationProvider_{name}_{authorization.name}_clientSecret", "securestring", "secretvalue"));
-                    }
-                                     
+                    }               
                     authorization.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/authorizationProviders', parameters('{GetServiceName(service)}'), '{name}')]");
+
+
+
+                    //var accessPolicies = resourceCollector.GetResource(
+                    //    $"{azureResourceId}/authorizations/{authorization.name}/accessPolicies", apiversion: "2021-08-01").Result?.Value<JArray>("value");
+                    //if (accessPolicies != null && accessPolicies.Any())
+                    //{
+                    //    foreach (var accessPolicy in accessPolicies)
+                    //    {
+                    //        accessPolicy["type"] = "accessPolicies";
+                    //        var tenantId = accessPolicy["properties"]?["tenantId"];
+                    //        if (tenantId != null)
+                    //        {
+                    //            accessPolicy["properties"]["tenantId"] = "[resourceGroup().subscription.tenantId]";
+                    //        }
+
+                    //        var dependsOn = new JArray
+                    //        {
+                    //            $"[resourceId('Microsoft.ApiManagement/service/authorizationProviders/authorizations', parameters('{GetServiceName(service)}'), '{authorization.name}')]"
+                    //        };
+                    //        accessPolicy["dependsOn"] = dependsOn;
+
+                            
+                    //        authorization.resources.Add(JObject.FromObject(accessPolicy));
+                    //    }
+                    //}
 
                     var authorizationObject = JObject.FromObject(authorization);
                     obj.resources.Add(authorizationObject);
