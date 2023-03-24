@@ -105,7 +105,7 @@ namespace APIManagementTemplate.Models
             }
             else
             {
-                if (!this.parameters[paramname].Value<string>("defaultValue").Equals(defaultvalue.Value.ToString()))
+                if (this.parameters[paramname]?["defaultValue"]?.ToString().Equals(defaultvalue.Value.ToString()) is false)
                 {
                     foreach (var p in this.parameters)
                     {
@@ -658,7 +658,11 @@ namespace APIManagementTemplate.Models
                 //    }
                 //}
 
-                AddParameterFromObject((JObject)resource["properties"], "credentials", "secureobject", name);
+                //if(resource["properties"]?["credentials"]?["query"]?.HasValues is true 
+                //   || resource["properties"]?["credentials"]?["header"]?.HasValues is true
+                //   || resource["properties"]?["credentials"]?["authorization"]?.HasValues is true
+                //   )
+                    AddParameterFromObject((JObject)resource["properties"], "credentials", "secureobject", name);
             }
 
             if (APIMInstanceAdded)
@@ -1259,11 +1263,15 @@ namespace APIManagementTemplate.Models
 
                 //set apiVersion to 2019-01-01
                 obj.apiVersion = "2019-01-01";
+ 
+                obj.properties["verbosity"] = WrapParameterName(AddParameter($"diagnostic_{name}_verbosity", "string", GetDefaultValue(restObject, "verbosity")), true);
 
                 obj.properties["loggerId"] = loggerResource;
                 obj.properties["alwaysLog"] = WrapParameterName(AddParameter($"diagnostic_{name}_alwaysLog", "string", GetDefaultValue(restObject, "alwaysLog")), true);
 
                 obj.properties["sampling"]["percentage"] = WrapParameterName(AddParameter($"diagnostic_{name}_samplingPercentage", "string", GetDefaultValue(restObject, "sampling", "percentage")));
+                
+                obj.properties["metrics"] = WrapParameterName(AddParameter($"diagnostic_{name}_metrics", "bool", GetDefaultValue(restObject, false, "metrics")));
 
                 //add when logger object is added
                 //obj.dependsOn.Add(loggerResource);
