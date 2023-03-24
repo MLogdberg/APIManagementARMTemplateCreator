@@ -1261,8 +1261,8 @@ namespace APIManagementTemplate.Models
                 var loggerName = GetServiceResourceName(loggerObject, "Microsoft.ApiManagement/service/loggers");
                 string loggerResource = $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), {loggerName})]";
 
-                //set apiVersion to 2019-01-01
-                obj.apiVersion = "2019-01-01";
+                //set apiVersion to 2022-08-01
+                obj.apiVersion = "2022-08-01";
  
                 obj.properties["verbosity"] = WrapParameterName(AddParameter($"diagnostic_{name}_verbosity", "string", GetDefaultValue(restObject, "verbosity")), true);
 
