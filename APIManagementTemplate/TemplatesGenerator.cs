@@ -857,6 +857,26 @@ namespace APIManagementTemplate
 
             }
 
+            //fix ARM template problem in defaultValue in swagger-definition
+            var operations = apiObject["resources"].Where(x => x.Value<string>("type") == ApiOperationResourceType);
+            //Find the operations request object and continue when found
+            foreach (var o in operations)
+            {
+                if (o?["properties"]?["request"] is JObject request)
+                {
+                    //loop through the defaultValue and search for patterns starting with [
+                    foreach (var defaultValue in request.SelectTokens("$..queryParameters..defaultValue").Where(_ => _ is JValue))
+                    {
+                        //When pattern is found, add a additional [
+                        if (defaultValue is JValue child && child.Value<string>().StartsWith("["))
+                        {
+                            child.Value = $"[{child.Value}";
+                        }
+                    }
+                }
+
+            }
+
             template.parameters = GetParameters(parsedTemplate["parameters"], apiObject);
             SetFilenameAndDirectory(apiObject, parsedTemplate, generatedTemplate, false);
             template.resources.Add(apiStandalone ? RemoveServiceDependencies(apiObject) : apiObject);
