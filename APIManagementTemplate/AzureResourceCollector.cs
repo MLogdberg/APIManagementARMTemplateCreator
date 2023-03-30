@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ namespace APIManagementTemplate
         public string token;
 
 
-        public AzureResourceCollector()  
+        public AzureResourceCollector()
         {
 
         }
@@ -37,7 +38,7 @@ namespace APIManagementTemplate
         }
         private static HttpClient client = new HttpClient() { BaseAddress = new Uri("https://management.azure.com") };
 
-        public async Task<JObject> GetResource(string resourceId, string suffix = "",string apiversion = "2019-01-01")
+        public async Task<JObject> GetResource(string resourceId, string suffix = "", string apiversion = "2019-01-01")
         {
             string url = resourceId + $"{GetSeparatorCharacter(resourceId)}api-version={apiversion}" + (string.IsNullOrEmpty(suffix) ? "" : $"&{suffix}");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -47,20 +48,33 @@ namespace APIManagementTemplate
             {
                 return null;
             }
-            
+
             var responseContent = await response.Content.ReadAsStringAsync();
             if (response.StatusCode == HttpStatusCode.Forbidden)
             {
                 throw new UnauthorizedAccessException(responseContent);
             }
 
+            //Define response object
+            var responseObject = JObject.Parse(responseContent);
 
+            //When more data is available in the next page get that too
+            var nextPageurl = responseObject["nextLink"]?.ToString();
+            while (nextPageurl != null)
+            {
+                response = await client.GetAsync(nextPageurl);
+                var rawResult = JsonConvert.DeserializeObject<JObject>(await response.Content.ReadAsStringAsync());
+                nextPageurl = rawResult["nextLink"]?.ToString();
+                responseObject.Merge(rawResult);
+            }
+            
             if (!string.IsNullOrEmpty(DebugOutputFolder))
             {
-                var path = DebugOutputFolder + "\\" + EscapeString(resourceId.Split('/').SkipWhile( (a) => { return a != "service" && a != "workflows" && a != "sites"; }).Aggregate<string>((b,c) => { return b +"-" +c; })  + ".json");
-                System.IO.File.WriteAllText(path, responseContent);
+                var path = DebugOutputFolder + "\\" + EscapeString(resourceId.Split('/').SkipWhile((a) => { return a != "service" && a != "workflows" && a != "sites"; }).Aggregate<string>((b, c) => { return b + "-" + c; }) + ".json");
+                System.IO.File.WriteAllText(path, response.ToString());
             }
-            return JObject.Parse(responseContent);
+
+            return responseObject;
 
         }
 
@@ -92,7 +106,7 @@ namespace APIManagementTemplate
         {
             if (String.IsNullOrWhiteSpace(value))
                 return value;
-            return value.Replace("/", "-").Replace(" ", "-").Replace("=","-").Replace("&", "-").Replace("?", "-");
+            return value.Replace("/", "-").Replace(" ", "-").Replace("=", "-").Replace("&", "-").Replace("?", "-");
         }
     }
 }

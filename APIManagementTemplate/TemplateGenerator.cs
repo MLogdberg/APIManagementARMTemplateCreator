@@ -266,11 +266,7 @@ namespace APIManagementTemplate
                                 operationTemplateResource.Value<JArray>("resources").Add(pol);
 
                             //all other fixed let's add the not found properties
-
-
-                            //handle nextlink?
                         }
-                        //handle nextlink?               
 
                         //add dependency to make sure not all operations are deployed at the same time. This results in timeouts when having a lot of operations
                         if (previousOperationName != null)
@@ -338,8 +334,7 @@ namespace APIManagementTemplate
                             {
                                 ReplacePolicyWithFileLink(template, policyTemplateResource, apiInstance.Value<string>("name") + "_AllOperations");
                             }
-
-                            //handle nextlink?
+                            
                         }
                     }
                     if (!exportSwaggerDefinition)
@@ -384,8 +379,6 @@ namespace APIManagementTemplate
                             }
                         }
                     }
-
-                    //handle nextlink?
 
                 }
             }
