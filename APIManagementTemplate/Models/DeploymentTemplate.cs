@@ -508,7 +508,9 @@ namespace APIManagementTemplate.Models
             {
                 string resourceid = restObject["properties"].Value<string>("resourceId");
                 var aid = new AzureResourceId(resourceid.Replace("https://management.azure.com/", ""));
-                aid.SubscriptionId = "',subscription().subscriptionId,'";
+                // Logic App might be in a different subscription.
+                var subparamname = AddParameter(name + "_subscriptionId", "string", "[subscription().subscriptionId]");
+                aid.SubscriptionId = "',parameters('" + subparamname + "'),'";
                 var rgparamname = AddParameter(name + "_resourceGroup", "string", aid.ResourceGroupName);
                 aid.ResourceGroupName = "',parameters('" + rgparamname + "'),'";
                 if (resourceid.Contains("providers/Microsoft.Logic/workflows")) //Logic App
