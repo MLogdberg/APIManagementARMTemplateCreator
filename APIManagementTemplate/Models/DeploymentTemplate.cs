@@ -531,7 +531,7 @@ namespace APIManagementTemplate.Models
                     }
                     //need to get the Logic App triggers and find the HTTP one....
 
-                    string listcallbackref = $"listCallbackUrl(resourceId(parameters('{rgparamname}'), 'Microsoft.Logic/workflows/triggers', parameters('{logicappname}'), '{triggername}'), '2017-07-01')";
+                    string listcallbackref = $"listCallbackUrl(resourceId(parameters('{subparamname}'), parameters('{rgparamname}'), 'Microsoft.Logic/workflows/triggers', parameters('{logicappname}'), '{triggername}'), '2017-07-01')";
 
                     resource["properties"]["url"] = $"[substring({listcallbackref}.basePath,0,add(10,indexOf({listcallbackref}.basePath,'/triggers/')))]";
                     retval = new Property()
