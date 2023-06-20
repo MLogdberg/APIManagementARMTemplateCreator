@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using APIManagementTemplate.Models;
@@ -73,7 +73,7 @@ namespace APIManagementTemplate.Test
             var prop = obj["properties"];
             Assert.AreEqual("[substring(listCallbackUrl(resourceId(parameters('LogicApp_customtrigger_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_customtrigger_logicAppName'), 'customtriggername'), '2017-07-01').basePath,0,add(10,indexOf(listCallbackUrl(resourceId(parameters('LogicApp_customtrigger_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_customtrigger_logicAppName'), 'customtriggername'), '2017-07-01').basePath,'/triggers/')))]", prop.Value<string>("url"));
             Assert.AreEqual("http", prop.Value<string>("protocol"));
-            Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',subscription().subscriptionId,'/resourceGroups/',parameters('LogicApp_customtrigger_resourceGroup'),'/providers/Microsoft.Logic/workflows/',parameters('LogicApp_customtrigger_logicAppName'))]", prop.Value<string>("resourceId"));
+            Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',parameters('LogicApp_customtrigger_subscriptionId'),'/resourceGroups/',parameters('LogicApp_customtrigger_resourceGroup'),'/providers/Microsoft.Logic/workflows/',parameters('LogicApp_customtrigger_logicAppName'))]", prop.Value<string>("resourceId"));
         }
 
         [TestMethod]

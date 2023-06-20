@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using APIManagementTemplate.Models;
@@ -84,7 +84,7 @@ namespace APIManagementTemplate.Test
                     var prop = obj["properties"];
                     Assert.AreEqual("[concat('https://',first(reference(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites'),parameters('FunctionApp_maloapimtest_siteName')),'2022-03-01').hostNames))]", prop.Value<string>("url"));
                     Assert.AreEqual("http", prop.Value<string>("protocol"));
-                    Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',subscription().subscriptionId,'/resourceGroups/',parameters('FunctionApp_maloapimtest_resourceGroup'),'/providers/Microsoft.Web/sites/',parameters('FunctionApp_maloapimtest_siteName'))]", prop.Value<string>("resourceId"));
+                    Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',parameters('FunctionApp_maloapimtest_subscriptionId'),'/resourceGroups/',parameters('FunctionApp_maloapimtest_resourceGroup'),'/providers/Microsoft.Web/sites/',parameters('FunctionApp_maloapimtest_siteName'))]", prop.Value<string>("resourceId"));
                 }
                 else
                  if (obj.Value<string>("name") == "[concat(parameters('service_ibizmalo_name'), '/' ,'LogicApp_malologicapptestRequest')]")
@@ -95,7 +95,7 @@ namespace APIManagementTemplate.Test
                     var prop = obj["properties"];
                     Assert.AreEqual("[substring(listCallbackUrl(resourceId(parameters('LogicApp_malologicapptestRequest_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_malologicapptestRequest_logicAppName'), 'request'), '2017-07-01').basePath,0,add(10,indexOf(listCallbackUrl(resourceId(parameters('LogicApp_malologicapptestRequest_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_malologicapptestRequest_logicAppName'), 'request'), '2017-07-01').basePath,'/triggers/')))]", prop.Value<string>("url"));
                     Assert.AreEqual("http", prop.Value<string>("protocol"));
-                    Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',subscription().subscriptionId,'/resourceGroups/',parameters('LogicApp_malologicapptestRequest_resourceGroup'),'/providers/Microsoft.Logic/workflows/',parameters('LogicApp_malologicapptestRequest_logicAppName'))]", prop.Value<string>("resourceId"));
+                    Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',parameters('LogicApp_malologicapptestRequest_subscriptionId'),'/resourceGroups/',parameters('LogicApp_malologicapptestRequest_resourceGroup'),'/providers/Microsoft.Logic/workflows/',parameters('LogicApp_malologicapptestRequest_logicAppName'))]", prop.Value<string>("resourceId"));
                 }
                 else
                 {

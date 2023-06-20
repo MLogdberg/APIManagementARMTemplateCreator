@@ -508,7 +508,7 @@ namespace APIManagementTemplate.Models
             {
                 string resourceid = restObject["properties"].Value<string>("resourceId");
                 var aid = new AzureResourceId(resourceid.Replace("https://management.azure.com/", ""));
-                // Logic App might be in a different subscription.
+                // Logic App might be in a different subscription. Allow override of the subscriptionId.
                 var subparamname = AddParameter(name + "_subscriptionId", "string", "[subscription().subscriptionId]");
                 aid.SubscriptionId = "',parameters('" + subparamname + "'),'";
                 var rgparamname = AddParameter(name + "_resourceGroup", "string", aid.ResourceGroupName);
