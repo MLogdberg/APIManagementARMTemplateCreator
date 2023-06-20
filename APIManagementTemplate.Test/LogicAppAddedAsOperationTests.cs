@@ -72,7 +72,7 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual(0, obj["dependsOn"].Count());
 
             var prop = obj["properties"];
-            Assert.AreEqual("[substring(listCallbackUrl(resourceId(parameters('LogicApp_salesinvoice-la_LabResources_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_salesinvoice-la_LabResources_logicAppName'), 'manual'), '2017-07-01').basePath,0,add(10,indexOf(listCallbackUrl(resourceId(parameters('LogicApp_salesinvoice-la_LabResources_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_salesinvoice-la_LabResources_logicAppName'), 'manual'), '2017-07-01').basePath,'/triggers/')))]", prop.Value<string>("url"));
+            Assert.AreEqual("[substring(listCallbackUrl(resourceId(parameters('LogicApp_salesinvoice-la_LabResources_subscriptionId'),parameters('LogicApp_salesinvoice-la_LabResources_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_salesinvoice-la_LabResources_logicAppName'), 'manual'), '2017-07-01').basePath,0,add(10,indexOf(listCallbackUrl(resourceId(parameters('LogicApp_salesinvoice-la_LabResources_subscriptionId'),parameters('LogicApp_salesinvoice-la_LabResources_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_salesinvoice-la_LabResources_logicAppName'), 'manual'), '2017-07-01').basePath,'/triggers/')))]", prop.Value<string>("url"));
             Assert.AreEqual("http", prop.Value<string>("protocol"));
             Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',parameters('LogicApp_salesinvoice-la_LabResources_subscriptionId'),'/resourceGroups/',parameters('LogicApp_salesinvoice-la_LabResources_resourceGroup'),'/providers/Microsoft.Logic/workflows/',parameters('LogicApp_salesinvoice-la_LabResources_logicAppName'))]", prop.Value<string>("resourceId"));
         }
@@ -92,7 +92,7 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual(0, obj["dependsOn"].Count());
 
             var prop = obj["properties"];
-            Assert.AreEqual("[listCallbackUrl(resourceId(parameters('LogicApp_salesinvoice-la_LabResources_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_salesinvoice-la_LabResources_logicAppName'), 'manual'), '2017-07-01').queries.sig]", prop.Value<string>("value"));
+            Assert.AreEqual("[listCallbackUrl(resourceId(parameters('LogicApp_salesinvoice-la_LabResources_subscriptionId'),parameters('LogicApp_salesinvoice-la_LabResources_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_salesinvoice-la_LabResources_logicAppName'), 'manual'), '2017-07-01').queries.sig]", prop.Value<string>("value"));
             Assert.AreEqual(true, prop.Value<bool>("secret"));
             Assert.AreEqual(0, prop["tags"].Count());
         }

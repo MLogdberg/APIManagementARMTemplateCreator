@@ -77,7 +77,7 @@ namespace APIManagementTemplate.Test
             Assert.AreEqual(0, obj["dependsOn"].Count());
 
             var prop = obj["properties"];
-            Assert.AreEqual("[concat('https://',first(reference(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites'),parameters('FunctionApp_maloapimtest_siteName')),'2022-03-01').hostNames))]", prop.Value<string>("url"));
+            Assert.AreEqual("[concat('https://',first(reference(resourceId(parameters('FunctionApp_maloapimtest_subscriptionId'),parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites'),parameters('FunctionApp_maloapimtest_siteName')),'2022-03-01').hostNames))]", prop.Value<string>("url"));
             Assert.AreEqual("http", prop.Value<string>("protocol"));
             Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',parameters('FunctionApp_maloapimtest_subscriptionId'),'/resourceGroups/',parameters('FunctionApp_maloapimtest_resourceGroup'),'/providers/Microsoft.Web/sites/',parameters('FunctionApp_maloapimtest_siteName'))]", prop.Value<string>("resourceId"));
         }
@@ -99,15 +99,15 @@ namespace APIManagementTemplate.Test
                 var prop = obj["properties"];
                 if(prop.Value<string>("displayName") == "maloapimtest_GenericWebhook_query_5b41934ca550d9de49391585")
                 {
-                    Assert.AreEqual("[listKeys(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),parameters('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
+                    Assert.AreEqual("[listKeys(resourceId(parameters('FunctionApp_maloapimtest_subscriptionId'),parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),parameters('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
                 }else if (prop.Value<string>("displayName") == "maloapimtest_HTTPTrigger_query_5b41934c571f50d55fdbf71b")
                 {
-                    Assert.AreEqual("[listKeys(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),parameters('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
+                    Assert.AreEqual("[listKeys(resourceId(parameters('FunctionApp_maloapimtest_subscriptionId'),parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),parameters('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
                 }
                 else if (prop.Value<string>("displayName") == "maloapimtest_HttpTriggerAdminKey_query_5b41934c6d0f59440d20c5ee")
                 {
                     //hwo to fix the admin key?????
-                    Assert.AreEqual("[listKeys(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),parameters('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
+                    Assert.AreEqual("[listKeys(resourceId(parameters('FunctionApp_maloapimtest_subscriptionId'),parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),parameters('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
                 }
                 else
                 {

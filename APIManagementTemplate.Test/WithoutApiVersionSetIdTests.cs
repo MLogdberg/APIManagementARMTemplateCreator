@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -422,7 +422,7 @@ namespace APIManagementTemplate.Test
             var codes = query.ValueWithType<JArray>(Arm.Code);
             Assert.AreEqual(1, codes.Count);
             Assert.AreEqual("{{myfunctions-key}}", codes[0].Value<string>());
-            Assert.AreEqual("[concat('https://',first(reference(resourceId(parameters('myfunctions_resourceGroup'),concat('Microsoft.Web/sites'),parameters('myfunctions_siteName')),'2022-03-01').hostNames),'/api')]",
+            Assert.AreEqual("[concat('https://',first(reference(resourceId(parameters('myfunctions_subscriptionId'),parameters('myfunctions_resourceGroup'),concat('Microsoft.Web/sites'),parameters('myfunctions_siteName')),'2022-03-01').hostNames),'/api')]",
                 backend["properties"]?.Value(Arm.Url));
         }
 

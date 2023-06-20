@@ -531,7 +531,7 @@ namespace APIManagementTemplate.Models
                     }
                     //need to get the Logic App triggers and find the HTTP one....
 
-                    string listcallbackref = $"listCallbackUrl(resourceId(parameters('{subparamname}'), parameters('{rgparamname}'), 'Microsoft.Logic/workflows/triggers', parameters('{logicappname}'), '{triggername}'), '2017-07-01')";
+                    string listcallbackref = $"listCallbackUrl(resourceId(parameters('{subparamname}'),parameters('{rgparamname}'), 'Microsoft.Logic/workflows/triggers', parameters('{logicappname}'), '{triggername}'), '2017-07-01')";
 
                     resource["properties"]["url"] = $"[substring({listcallbackref}.basePath,0,add(10,indexOf({listcallbackref}.basePath,'/triggers/')))]";
                     retval = new Property()
@@ -558,16 +558,16 @@ namespace APIManagementTemplate.Models
                     if (urlSuffix.Length > 1)
                     {
 
-                        resource["properties"]["url"] = $"[concat('https://',first(reference(resourceId(parameters('{rgparamname}'),concat('Microsoft.Web/sites'),parameters('{paramsitename}')),'2022-03-01').hostNames),'{urlSuffix}')]";
+                        resource["properties"]["url"] = $"[concat('https://',first(reference(resourceId(parameters('{subparamname}'),parameters('{rgparamname}'),concat('Microsoft.Web/sites'),parameters('{paramsitename}')),'2022-03-01').hostNames),'{urlSuffix}')]";
                     }
                     else
                     {
-                        resource["properties"]["url"] = $"[concat('https://',first(reference(resourceId(parameters('{rgparamname}'),concat('Microsoft.Web/sites'),parameters('{paramsitename}')),'2022-03-01').hostNames))]";
+                        resource["properties"]["url"] = $"[concat('https://',first(reference(resourceId(parameters('{subparamname}'),parameters('{rgparamname}'),concat('Microsoft.Web/sites'),parameters('{paramsitename}')),'2022-03-01').hostNames))]";
                     }
                     //Determine the extrainfo based on the parameterizeBackendFunctionKey. When the backend should be parameterized use the name of the property
                     //in the x-functions-key header
                     //var extraInfo = $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key";
-                    var extraInfo = $"listKeys(resourceId(parameters('{rgparamname}'),concat('Microsoft.Web/sites/host'),parameters('{paramsitename}'),'default'),'2018-02-01').functionKeys.default";
+                    var extraInfo = $"listKeys(resourceId(parameters('{subparamname}'),parameters('{rgparamname}'),concat('Microsoft.Web/sites/host'),parameters('{paramsitename}'),'default'),'2018-02-01').functionKeys.default";
                     var functionAppPropertyName = sitename;
                     var xFunctionKey = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();
                     if (xFunctionKey != null)
