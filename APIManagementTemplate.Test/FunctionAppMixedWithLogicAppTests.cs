@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using APIManagementTemplate.Models;
@@ -82,9 +82,9 @@ namespace APIManagementTemplate.Test
                     Assert.AreEqual(0, obj["dependsOn"].Count());
 
                     var prop = obj["properties"];
-                    Assert.AreEqual("[concat('https://',first(reference(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites'),parameters('FunctionApp_maloapimtest_siteName')),'2022-03-01').hostNames))]", prop.Value<string>("url"));
+                    Assert.AreEqual("[concat('https://',first(reference(resourceId(parameters('FunctionApp_maloapimtest_subscriptionId'),parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites'),parameters('FunctionApp_maloapimtest_siteName')),'2022-03-01').hostNames))]", prop.Value<string>("url"));
                     Assert.AreEqual("http", prop.Value<string>("protocol"));
-                    Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',subscription().subscriptionId,'/resourceGroups/',parameters('FunctionApp_maloapimtest_resourceGroup'),'/providers/Microsoft.Web/sites/',parameters('FunctionApp_maloapimtest_siteName'))]", prop.Value<string>("resourceId"));
+                    Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',parameters('FunctionApp_maloapimtest_subscriptionId'),'/resourceGroups/',parameters('FunctionApp_maloapimtest_resourceGroup'),'/providers/Microsoft.Web/sites/',parameters('FunctionApp_maloapimtest_siteName'))]", prop.Value<string>("resourceId"));
                 }
                 else
                  if (obj.Value<string>("name") == "[concat(parameters('service_ibizmalo_name'), '/' ,'LogicApp_malologicapptestRequest')]")
@@ -93,9 +93,9 @@ namespace APIManagementTemplate.Test
                     Assert.AreEqual(0, obj["dependsOn"].Count());
 
                     var prop = obj["properties"];
-                    Assert.AreEqual("[substring(listCallbackUrl(resourceId(parameters('LogicApp_malologicapptestRequest_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_malologicapptestRequest_logicAppName'), 'request'), '2017-07-01').basePath,0,add(10,indexOf(listCallbackUrl(resourceId(parameters('LogicApp_malologicapptestRequest_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_malologicapptestRequest_logicAppName'), 'request'), '2017-07-01').basePath,'/triggers/')))]", prop.Value<string>("url"));
+                    Assert.AreEqual("[substring(listCallbackUrl(resourceId(parameters('LogicApp_malologicapptestRequest_subscriptionId'),parameters('LogicApp_malologicapptestRequest_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_malologicapptestRequest_logicAppName'), 'request'), '2017-07-01').basePath,0,add(10,indexOf(listCallbackUrl(resourceId(parameters('LogicApp_malologicapptestRequest_subscriptionId'),parameters('LogicApp_malologicapptestRequest_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_malologicapptestRequest_logicAppName'), 'request'), '2017-07-01').basePath,'/triggers/')))]", prop.Value<string>("url"));
                     Assert.AreEqual("http", prop.Value<string>("protocol"));
-                    Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',subscription().subscriptionId,'/resourceGroups/',parameters('LogicApp_malologicapptestRequest_resourceGroup'),'/providers/Microsoft.Logic/workflows/',parameters('LogicApp_malologicapptestRequest_logicAppName'))]", prop.Value<string>("resourceId"));
+                    Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',parameters('LogicApp_malologicapptestRequest_subscriptionId'),'/resourceGroups/',parameters('LogicApp_malologicapptestRequest_resourceGroup'),'/providers/Microsoft.Logic/workflows/',parameters('LogicApp_malologicapptestRequest_logicAppName'))]", prop.Value<string>("resourceId"));
                 }
                 else
                 {
@@ -119,24 +119,24 @@ namespace APIManagementTemplate.Test
                 var prop = obj["properties"];
                 if (prop.Value<string>("displayName") == "maloapimtest_GenericWebhook_query_5b418f4619afb685dc8de379")
                 {
-                    Assert.AreEqual("[listKeys(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),parameters('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
+                    Assert.AreEqual("[listKeys(resourceId(parameters('FunctionApp_maloapimtest_subscriptionId'),parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),parameters('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
                 }
                 else if (prop.Value<string>("displayName") == "maloapimtest_HTTPTrigger_query_5b418f463f37b79bfde7eebe")
                 {
-                    Assert.AreEqual("[listKeys(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),parameters('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
+                    Assert.AreEqual("[listKeys(resourceId(parameters('FunctionApp_maloapimtest_subscriptionId'),parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),parameters('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
                 }
                 else if (prop.Value<string>("displayName") == "maloapimtest_HttpTriggerAdminKey_query_5b418f46b3882daea0919d26")
                 {
                     //hwo to fix the admin key?????
-                    Assert.AreEqual("[listKeys(resourceId(parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),parameters('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
+                    Assert.AreEqual("[listKeys(resourceId(parameters('FunctionApp_maloapimtest_subscriptionId'),parameters('FunctionApp_maloapimtest_resourceGroup'),concat('Microsoft.Web/sites/host'),parameters('FunctionApp_maloapimtest_siteName'),'default'),'2018-02-01').functionKeys.default]", prop.Value<string>("value"));
                 }
                 else if (prop.Value<string>("displayName") == "maloapimtest_request-invoke_5b4192e76a19ef3c6dbf2466")
                 {
-                    Assert.AreEqual("[listCallbackUrl(resourceId(parameters('LogicApp_malologicapptestRequest_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_malologicapptestRequest_logicAppName'), 'request'), '2017-07-01').queries.sig]", prop.Value<string>("value"));
+                    Assert.AreEqual("[listCallbackUrl(resourceId(parameters('LogicApp_malologicapptestRequest_subscriptionId'),parameters('LogicApp_malologicapptestRequest_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_malologicapptestRequest_logicAppName'), 'request'), '2017-07-01').queries.sig]", prop.Value<string>("value"));
                 }
                 else if (prop.Value<string>("displayName") == "maloapimtest_request-invoke-1_5b419313d3e5a75808e3f4ce")
                 {
-                    Assert.AreEqual("[listCallbackUrl(resourceId(parameters('LogicApp_malologicapptestRequest_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_malologicapptestRequest_logicAppName'), 'request'), '2017-07-01').queries.sig]", prop.Value<string>("value"));
+                    Assert.AreEqual("[listCallbackUrl(resourceId(parameters('LogicApp_malologicapptestRequest_subscriptionId'),parameters('LogicApp_malologicapptestRequest_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_malologicapptestRequest_logicAppName'), 'request'), '2017-07-01').queries.sig]", prop.Value<string>("value"));
                 }
                 else
                 {
