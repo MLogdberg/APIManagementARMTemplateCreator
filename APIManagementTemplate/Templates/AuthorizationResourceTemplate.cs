@@ -39,15 +39,17 @@ namespace APIManagementTemplate.Templates
 
         private string _name = null;
        
-        public string apiVersion { get; set; } = "2021-04-01-preview";
+        public string apiVersion { get; set; } = "2021-08-01";
         public AuthorizationProperties properties { get; set; }
         
+        public IList<JObject> resources { get; set; }
 
         public JArray dependsOn { get; set; }
 
         public AuthorizationResourceTemplate()
         {
             dependsOn = new JArray();
+            resources = new List<JObject>();
         }
     }
 
