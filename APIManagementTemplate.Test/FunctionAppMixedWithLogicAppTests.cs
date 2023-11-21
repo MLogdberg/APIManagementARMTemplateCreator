@@ -74,7 +74,7 @@ namespace APIManagementTemplate.Test
             {
 
                 Assert.AreEqual("Microsoft.ApiManagement/service/backends", obj.Value<string>("type"));
-                Assert.AreEqual("2019-01-01", obj.Value<string>("apiVersion"));
+                Assert.AreEqual("2022-08-01", obj.Value<string>("apiVersion"));
 
                 if (obj.Value<string>("name") == "[concat(parameters('service_ibizmalo_name'), '/' ,'FunctionApp_maloapimtest')]")
                 {

@@ -1294,7 +1294,7 @@ namespace APIManagementTemplate.Models
             var name = restObject.Value<string>("name");
             var loggerId = restObject["properties"]?.Value<string>("loggerId") ?? String.Empty;
             var logger = loggers.FirstOrDefault(x => x.Value<string>("id") == loggerId);
-            resource["apiVersion"] = "2019-01-01";
+            resource["apiVersion"] = "2022-08-01";
             if (logger != null)
             {
                 var rid = new AzureResourceId(restObject.Value<string>("id"));

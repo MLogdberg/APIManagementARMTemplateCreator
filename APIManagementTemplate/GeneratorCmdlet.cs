@@ -25,7 +25,7 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false,HelpMessage = "Name of the Tenant i.e. contoso.onmicrosoft.com")]
         public string TenantName = "";
 
-        //see filter in https://docs.microsoft.com/en-us/rest/api/apimanagement/2019-01-01/apis/listbyservice
+        //see filter in https://learn.microsoft.com/en-us/rest/api/apimanagement/apis/list-by-service
         [Parameter(Mandatory = false, HelpMessage = "Filter for what API's to exort i.e: path eq 'api/v1/currencyconverter' or endswith(path,'currencyconverter'). In addition to this, is it also possible to filter on productname i.e.: productname eq 'product-x'")]
         public string APIFilters = null;
         
