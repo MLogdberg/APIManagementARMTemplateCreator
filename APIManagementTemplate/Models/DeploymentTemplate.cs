@@ -307,7 +307,7 @@ namespace APIManagementTemplate.Models
             /*       Migrated to new version
              *       if (resource["properties"]?["subscriptionRequired"] != null)
                    {
-                       resource["apiVersion"] = "2019-01-01";
+                       resource["apiVersion"] = "2022-08-01";
                    }*/
 
             var dependsOn = new JArray();
@@ -872,7 +872,7 @@ namespace APIManagementTemplate.Models
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
             obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
             obj.AddName($"'{name}'");
-            obj.apiVersion = "2020-06-01-preview";
+            obj.apiVersion = "2022-08-01";
 
             obj.type = type;
             obj.properties = restObject.Value<JObject>("properties");
@@ -1294,7 +1294,7 @@ namespace APIManagementTemplate.Models
             var name = restObject.Value<string>("name");
             var loggerId = restObject["properties"]?.Value<string>("loggerId") ?? String.Empty;
             var logger = loggers.FirstOrDefault(x => x.Value<string>("id") == loggerId);
-            resource["apiVersion"] = "2019-01-01";
+            resource["apiVersion"] = "2022-08-01";
             if (logger != null)
             {
                 var rid = new AzureResourceId(restObject.Value<string>("id"));

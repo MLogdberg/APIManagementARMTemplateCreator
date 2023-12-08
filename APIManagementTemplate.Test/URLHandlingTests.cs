@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using APIManagementTemplate.Models;
@@ -66,7 +66,7 @@ namespace APIManagementTemplate.Test
 
 
             Assert.AreEqual("Microsoft.ApiManagement/service/apis", obj.Value<string>("type"));
-            Assert.AreEqual("2019-01-01", obj.Value<string>("apiVersion"));
+            Assert.AreEqual("2022-08-01", obj.Value<string>("apiVersion"));
 
             Assert.AreEqual("[concat(parameters('service_apidev_name'), '/' ,parameters('api_invoice-retrieval-api_name'))]", obj.Value<string>("name"));
             Assert.AreEqual(3, obj["resources"].Count());
@@ -93,7 +93,7 @@ namespace APIManagementTemplate.Test
 
             var obj = ((JArray)api["resources"]).Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/apis/operations").First();
             Assert.AreEqual("Microsoft.ApiManagement/service/apis/operations", obj.Value<string>("type"));
-            Assert.AreEqual("2019-01-01", obj.Value<string>("apiVersion"));
+            Assert.AreEqual("2022-08-01", obj.Value<string>("apiVersion"));
 
             Assert.AreEqual("[concat(parameters('service_apidev_name'), '/', parameters('api_invoice-retrieval-api_name'), '/', 'get-invoice')]", obj.Value<string>("name"));
             Assert.AreEqual(1, obj["resources"].Count());
@@ -115,7 +115,7 @@ namespace APIManagementTemplate.Test
             
 
             Assert.AreEqual("Microsoft.ApiManagement/service/apis/operations/policies", obj.Value<string>("type"));
-            Assert.AreEqual("2019-01-01", obj.Value<string>("apiVersion"));
+            Assert.AreEqual("2022-08-01", obj.Value<string>("apiVersion"));
 
             Assert.AreEqual("[concat(parameters('service_apidev_name'), '/', parameters('api_invoice-retrieval-api_name'), '/', 'get-invoice', '/', 'policy')]", obj.Value<string>("name"));
             Assert.AreEqual(0, obj["resources"].Count());

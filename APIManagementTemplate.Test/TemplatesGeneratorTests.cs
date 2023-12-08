@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -202,7 +202,7 @@ namespace APIManagementTemplate.Test
             //even though it is only handled when deploying an api with apiversion 20180601preview or later
             var template = _generatedTemplates.With(Filename.Echo);
             var api = template.WithDirectResource(ResourceType.Api);
-            Assert.AreEqual("2019-01-01", api.Value(Arm.ApiVersion));
+            Assert.AreEqual("2022-08-01", api.Value(Arm.ApiVersion));
         }
 
         [TestMethod]
@@ -520,7 +520,7 @@ namespace APIManagementTemplate.Test
             var policies = service.Content.SelectTokens("$..resources[?(@.type==\'Microsoft.ApiManagement/service/policies\')]");
             Assert.AreEqual(1, policies.Count());
             JToken policy = policies.First();
-            Assert.AreEqual("2019-01-01", policy.Value<string>("apiVersion"));
+            Assert.AreEqual("2022-08-01", policy.Value<string>("apiVersion"));
             AssertFileLink(policy, "/service.policy.xml");
         }
 
