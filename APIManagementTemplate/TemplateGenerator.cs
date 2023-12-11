@@ -342,7 +342,8 @@ namespace APIManagementTemplate
                     }
                     if (!exportSwaggerDefinition)
                     {
-                        var apiSchemas = await resourceCollector.GetResource(id + "/schemas");
+                        // Specify older apiversion, because newer versions do not return schema contents.
+                        var apiSchemas = await resourceCollector.GetResource(id + "/schemas", apiversion: "2021-08-01");
                         foreach (JObject schema in (apiSchemas == null ? new JArray() : apiSchemas.Value<JArray>("value")))
                         {
                             var schemaTemplate = template.CreateAPISchema(schema);
