@@ -599,7 +599,8 @@ namespace APIManagementTemplate.Models
                             functionAppPropertyName = $"{sitename}-key";
                             extraInfo = $"parameters('{AddParameter($"{sitename}-key", "string", "")}')";
                         }
-                    }else
+                    }
+                    else
                     {
                         //make sure to have dependency correct
 
@@ -662,7 +663,7 @@ namespace APIManagementTemplate.Models
                 //   || resource["properties"]?["credentials"]?["header"]?.HasValues is true
                 //   || resource["properties"]?["credentials"]?["authorization"]?.HasValues is true
                 //   )
-                    AddParameterFromObject((JObject)resource["properties"], "credentials", "secureobject", name);
+                AddParameterFromObject((JObject)resource["properties"], "credentials", "secureobject", name);
             }
 
             if (APIMInstanceAdded)
@@ -1180,8 +1181,7 @@ namespace APIManagementTemplate.Models
 
 
             var obj = jObject.ToObject<ResourceTemplate>();
-            obj.apiVersion = "2021-08-01";
-            var authorizations = resourceCollector.GetResource($"{azureResourceId}/authorizations", apiversion: "2021-08-01")
+            var authorizations = resourceCollector.GetResource($"{azureResourceId}/authorizations")
                 .Result?.Value<JArray>("value").Select(j => j.ToObject<AuthorizationResourceTemplate>()).ToList();
             if (authorizations != null && authorizations.Any())
             {
@@ -1195,34 +1195,25 @@ namespace APIManagementTemplate.Models
 
                         authorization.properties.parameters.clientSecret =
                             WrapParameterName(AddParameter($"authorizationProvider_{name}_{authorization.name}_clientSecret", "securestring", "secretvalue"));
-                    }               
+                    }
                     authorization.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/authorizationProviders', parameters('{GetServiceName(service)}'), '{name}')]");
 
+                    var accessPolicies = resourceCollector
+                        .GetResource($"{azureResourceId}/authorizations/{authorization.name}/accessPolicies").Result
+                        ?.Value<JArray>("value").Select(j => j.ToObject<AccessPoliciesTemplate>()).ToList();
+                    if (accessPolicies != null && accessPolicies.Any())
+                    {
+                        foreach (var accessPolicy in accessPolicies)
+                        {
+                            var accessPolicyNameParameterName = WrapParameterName(AddParameter($"accessPolicy_{name}_{authorization.name}_objectId", "string", accessPolicy.name));
 
-
-                    //var accessPolicies = resourceCollector.GetResource(
-                    //    $"{azureResourceId}/authorizations/{authorization.name}/accessPolicies", apiversion: "2021-08-01").Result?.Value<JArray>("value");
-                    //if (accessPolicies != null && accessPolicies.Any())
-                    //{
-                    //    foreach (var accessPolicy in accessPolicies)
-                    //    {
-                    //        accessPolicy["type"] = "accessPolicies";
-                    //        var tenantId = accessPolicy["properties"]?["tenantId"];
-                    //        if (tenantId != null)
-                    //        {
-                    //            accessPolicy["properties"]["tenantId"] = "[resourceGroup().subscription.tenantId]";
-                    //        }
-
-                    //        var dependsOn = new JArray
-                    //        {
-                    //            $"[resourceId('Microsoft.ApiManagement/service/authorizationProviders/authorizations', parameters('{GetServiceName(service)}'), '{authorization.name}')]"
-                    //        };
-                    //        accessPolicy["dependsOn"] = dependsOn;
-
-                            
-                    //        authorization.resources.Add(JObject.FromObject(accessPolicy));
-                    //    }
-                    //}
+                            accessPolicy.name = accessPolicyNameParameterName;
+                            accessPolicy.properties.tenantId = "[subscription().tenantId]";
+                            accessPolicy.properties.objectId = accessPolicyNameParameterName;
+                            accessPolicy.dependsOn.Add($"{authorization.name}");
+                            authorization.resources.Add(JObject.FromObject(accessPolicy));
+                        }
+                    }
 
                     var authorizationObject = JObject.FromObject(authorization);
                     obj.resources.Add(authorizationObject);
@@ -1263,14 +1254,14 @@ namespace APIManagementTemplate.Models
 
                 //set apiVersion to 2022-08-01
                 obj.apiVersion = "2022-08-01";
- 
+
                 obj.properties["verbosity"] = WrapParameterName(AddParameter($"diagnostic_{name}_verbosity", "string", GetDefaultValue(restObject, "verbosity")), true);
 
                 obj.properties["loggerId"] = loggerResource;
                 obj.properties["alwaysLog"] = WrapParameterName(AddParameter($"diagnostic_{name}_alwaysLog", "string", GetDefaultValue(restObject, "alwaysLog")), true);
 
                 obj.properties["sampling"]["percentage"] = WrapParameterName(AddParameter($"diagnostic_{name}_samplingPercentage", "string", GetDefaultValue(restObject, "sampling", "percentage")));
-                
+
                 obj.properties["metrics"] = WrapParameterName(AddParameter($"diagnostic_{name}_metrics", "bool", GetDefaultValue(restObject, false, "metrics")));
 
                 //add when logger object is added
