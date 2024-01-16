@@ -65,7 +65,7 @@ namespace APIManagementTemplate.Test
             Assert.IsNotNull(api);
 
             var apiVersion = api.Value(Arm.ApiVersion);
-            Assert.AreEqual("2019-01-01", apiVersion);
+            Assert.AreEqual("2022-08-01", apiVersion);
         }
 
 
@@ -558,7 +558,7 @@ namespace APIManagementTemplate.Test
                 diagnostics.Index(Arm.Properties).Value(Arm.AlwaysLog));
             Assert.AreEqual($"[concat(parameters('service_ibizmalo_name'), '/', {name})]",
                 diagnostics.Value(Arm.Name));
-            Assert.AreEqual($"2019-01-01", diagnostics.Value(Arm.ApiVersion));
+            Assert.AreEqual($"2022-08-01", diagnostics.Value(Arm.ApiVersion));
             var loggerResource =
                 $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('service_ibizmalo_name'), parameters('service_ibizmalo_applicationInsights'))]";
             Assert.AreEqual(loggerResource, diagnostics.Index(Arm.Properties).Value(Arm.LoggerId));

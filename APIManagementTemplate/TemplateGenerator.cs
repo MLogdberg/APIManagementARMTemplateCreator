@@ -139,6 +139,9 @@ namespace APIManagementTemplate
 
 
             var apiObjectResult = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
+            if (apiObjectResult.ContainsKey("error")) {
+                throw new Exception(apiObjectResult.SelectToken("error.message").Value<string>());
+            }
             IEnumerable<JToken> apis = new List<JToken>();
             if (apiObjectResult != null)
             {
@@ -281,7 +284,7 @@ namespace APIManagementTemplate
                     if (exportSwaggerDefinition)
                     {
                         apiTemplateResource["properties"]["contentFormat"] = "swagger-json";
-                        var swaggerExport = await resourceCollector.GetResource(id + "?format=swagger-link&export=true", apiversion: "2019-01-01");
+                        var swaggerExport = await resourceCollector.GetResource(id + "?format=swagger-link&export=true", apiversion: "2022-08-01");
                         var swaggerUrl = swaggerExport.Value<string>("link");
                         // On my system, the link is in a value object. Not sure if this is changed in APIM. Therefore keep the old assigment and check for null.
                         if (swaggerUrl == null)
@@ -339,7 +342,8 @@ namespace APIManagementTemplate
                     }
                     if (!exportSwaggerDefinition)
                     {
-                        var apiSchemas = await resourceCollector.GetResource(id + "/schemas");
+                        // Specify older apiversion, because newer versions do not return schema contents.
+                        var apiSchemas = await resourceCollector.GetResource(id + "/schemas", apiversion: "2021-08-01");
                         foreach (JObject schema in (apiSchemas == null ? new JArray() : apiSchemas.Value<JArray>("value")))
                         {
                             var schemaTemplate = template.CreateAPISchema(schema);
@@ -350,7 +354,7 @@ namespace APIManagementTemplate
                     //diagnostics
                     var loggers = resourceCollector.GetResource(GetAPIMResourceIDString() + "/loggers").Result;
                     var logger = loggers == null ? new JArray() : loggers.Value<JArray>("value");
-                    var diagnostics = await resourceCollector.GetResource(id + "/diagnostics", apiversion: "2019-01-01");
+                    var diagnostics = await resourceCollector.GetResource(id + "/diagnostics", apiversion: "2022-08-01");
                     foreach (JObject diagnostic in diagnostics.Value<JArray>("value"))
                     {
                         if (diagnostic.Value<string>("type") == "Microsoft.ApiManagement/service/apis/diagnostics")
@@ -467,9 +471,9 @@ namespace APIManagementTemplate
                 }
             }
 
-            var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/namedValues", suffix: "$top=1000", apiversion: "2020-06-01-preview");
+            var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/namedValues", suffix: "$top=1000", apiversion: "2022-08-01");
 
-            //  var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/properties",apiversion: "2020-06-01-preview");
+            //  var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/properties",apiversion: "2022-08-01");
             //has more?
             foreach (JObject propertyObject in (properties == null ? new JArray() : properties.Value<JArray>("value")))
             {
@@ -538,7 +542,7 @@ namespace APIManagementTemplate
             return length > 0 ? operationName.Substring(4, length) : operationName;
         }
 
-        private async Task<JObject> AddServiceResource(JObject apimTemplateResource, string resourceName, Func<JObject, JObject> createResource, string apiversion = "2019-01-01")
+        private async Task<JObject> AddServiceResource(JObject apimTemplateResource, string resourceName, Func<JObject, JObject> createResource, string apiversion = "2022-08-01")
         {
             var resources = await resourceCollector.GetResource(GetAPIMResourceIDString() + resourceName, apiversion: apiversion);
             foreach (JObject resource in (resources == null ? new JArray() : resources.Value<JArray>("value")))

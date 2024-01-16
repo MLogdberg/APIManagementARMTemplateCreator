@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -43,7 +43,7 @@ namespace APIManagementTemplate.Models
         }
 
         private string _name = null;
-        public string apiVersion { get; set; } = "2019-01-01";
+        public string apiVersion { get; set; } = "2022-08-01";
         public JObject properties { get; set; }
 
         public IList<JObject> resources { get; set; }
