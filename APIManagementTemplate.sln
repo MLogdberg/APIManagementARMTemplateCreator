@@ -1,11 +1,10 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27428.2011
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34616.47
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APIManagementTemplate", "APIManagementTemplate\APIManagementTemplate.csproj", "{284B85D0-239C-480C-BC4A-E06F408082C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "APIManagementTemplate", "APIManagementTemplate\APIManagementTemplate.csproj", "{284B85D0-239C-480C-BC4A-E06F408082C2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APIManagementTemplate.Test", "APIManagementTemplate.Test\APIManagementTemplate.Test.csproj", "{2AAB280F-27B0-409D-B71E-E5F4C38AE5A4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "APIManagementTemplate.Test", "APIManagementTemplate.Test\APIManagementTemplate.Test.csproj", "{2AAB280F-27B0-409D-B71E-E5F4C38AE5A4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
