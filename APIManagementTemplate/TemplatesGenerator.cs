@@ -1,4 +1,4 @@
-﻿using APIManagementTemplate.Models;
+using APIManagementTemplate.Models;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -150,6 +150,8 @@ namespace APIManagementTemplate
         private static bool IsLocalDependency(string name, GeneratedTemplate template)
         {
             var resourceType = GetSplitPart(1, name);
+            if (resourceType == string.Empty)
+                return true;
             var nameParts = name.Split(',').Skip(1).Select(x => x.Trim().Replace("'))]", "')").Replace("')]", "')"));
             var localDependency = template.Content.SelectTokens($"$..resources[?(@.type=='{resourceType}')]")
                 .Any(resource => nameParts.All(namePart => NameContainsPart(resource, namePart)));

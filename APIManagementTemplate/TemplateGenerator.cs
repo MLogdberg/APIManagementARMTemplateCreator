@@ -139,6 +139,9 @@ namespace APIManagementTemplate
 
 
             var apiObjectResult = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
+            if (apiObjectResult.ContainsKey("error")) {
+                throw new Exception(apiObjectResult.SelectToken("error.message").Value<string>());
+            }
             IEnumerable<JToken> apis = new List<JToken>();
             if (apiObjectResult != null)
             {
@@ -338,6 +341,7 @@ namespace APIManagementTemplate
                     }
                     if (!exportSwaggerDefinition)
                     {
+                        // Specify older apiversion, because newer versions do not return schema contents.
                         var apiSchemas = await resourceCollector.GetResource(id + "/schemas", apiversion: "2021-08-01");
                         foreach (JObject schema in (apiSchemas == null ? new JArray() : apiSchemas.Value<JArray>("value")))
                         {
@@ -466,9 +470,9 @@ namespace APIManagementTemplate
                 }
             }
 
-            var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/namedValues", suffix: "$top=1000", apiversion: "2020-06-01-preview");
+            var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/namedValues", suffix: "$top=1000", apiversion: "2022-08-01");
 
-            //  var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/properties",apiversion: "2020-06-01-preview");
+            //  var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/properties",apiversion: "2022-08-01");
             //has more?
             foreach (JObject propertyObject in (properties == null ? new JArray() : properties.Value<JArray>("value")))
             {

@@ -91,7 +91,7 @@ namespace APIManagementTemplate.Test
             foreach (var obj in properties)
             {
                 Assert.AreEqual("Microsoft.ApiManagement/service/namedValues", obj.Value<string>("type"));
-                Assert.AreEqual("2020-06-01-preview", obj.Value<string>("apiVersion"));
+                Assert.AreEqual("2022-08-01", obj.Value<string>("apiVersion"));
 
                 Assert.AreEqual(0, obj["resources"].Count());
                 Assert.AreEqual(0, obj["dependsOn"].Count());

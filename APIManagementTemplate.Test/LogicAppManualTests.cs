@@ -84,7 +84,7 @@ namespace APIManagementTemplate.Test
             var obj = ((JArray)template["resources"]).Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/namedValues").First();
 
             Assert.AreEqual("Microsoft.ApiManagement/service/namedValues", obj.Value<string>("type"));
-            Assert.AreEqual("2020-06-01-preview", obj.Value<string>("apiVersion"));
+            Assert.AreEqual("2022-08-01", obj.Value<string>("apiVersion"));
 
             Assert.AreEqual("[concat(parameters('service_ibizmalo_name'), '/', '5b418f9eb3de406c8744638f')]", obj.Value<string>("name"));
             Assert.AreEqual(0, obj["resources"].Count());

@@ -65,6 +65,7 @@
     <Compile Include="ParamGeneratorCmdlet.cs" />
     <Compile Include="TemplatesGenerator.cs" />
     <Compile Include="Models\ResourceTemplate.cs" />
+    <Compile Include="Templates\AccessPoliciesTemplate.cs" />
     <Compile Include="WriteApiManagementTemplatesCmdlet.cs" />
     <Compile Include="GeneratorCmdlet.cs" />
     <Compile Include="Models\DeploymentTemplate.cs" />
