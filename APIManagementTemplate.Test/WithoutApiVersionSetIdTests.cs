@@ -59,7 +59,7 @@ namespace APIManagementTemplate.Test
         }
 
         [TestMethod]
-        public void TestApiVersionForApiIs20190101()
+        public void TestApiVersionForApiIs20220801()
         {
             JToken api = GetResourceFromTemplate(ResourceType.Api, false);
             Assert.IsNotNull(api);

@@ -146,9 +146,8 @@ namespace APIManagementTemplate
             if (apiObjectResult != null)
             {
                 apis = (!string.IsNullOrEmpty(apiVersion) ? apiObjectResult.Value<JArray>("value").Where(aa => aa["properties"].Value<string>("apiVersion") == this.apiVersion) : apiObjectResult.Value<JArray>("value"));
-                foreach (JObject apiObject in apis)
+                foreach (var apiObject in apis.Where(a => a["properties"]?.Value<bool>("isCurrent") is true).Cast<JObject>())
                 {
-
                     var id = apiObject.Value<string>("id");
 
 
