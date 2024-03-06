@@ -1,37 +1,31 @@
 ﻿using APIManagementTemplate;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace LogicAppTemplate.Models
+namespace LogicAppTemplate.Models;
+
+public class ParameterTemplate
 {
-    public class ParameterTemplate
+    [JsonProperty("$schema")]
+    public string schema
     {
-        [JsonProperty("$schema")]
-        public string schema
+        get
         {
-            get
-            {
-                return Constants.parameterSchema;
-            }
+            return Constants.parameterSchema;
         }
-        public string contentVersion
+    }
+    public string contentVersion
+    {
+        get
         {
-            get
-            {
-                return "1.0.0.0";
-            }
+            return "1.0.0.0";
         }
+    }
 
-        public JObject parameters { get; set; }
+    public JObject parameters { get; set; }
 
-        public ParameterTemplate()
-        {
-            parameters = new JObject();
-        }
+    public ParameterTemplate()
+    {
+        parameters = new JObject();
     }
 }
