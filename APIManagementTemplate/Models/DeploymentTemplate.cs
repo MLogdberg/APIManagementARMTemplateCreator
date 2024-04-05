@@ -468,7 +468,7 @@ namespace APIManagementTemplate.Models
             foreach (JObject rep in reps)
             {
                 string sample = rep.Value<string>("sample") ?? "";
-                //if sample is an arrau and start with [ it need's to be escaped
+                //if sample is an array and start with [ it need's to be escaped
                 if (sample.StartsWith("["))
                     rep["sample"] = "[" + sample;
 
@@ -480,6 +480,10 @@ namespace APIManagementTemplate.Models
                 var schema = rep.Value<string>("schemaId");
                 if (!string.IsNullOrEmpty(schema))
                     ll.Add(schema);
+
+                var defaultValue = rep.SelectToken("examples.default.value");
+                if (defaultValue != null && defaultValue.ToString().StartsWith("["))
+                    rep["examples"]["default"]["value"] = "[" + defaultValue.ToString();
             }
             return ll;
         }
