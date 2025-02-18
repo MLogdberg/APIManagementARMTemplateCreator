@@ -49,7 +49,7 @@ namespace APIManagementTemplate.Test
         {
             var document = Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.VersionSet.VersionSetResource.json");
             var template = new DeploymentTemplate();
-            var actual = template.AddVersionSet(JObject.Parse(document));
+            var actual = template.AddVersionSet(JObject.Parse(document));            
             Assert.IsNotNull(actual);
         }
 
@@ -92,13 +92,13 @@ namespace APIManagementTemplate.Test
 
             var policy = (JObject)array[0];
 
-            TemplateGenerator generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest", "", false, false, false, false, new MockResourceCollector("path"));
+            TemplateGenerator generator = new TemplateGenerator("ibizmalo", "c107df29-a4af-4bc9-a733-f88f0eaa4296", "PreDemoTest","",false,false,false,false,new MockResourceCollector("path"));
 
             var template = new DeploymentTemplate();
             template.CreatePolicy(policy);
 
-            generator.PolicyHandeAzureResources(policy, "123", template);
-            generator.PolicyHandleProperties(policy, "123", null);
+            generator.PolicyHandeAzureResources(policy,"123",template);
+            generator.PolicyHandleProperties(policy,"123",null);
 
             Assert.AreEqual(1, generator.identifiedProperties.Count);
 
@@ -109,7 +109,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void RemoveBuiltInGroups()
         {
-            var document = Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.StandardInstance-New.json");
+            var document = Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.StandardInstance-New.json");           
             var template = DeploymentTemplate.FromString(document);
             template.RemoveResources_BuiltInGroups();
 
@@ -147,7 +147,7 @@ namespace APIManagementTemplate.Test
         [TestMethod]
         public void TestAddAPIInstance()
         {
-            var document = JObject.Parse(Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.malo-apiminstance.json"));
+            var document = JObject.Parse( Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.malo-apiminstance.json"));
             var template = new DeploymentTemplate();
             template.AddAPIManagementInstance(document);
             var definition = JObject.FromObject(template);
@@ -195,29 +195,29 @@ namespace APIManagementTemplate.Test
         }
 
 
-        /*  [TestMethod]
-          public void ParameterizeAuthorizationServers()
-          {
-              var document = Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.MaloInstance-Preview-Export.json");
-              var template = DeploymentTemplate.FromString(document);
-              template.ParameterizeAuthorizationServers();
+      /*  [TestMethod]
+        public void ParameterizeAuthorizationServers()
+        {
+            var document = Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.MaloInstance-Preview-Export.json");
+            var template = DeploymentTemplate.FromString(document);
+            template.ParameterizeAuthorizationServers();
 
-              Assert.AreEqual("http://localhost", template.parameters["authorizationServers_57e38f3e0647c00f5092b5d3_clientRegistrationEndpoint"].Value<string>("defaultValue"));
-              Assert.AreEqual("[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_clientRegistrationEndpoint')]", template.resources.Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/authorizationServers" && rr.Value<string>("name") == "[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_name')]").First()["properties"].Value<string>("clientRegistrationEndpoint"));
+            Assert.AreEqual("http://localhost", template.parameters["authorizationServers_57e38f3e0647c00f5092b5d3_clientRegistrationEndpoint"].Value<string>("defaultValue"));
+            Assert.AreEqual("[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_clientRegistrationEndpoint')]", template.resources.Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/authorizationServers" && rr.Value<string>("name") == "[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_name')]").First()["properties"].Value<string>("clientRegistrationEndpoint"));
 
-              Assert.AreEqual("https://adfs.mycompany.com/adfs/ls/oauth2/authorize?resource=https://mycompany.com/appid", template.parameters["authorizationServers_57e38f3e0647c00f5092b5d3_authorizationEndpoint"].Value<string>("defaultValue"));
-              Assert.AreEqual("[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_authorizationEndpoint')]", template.resources.Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/authorizationServers" && rr.Value<string>("name") == "[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_name')]").First()["properties"].Value<string>("authorizationEndpoint"));
+            Assert.AreEqual("https://adfs.mycompany.com/adfs/ls/oauth2/authorize?resource=https://mycompany.com/appid", template.parameters["authorizationServers_57e38f3e0647c00f5092b5d3_authorizationEndpoint"].Value<string>("defaultValue"));
+            Assert.AreEqual("[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_authorizationEndpoint')]", template.resources.Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/authorizationServers" && rr.Value<string>("name") == "[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_name')]").First()["properties"].Value<string>("authorizationEndpoint"));
 
-              Assert.AreEqual("https://adfs.mycompany.com/adfs/oauth2/token", template.parameters["authorizationServers_57e38f3e0647c00f5092b5d3_tokenEndpoint"].Value<string>("defaultValue"));
-              Assert.AreEqual("[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_tokenEndpoint')]", template.resources.Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/authorizationServers" && rr.Value<string>("name") == "[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_name')]").First()["properties"].Value<string>("tokenEndpoint"));
+            Assert.AreEqual("https://adfs.mycompany.com/adfs/oauth2/token", template.parameters["authorizationServers_57e38f3e0647c00f5092b5d3_tokenEndpoint"].Value<string>("defaultValue"));
+            Assert.AreEqual("[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_tokenEndpoint')]", template.resources.Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/authorizationServers" && rr.Value<string>("name") == "[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_name')]").First()["properties"].Value<string>("tokenEndpoint"));
 
-              Assert.AreEqual("mysecretpassword", template.parameters["authorizationServers_57e38f3e0647c00f5092b5d3_clientSecret"].Value<string>("defaultValue"));
-              Assert.AreEqual("[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_clientSecret')]", template.resources.Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/authorizationServers" && rr.Value<string>("name") == "[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_name')]").First()["properties"].Value<string>("clientSecret"));
+            Assert.AreEqual("mysecretpassword", template.parameters["authorizationServers_57e38f3e0647c00f5092b5d3_clientSecret"].Value<string>("defaultValue"));
+            Assert.AreEqual("[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_clientSecret')]", template.resources.Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/authorizationServers" && rr.Value<string>("name") == "[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_name')]").First()["properties"].Value<string>("clientSecret"));
 
-              Assert.AreEqual("123", template.parameters["authorizationServers_57e38f3e0647c00f5092b5d3_clientId"].Value<string>("defaultValue"));
-              Assert.AreEqual("[concat(resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalo_name')), [parameters('authorizationServers_57e38f3e0647c00f5092b5d3_clientId')])]", template.resources.Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/authorizationServers" && rr.Value<string>("name") == "[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_name')]").First()["properties"].Value<string>("clientId"));
+            Assert.AreEqual("123", template.parameters["authorizationServers_57e38f3e0647c00f5092b5d3_clientId"].Value<string>("defaultValue"));
+            Assert.AreEqual("[concat(resourceId('Microsoft.ApiManagement/service', parameters('service_ibizmalo_name')), [parameters('authorizationServers_57e38f3e0647c00f5092b5d3_clientId')])]", template.resources.Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/authorizationServers" && rr.Value<string>("name") == "[parameters('authorizationServers_57e38f3e0647c00f5092b5d3_name')]").First()["properties"].Value<string>("clientId"));
 
-          }*/
+        }*/
 
         [TestMethod]
         public void PREVIEWFixOperationsUrlTemplateParameters()
@@ -246,7 +246,7 @@ namespace APIManagementTemplate.Test
             var dtemplate = new DeploymentTemplate();
 
             var document = JObject.Parse(Utils.GetEmbededFileContent("APIManagementTemplate.Test.Samples.UpdatedeLogicApp.service-cramoapidev-backends-LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV.json"));
-            dtemplate.AddBackend(document, JObject.Parse("{\"properties\":{\"definition\": {\"triggers\": {\"manual\": {\"type\": \"Request\",\"kind\": \"Http\"}}}}}"));
+            dtemplate.AddBackend(document,JObject.Parse("{\"properties\":{\"definition\": {\"triggers\": {\"manual\": {\"type\": \"Request\",\"kind\": \"Http\"}}}}}"));
 
             Assert.AreEqual("[substring(listCallbackUrl(resourceId(parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_subscriptionId'),parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_logicAppName'), 'manual'), '2017-07-01').basePath,0,add(10,indexOf(listCallbackUrl(resourceId(parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_subscriptionId'),parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_resourceGroup'), 'Microsoft.Logic/workflows/triggers', parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_logicAppName'), 'manual'), '2017-07-01').basePath,'/triggers/')))]", dtemplate.resources[0]["properties"].Value<string>("url"));
             Assert.AreEqual("[concat('https://management.azure.com/','subscriptions/',parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_subscriptionId'),'/resourceGroups/',parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_resourceGroup'),'/providers/Microsoft.Logic/workflows/',parameters('LogicApp_INT3502-PricelistErrorFileToSharePoint-DEV_logicAppName'))]", dtemplate.resources[0]["properties"].Value<string>("resourceId"));
@@ -266,7 +266,7 @@ namespace APIManagementTemplate.Test
             dtemplate.AddBackend(document, null);
             Assert.AreEqual("{}", dtemplate.parameters["Backend_CustomUrlWithoutCredentials_credentials"].Value<JObject>("defaultValue").ToString());
             Assert.AreEqual(dtemplate.resources[0]["properties"].Value<string>("credentials"), "[parameters('Backend_CustomUrlWithoutCredentials_credentials')]");
-        }
+         }
 
         [TestMethod]
         public void ScenarioTestBackendCustomURLWithCredentials()
