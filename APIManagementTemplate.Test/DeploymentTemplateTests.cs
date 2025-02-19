@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,6 +13,7 @@ namespace APIManagementTemplate.Test
     [TestClass]
     public class DeploymentTemplateTests
     {
+        private static readonly HttpClient _httpClient = new HttpClient();
 
         [TestMethod]
         public void TestFromString()
@@ -276,6 +278,19 @@ namespace APIManagementTemplate.Test
             dtemplate.AddBackend(document, null);
             Assert.AreEqual("{}", dtemplate.parameters["Backend_CustomUrlWithoutCredentials_credentials"].Value<JObject>("defaultValue").ToString());
             Assert.AreEqual(dtemplate.resources[0]["properties"].Value<string>("credentials"), "[parameters('Backend_CustomUrlWithoutCredentials_credentials')]");
+        }
+
+        [TestMethod]
+        public async Task TryFetchDeploymentSchemas()
+        {
+            var deploymentSchemaResponse = await _httpClient.GetAsync(Constants.deploymentSchema);
+            Assert.IsTrue(deploymentSchemaResponse.IsSuccessStatusCode);
+
+            var deploymenParameterSchemaResponse = await _httpClient.GetAsync(Constants.deploymenParameterSchema);
+            Assert.IsTrue(deploymenParameterSchemaResponse.IsSuccessStatusCode);
+
+            var parameterSchemaResponse = await _httpClient.GetAsync(Constants.parameterSchema);
+            Assert.IsTrue(parameterSchemaResponse.IsSuccessStatusCode);
         }
     }
 
