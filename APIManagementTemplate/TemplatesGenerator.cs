@@ -704,7 +704,7 @@ namespace APIManagementTemplate
             var policy = product["resources"].FirstOrDefault(x => x.Value<string>("type") == ProductPolicyResourceType);
             if (policy != null)
             {
-                policy["apiVersion"] = "2022-08-01";
+                policy["apiVersion"] = "2024-05-01";
                 var policyPropertyName = policy["properties"].Value<string>("format") == null ? "contentFormat" : "format";
                 policy["properties"][policyPropertyName] = "xml-link";
                 policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
@@ -738,7 +738,7 @@ namespace APIManagementTemplate
         {
             var policyPropertyName = policy["properties"].Value<string>("format") == null ? "contentFormat" : "format";
             policy["properties"][policyPropertyName] = "xml-link";
-            policy["apiVersion"] = "2022-08-01";
+            policy["apiVersion"] = "2024-05-01";
             string formattedDirectory = fileInfo.Directory.Replace(@"\", "/");
             var directory = $"/{formattedDirectory}";
             if (directory == "/")
@@ -752,7 +752,7 @@ namespace APIManagementTemplate
         private static void ReplaceSwaggerWithFileLink(JToken policy, FileInfo fileInfo)
         {
             policy["properties"]["contentFormat"] = "swagger-link-json";
-            policy["apiVersion"] = "2022-08-01";
+            policy["apiVersion"] = "2024-05-01";
             string formattedDirectory = fileInfo.Directory.Replace(@"\", "/");
             var directory = $"/{formattedDirectory}";
             policy["properties"]["contentValue"] =

@@ -877,7 +877,7 @@ namespace APIManagementTemplate.Models
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
             obj.AddName($"parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}')");
             obj.AddName($"'{name}'");
-            obj.apiVersion = "2022-08-01";
+            obj.apiVersion = "2024-05-01";
 
             obj.type = type;
             obj.properties = restObject.Value<JObject>("properties");
@@ -1258,8 +1258,8 @@ namespace APIManagementTemplate.Models
                 var loggerName = GetServiceResourceName(loggerObject, "Microsoft.ApiManagement/service/loggers");
                 string loggerResource = $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), {loggerName})]";
 
-                //set apiVersion to 2022-08-01
-                obj.apiVersion = "2022-08-01";
+                //set apiVersion to 2024-05-01
+                obj.apiVersion = "2024-05-01";
 
                 obj.properties["verbosity"] = WrapParameterName(AddParameter($"diagnostic_{name}_verbosity", "string", GetDefaultValue(restObject, "verbosity")), true);
 
@@ -1289,7 +1289,7 @@ namespace APIManagementTemplate.Models
             var name = restObject.Value<string>("name");
             var loggerId = restObject["properties"]?.Value<string>("loggerId") ?? String.Empty;
             var logger = loggers.FirstOrDefault(x => x.Value<string>("id") == loggerId);
-            resource["apiVersion"] = "2022-08-01";
+            resource["apiVersion"] = "2024-05-01";
             if (logger != null)
             {
                 var rid = new AzureResourceId(restObject.Value<string>("id"));

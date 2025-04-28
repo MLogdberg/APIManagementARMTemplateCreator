@@ -18,7 +18,7 @@ namespace APIManagementTemplate.Templates
     {
        
         public string type => "accessPolicies";
-        public string apiVersion => "2022-08-01";
+        public string apiVersion => "2024-05-01";
         public string name { get; set; }
 
         public AccessPolicyProperties properties { get; set; } = new AccessPolicyProperties();
