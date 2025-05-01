@@ -39,7 +39,7 @@ namespace APIManagementTemplate.Templates
 
         private string _name = null;
        
-        public string apiVersion { get; set; } = "2022-08-01";
+        public string apiVersion { get; set; } = "2024-05-01";
         public AuthorizationProperties properties { get; set; }
         
         public IList<JObject> resources { get; set; }

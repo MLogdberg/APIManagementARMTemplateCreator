@@ -164,7 +164,7 @@ namespace APIManagementTemplate.Test
             //check definition 
             Assert.AreEqual("Microsoft.ApiManagement/service", definition["resources"][0]["type"]);
             Assert.AreEqual("[parameters('service_ibizmalo_name')]", definition["resources"][0]["name"]);
-            Assert.AreEqual("2022-08-01", definition["resources"][0]["apiVersion"]);
+            Assert.AreEqual("2024-05-01", definition["resources"][0]["apiVersion"]);
 
             Assert.AreEqual("[parameters('service_ibizmalo_sku_name')]", definition["resources"][0]["sku"]["name"]);
             Assert.AreEqual("[parameters('service_ibizmalo_sku_capacity')]", definition["resources"][0]["sku"]["capacity"]);
