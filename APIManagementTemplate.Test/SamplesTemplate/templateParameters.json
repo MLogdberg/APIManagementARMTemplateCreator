@@ -325,7 +325,7 @@
           "comments": "Generated for resource /subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/diagnostics/appInsights",
           "type": "Microsoft.ApiManagement/service/diagnostics",
           "name": "[concat(parameters('apimServiceName'),'/',parameters('diagnostic_appInsights_name'))]",
-          "apiVersion": "2022-08-01",
+          "apiVersion": "2024-05-01",
           "properties": {
             "alwaysLog": "[parameters('diagnostic_appInsights_alwaysLog')]",
             "enableHttpCorrelationHeaders": "[parameters('diagnostic_appInsights_enableHttpCorrelationHeaders')]",
@@ -373,7 +373,7 @@
           "comments": "Generated for resource /subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/ibizmalo/diagnostics/azuremonitor",
           "type": "Microsoft.ApiManagement/service/diagnostics",
           "name": "[concat(parameters('apimServiceName'),'/',parameters('diagnostic_azuremonitor_name'))]",
-          "apiVersion": "2022-08-01",
+          "apiVersion": "2024-05-01",
           "properties": {
             "alwaysLog": "[parameters('diagnostic_azuremonitor_alwaysLog')]",
             "loggerId": "[resourceId('Microsoft.ApiManagement/service/loggers', parameters('apimServiceName'), parameters('logger_azuremonitor_name'))]",

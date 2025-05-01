@@ -158,7 +158,7 @@
       "comments": "Generated for resource /subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/PreDemoTest/providers/Microsoft.ApiManagement/service/PreDemoTest/apis/echo-api",
       "type": "Microsoft.ApiManagement/service/apis",
       "name": "[concat(parameters('service_PreDemoTest_name'), '/echo-api')]",
-      "apiVersion": "2022-08-01",
+      "apiVersion": "2024-05-01",
       "properties": {
         "displayName": "Echo API",
         "apiRevision": "[parameters('echo-api_apiRevision')]",

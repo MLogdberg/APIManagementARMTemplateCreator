@@ -65,7 +65,7 @@ namespace APIManagementTemplate.Test
             var obj = ((JArray)template["resources"]).Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/backends").First();
 
             Assert.AreEqual("Microsoft.ApiManagement/service/backends", obj.Value<string>("type"));
-            Assert.AreEqual("2022-08-01", obj.Value<string>("apiVersion"));
+            Assert.AreEqual("2024-05-01", obj.Value<string>("apiVersion"));
             
             Assert.AreEqual("[concat(parameters('service_iBizUtbildningAPIM_name'), '/' ,'LogicApp_salesinvoice-la_LabResources')]", obj.Value<string>("name"));
             Assert.AreEqual(0, obj["resources"].Count());
@@ -85,7 +85,7 @@ namespace APIManagementTemplate.Test
             var obj = ((JArray)template["resources"]).Where(rr => rr.Value<string>("type") == "Microsoft.ApiManagement/service/namedValues").First();
 
             Assert.AreEqual("Microsoft.ApiManagement/service/namedValues", obj.Value<string>("type"));
-            Assert.AreEqual("2022-08-01", obj.Value<string>("apiVersion"));
+            Assert.AreEqual("2024-05-01", obj.Value<string>("apiVersion"));
 
             Assert.AreEqual("[concat(parameters('service_iBizUtbildningAPIM_name'), '/', '5cc9f8a843285d9c7cdc3e3d')]", obj.Value<string>("name"));
             Assert.AreEqual(0, obj["resources"].Count());
