@@ -374,6 +374,18 @@ namespace APIManagementTemplate.Models
         {
             if (restObject == null)
                 return null;
+            
+            // Escape example values that start with [ to avoid ARM expression errors
+            foreach (var example in restObject.SelectTokens("properties.document.components.schemas.*.properties.*.example"))
+            {
+                if (example is { Type: JTokenType.String } &&
+                    example is JValue { Value: string val } &&
+                    val.StartsWith("[") && !val.StartsWith("[[") &&
+                    example.Parent is JProperty parent)
+                {
+                    parent.Value = $"[{val}";
+                }
+            }
 
             string name = restObject.Value<string>("name");
             string type = restObject.Value<string>("type");
