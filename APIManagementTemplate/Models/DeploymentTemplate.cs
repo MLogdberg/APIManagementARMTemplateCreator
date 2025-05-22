@@ -922,7 +922,7 @@ namespace APIManagementTemplate.Models
             return resource;
         }
 
-        public ResourceTemplate AddNamedValues(JObject restObject)
+        public ResourceTemplate? AddNamedValues(JObject? restObject)
         {
             if (restObject == null)
                 return null;
@@ -933,6 +933,15 @@ namespace APIManagementTemplate.Models
 
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
+            
+            // Check if resource already exists
+            string expectedName = $"[concat(parameters('{GetServiceName(servicename)}'), '/', '{name}')]";
+            if (this.resources.Any(r =>
+                    r.Value<string>("type") == type &&
+                    r.Value<string>("name") == expectedName))
+            {
+                return null; // resource already added
+            }
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
