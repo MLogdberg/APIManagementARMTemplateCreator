@@ -77,6 +77,9 @@ namespace APIManagementTemplate
         [Parameter(Mandatory = false,HelpMessage = "If the parameter for the keyvault name always should be called keyVaultName or depend on the name of the nameValue")]
         public bool FixedKeyVaultNameParameter = false;
 
+        [Parameter(Mandatory = false,HelpMessage = "Set to 'true' to extract the credentials from the backend and parameterize the namedvalues used.")]
+        public bool ExtractBackendCredentials = false;
+
         [Parameter(Mandatory = false,HelpMessage = "If an Application Insights instance should be created. Otherwise you need to provide the instrumentation key of an existing Application Insights instance as a parameter")]
         public bool CreateApplicationInsightsInstance = false;
 
@@ -127,7 +130,7 @@ namespace APIManagementTemplate
                     createApplicationInsightsInstance: CreateApplicationInsightsInstance, apiVersion: ApiVersion, parameterizeBackendFunctionKey: ParameterizeBackendFunctionKey,
                     exportSwaggerDefinition: ExportSwaggerDefinition, exportCertificates: ExportCertificates, exportTags: ExportTags, separatePolicyOutputFolder: SeparatePolicyOutputFolder,
                     chainDependencies: ChainDependencies, exportApiPropertiesAndBackend: ExportApiPropertiesAndBackend, fixedKeyVaultNameParameter: FixedKeyVaultNameParameter, exportBackendInstances: ExportBackendInstances,
-                    ignoreProperties: IgnoreProperties, exportAuthorizationProviders:ExportAuthorizationProviders);
+                    ignoreProperties: IgnoreProperties, exportAuthorizationProviders:ExportAuthorizationProviders, extractBackendCredentials:ExtractBackendCredentials);
                 JObject result = generator.GenerateTemplate().Result;
                 WriteObject(result.ToString());
             }

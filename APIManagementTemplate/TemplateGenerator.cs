@@ -28,6 +28,7 @@ namespace APIManagementTemplate
         private bool replaceSetBackendServiceBaseUrlAsProperty;
         private bool fixedServiceNameParameter;
         private bool fixedKeyVaultNameParameter;
+        private bool extractBackendCredentials;
         private readonly bool exportBackendInstances;
         private bool createApplicationInsightsInstance;
         private string apiVersion;
@@ -50,7 +51,7 @@ namespace APIManagementTemplate
             bool exportCertificates = true, bool exportTags = false, string separatePolicyOutputFolder = "",
             bool chainDependencies = false, bool exportApiPropertiesAndBackend = true,
             bool fixedKeyVaultNameParameter = false, bool exportBackendInstances = true,
-            string[] ignoreProperties = null, bool exportAuthorizationProviders = false)
+            string[] ignoreProperties = null, bool exportAuthorizationProviders = false, bool extractBackendCredentials = false)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -66,6 +67,7 @@ namespace APIManagementTemplate
             this.resourceCollector = resourceCollector;
             this.fixedServiceNameParameter = fixedServiceNameParameter;
             this.fixedKeyVaultNameParameter = fixedKeyVaultNameParameter;
+            this.extractBackendCredentials = extractBackendCredentials;
             this.exportBackendInstances = exportBackendInstances;
             this.createApplicationInsightsInstance = createApplicationInsightsInstance;
             this.apiVersion = apiVersion;
@@ -85,7 +87,7 @@ namespace APIManagementTemplate
 
         public async Task<JObject> GenerateTemplate()
         {
-            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly, this.fixedServiceNameParameter, this.createApplicationInsightsInstance, this.parameterizeBackendFunctionKey, this.separatePolicyOutputFolder, this.chainDependencies, this.fixedKeyVaultNameParameter);
+            DeploymentTemplate template = new DeploymentTemplate(this.parametrizePropertiesOnly, this.fixedServiceNameParameter, this.createApplicationInsightsInstance, this.parameterizeBackendFunctionKey, this.separatePolicyOutputFolder, this.chainDependencies, this.fixedKeyVaultNameParameter, this.extractBackendCredentials);
             if (exportPIManagementInstance)
             {
                 var apim = await resourceCollector.GetResource(GetAPIMResourceIDString());
@@ -618,8 +620,11 @@ namespace APIManagementTemplate
                 azureResource = await resourceCollector.GetResource(backendInstance["properties"].Value<string>("resourceId"), "", version);
             }
 
+            
+            var  namedValues = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/namedValues", suffix: "$top=1000");
+
             //sometime old endpoint are not cleaned-up, this will result in null. So skip these resources
-            var property = template.AddBackend(backendInstance, azureResource);
+            var property = template.AddBackend(backendInstance, azureResource, namedValues);
 
             if (property != null)
             {
@@ -634,8 +639,6 @@ namespace APIManagementTemplate
                 }
                 else if (property.type == Property.PropertyType.Function)
                 {
-                    // old way of handling, removed 2019-11-03
-                    //property.operationName = GetOperationName(startname);
                     property.operationName = startname;
                     identifiedProperties.Add(property);
                     foreach (var idp in this.identifiedProperties.Where(pp => pp.name.ToLower().StartsWith(property.name) && !pp.name.Contains("-invoke")))
@@ -648,14 +651,6 @@ namespace APIManagementTemplate
 
             return new BackendObject() { backendInstance = backendInstance, backendProperty = property };
         }
-
-        private static string GetOperationName(string startname)
-        {
-            if (startname.IndexOf("_") >= 0)
-                return startname.Split('_')[1].Replace("-", String.Empty);
-            return startname;
-        }
-
 
         public void PolicyHandleProperties(JObject policy, string apiname, string operationName)
         {

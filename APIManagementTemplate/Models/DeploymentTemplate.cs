@@ -40,6 +40,7 @@ namespace APIManagementTemplate.Models
         private bool parametrizePropertiesOnly { get; set; }
         private bool fixedServiceNameParameter { get; set; }
         private bool fixedKeyVaultNameParameter { get; set; }
+        private bool extractBackendCredentials { get; set; }
         private bool referenceApplicationInsightsInstrumentationKey { get; set; }
         private readonly bool parameterizeBackendFunctionKey;
         private string separatePolicyOutputFolder { get; set; }
@@ -47,7 +48,7 @@ namespace APIManagementTemplate.Models
         private string lastProductApi { get; set; }
         private string lastApi { get; set; }
 
-        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false, string separatePolicyOutputFolder = "", bool chainDependencies = false, bool fixedKeyVaultNameParameter = false)
+        public DeploymentTemplate(bool parametrizePropertiesOnly = false, bool fixedServiceNameParameter = false, bool referenceApplicationInsightsInstrumentationKey = false, bool parameterizeBackendFunctionKey = false, string separatePolicyOutputFolder = "", bool chainDependencies = false, bool fixedKeyVaultNameParameter = false, bool extractBackendCredentials = false)
         {
             parameters = new JObject();
             variables = new JObject();
@@ -61,6 +62,7 @@ namespace APIManagementTemplate.Models
             this.separatePolicyOutputFolder = separatePolicyOutputFolder;
             this.chainDependencies = chainDependencies;
             this.fixedKeyVaultNameParameter = fixedKeyVaultNameParameter;
+            this.extractBackendCredentials = extractBackendCredentials;
         }
 
         public static DeploymentTemplate FromString(string template)
@@ -374,7 +376,7 @@ namespace APIManagementTemplate.Models
         {
             if (restObject == null)
                 return null;
-            
+
             // Escape example values that start with [ to avoid ARM expression errors
             foreach (var example in restObject.SelectTokens("properties.document.components.schemas.*.properties.*.example"))
             {
@@ -472,7 +474,7 @@ namespace APIManagementTemplate.Models
             //this.resources.Add(resource);
         }
 
-        private List<string> FixRepresentations(JArray reps)
+        private List<string> FixRepresentations(JArray? reps)
         {
             var ll = new List<string>();
             if (reps == null)
@@ -500,7 +502,72 @@ namespace APIManagementTemplate.Models
             return ll;
         }
 
-        public Property AddBackend(JObject restObject, JObject azureResource)
+        /// <summary>
+        /// Replaces {{...}} credential tokens with namedValue references from provided namedValues JObject.
+        /// Adds the namedValue resource to the ARM template using AddNamedValues.
+        /// </summary>
+        private void ParameterizeCredentials(JObject credentials, JArray dependsOn, string servicename, JObject? namedValues)
+        {
+            foreach (var sectionName in new[] { "query", "header", "authorization" })
+            {
+                if (!(credentials[sectionName] is JObject section)) continue;
+
+                foreach (var field in section.Properties())
+                {
+                    if (field.Value is JArray valueArray)
+                    {
+                        for (var i = 0; i < valueArray.Count; i++)
+                        {
+                            var value = valueArray[i].ToString();
+                            if (namedValues != null && IsNamedValueToken(value))
+                            {
+                                var name = ExtractToken(value);
+                                var namedValue = GetNamedValueFromList(namedValues, name);
+                                if (namedValue != null)
+                                {
+                                    AddNamedValues(namedValue);
+                                    valueArray[i] = $"{{{{{name}}}}}";
+                                    dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('{GetServiceName(servicename)}'),'{name}')]");
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var value = section[field.Name]?.ToString();
+                        if (namedValues != null && value != null && IsNamedValueToken(value))
+                        {
+                            var name = ExtractToken(value);
+                            var namedValue = GetNamedValueFromList(namedValues, name);
+                            if (namedValue != null)
+                            {
+                                AddNamedValues(namedValue);
+                                section[field.Name] = $"{{{{{name}}}}}";
+                                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('{GetServiceName(servicename)}'),'{name}')]");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        private bool IsNamedValueToken(string? value) =>
+            value != null && value.StartsWith("{{") && value.EndsWith("}}");
+
+        private string ExtractToken(string value) =>
+            value.Substring(2, value.Length - 4);
+
+        /// <summary>
+        /// Looks up a namedValue from the namedValues JObject based on its name.
+        /// </summary>
+        private JObject? GetNamedValueFromList(JObject namedValues, string name)
+        {
+            var array = namedValues["value"] as JArray;
+            return array?.FirstOrDefault(v => v.Value<string>("name") == name) as JObject;
+        }
+
+
+        public Property AddBackend(JObject restObject, JObject azureResource, JObject? namedValues)
         {
             Property retval = null;
             if (restObject == null)
@@ -655,33 +722,15 @@ namespace APIManagementTemplate.Models
             {
                 AddParameterFromObject((JObject)resource["properties"], "url", "string", name);
 
-                //todo: tried to add namedvalues used in credetials to template. Doesn't work yet.
-                //var queries = resource["properties"]?["credentials"]?.Value<JObject>("query");
-                //if (queries != null)
-                //{
-
-                //    //HandleProperties(logger.Value<string>("name"), "Logger", logger["properties"].ToString());
-
-
-                //    foreach (var query in queries.Properties())
-                //    {
-                //        foreach (string value in query.Value)
-                //        {
-                //            if (!value.StartsWith("{{") || !value.EndsWith("}}"))
-                //                continue;
-
-                //            var parsed = value.Substring(2, value.Length - 4);
-                //            dependsOn.Add(
-                //                $"[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('{GetServiceName(servicename)}'),'{parsed}')]");
-                //        }
-                //    }
-                //}
-
-                //if(resource["properties"]?["credentials"]?["query"]?.HasValues is true 
-                //   || resource["properties"]?["credentials"]?["header"]?.HasValues is true
-                //   || resource["properties"]?["credentials"]?["authorization"]?.HasValues is true
-                //   )
-                AddParameterFromObject((JObject)resource["properties"], "credentials", "secureobject", name);
+                //Extract credentials and parameterize namedvalues used in credentials to template.
+                if (extractBackendCredentials && resource["properties"]?["credentials"] is JObject credentialsObj)
+                {
+                    ParameterizeCredentials(credentialsObj, dependsOn, servicename, namedValues);
+                }
+                else
+                {
+                    AddParameterFromObject((JObject)resource["properties"], "credentials", "secureobject", name);
+                }
             }
 
             if (APIMInstanceAdded)
