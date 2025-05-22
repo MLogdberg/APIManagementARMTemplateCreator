@@ -304,6 +304,7 @@
     <EmbeddedResource Include="Samples\UrlHandling\service-apidev-namedValues.json" />
     <EmbeddedResource Include="Samples\CustomURLBackends\service-cramoapidev-backends-CustomUrlWithoutCredentials.json" />
     <EmbeddedResource Include="Samples\CustomURLBackends\service-cramoapidev-backends-CustomUrlWithCredentials.json" />
+    <EmbeddedResource Include="Samples\CustomURLBackends\service-cramoapidev-backends-CustomUrlWithCredentialsAndNamedValues.json" />
     <None Include="Samples\workflows-salesinvoice-la.json" />
   </ItemGroup>
   <ItemGroup>
