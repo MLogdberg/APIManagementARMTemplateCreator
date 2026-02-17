@@ -375,7 +375,7 @@ namespace APIManagementTemplate.Models
             return obj;
         }
 
-        public ResourceTemplate CreateAPISchema(JObject restObject)
+        public ResourceTemplate? CreateAPISchema(JObject? restObject)
         {
             if (restObject == null)
                 return null;
@@ -440,15 +440,18 @@ namespace APIManagementTemplate.Models
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
 
-            //Schema list
+            //Schema list to keep track of all schemas that are used in the operation, so we can add them as dependencies.
+            //This is needed to make sure they are created before the operation tries to reference them.
             var schemalist = new List<string>();
 
+            //Check for request and extract schema from there
             var request = resource["properties"].Value<JObject>("request");
             if (request != null)
             {
                 schemalist = schemalist.Union(FixRepresentations(request.Value<JArray>("representations"))).ToList();
             }
 
+            //Check for responses and extract schemas from there as well
             var responses = resource["properties"].Value<JArray>("responses");
             if (responses != null)
             {
@@ -457,7 +460,8 @@ namespace APIManagementTemplate.Models
                     schemalist = schemalist.Union(FixRepresentations(resp.Value<JArray>("representations"))).ToList();
                 }
             }
-
+            //Also check for template parameters
+            schemalist = schemalist.Union(FixRepresentations(resource["properties"].Value<JArray>("templateParameters"))).ToList();
 
             var dependsOn = new JArray();
             if (APIMInstanceAdded)
@@ -1110,7 +1114,7 @@ namespace APIManagementTemplate.Models
                 return Array.Empty<string>();
 
             var candidate = rawValue.Trim();
-            
+
             // Decode only if the text is HTML-escaped (starts with &lt;)
             var xml = candidate.StartsWith("&lt;", StringComparison.OrdinalIgnoreCase)
                        ? WebUtility.HtmlDecode(candidate)
@@ -1151,7 +1155,7 @@ namespace APIManagementTemplate.Models
                                      .Distinct(StringComparer.OrdinalIgnoreCase)
                                      .ToList();
         }
-        
+
 
         public JObject AddApplicationInsightsInstance(JObject restObject)
         {
