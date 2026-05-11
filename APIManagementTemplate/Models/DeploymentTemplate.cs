@@ -1,13 +1,16 @@
+using APIManagementTemplate.Templates;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
+using System.Net;
 using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
-using APIManagementTemplate.Templates;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace APIManagementTemplate.Models
 {
@@ -372,7 +375,7 @@ namespace APIManagementTemplate.Models
             return obj;
         }
 
-        public ResourceTemplate CreateAPISchema(JObject restObject)
+        public ResourceTemplate? CreateAPISchema(JObject? restObject)
         {
             if (restObject == null)
                 return null;
@@ -437,15 +440,18 @@ namespace APIManagementTemplate.Models
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
 
-            //Schema list
+            //Schema list to keep track of all schemas that are used in the operation, so we can add them as dependencies.
+            //This is needed to make sure they are created before the operation tries to reference them.
             var schemalist = new List<string>();
 
+            //Check for request and extract schema from there
             var request = resource["properties"].Value<JObject>("request");
             if (request != null)
             {
                 schemalist = schemalist.Union(FixRepresentations(request.Value<JArray>("representations"))).ToList();
             }
 
+            //Check for responses and extract schemas from there as well
             var responses = resource["properties"].Value<JArray>("responses");
             if (responses != null)
             {
@@ -454,7 +460,8 @@ namespace APIManagementTemplate.Models
                     schemalist = schemalist.Union(FixRepresentations(resp.Value<JArray>("representations"))).ToList();
                 }
             }
-
+            //Also check for template parameters
+            schemalist = schemalist.Union(FixRepresentations(resource["properties"].Value<JArray>("templateParameters"))).ToList();
 
             var dependsOn = new JArray();
             if (APIMInstanceAdded)
@@ -550,7 +557,7 @@ namespace APIManagementTemplate.Models
                 }
             }
         }
-        
+
         private bool IsNamedValueToken(string? value) =>
             value != null && value.StartsWith("{{") && value.EndsWith("}}");
 
@@ -933,7 +940,7 @@ namespace APIManagementTemplate.Models
 
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
-            
+
             // Check if resource already exists
             string expectedName = $"[concat(parameters('{GetServiceName(servicename)}'), '/', '{name}')]";
             if (this.resources.Any(r =>
@@ -1005,7 +1012,7 @@ namespace APIManagementTemplate.Models
         }
 
         //need to return an object with property list and so on
-        public JObject CreatePolicy(JObject restObject)
+        public JObject? CreatePolicy(JObject? restObject)
         {
             if (restObject == null)
                 return null;
@@ -1015,6 +1022,7 @@ namespace APIManagementTemplate.Models
             string servicename = "";
             string apiname = "";
             string operationname = "";
+            IReadOnlyList<string> policyFragments = Array.Empty<string>();
             bool servicePolicy = false;
 
             name = $"'{name}'";
@@ -1045,6 +1053,10 @@ namespace APIManagementTemplate.Models
                 servicename = rid.ValueAfter("service");
                 obj.name = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/', 'policy')]";
                 servicePolicy = true;
+
+                //Extract policy fragments used in the service policy
+                var raw = restObject["properties"]?["value"]?.Value<string>() ?? string.Empty;
+                policyFragments = ExtractFragmentIds(raw);
             }
 
             obj.type = type;
@@ -1055,6 +1067,17 @@ namespace APIManagementTemplate.Models
             if (APIMInstanceAdded)
             {
                 dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
+
+                //Check for dependency on a policy fragment
+                if (policyFragments.Count > 0)
+                {
+                    //Extract policy fragments used in the service policy
+                    foreach (var policyFragmentId in policyFragments)
+                    {
+                        //add dependency on policy fragment
+                        dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/policyfragments', parameters('apimServiceName'), '{policyFragmentId}')]");
+                    }
+                }
             }
 
             if (!servicePolicy)
@@ -1090,6 +1113,68 @@ namespace APIManagementTemplate.Models
             resource["properties"] = restObject["properties"];
 
             return resource;
+        }
+
+
+
+
+        // Matches generics in APIM expressions (e.g., As<string>, As<Guid>, As<System.Type>)
+        private static readonly Regex GenericAngleRx = new Regex(
+            @"(?<=\bAs)\s*<\s*([A-Za-z0-9_.]+)\s*>",
+            RegexOptions.Compiled);
+
+        /// <summary>
+        /// Extracts fragment names used in an APIM policy XML string.
+        /// Supports: <include-fragment fragment-id="..."/>, and falls back to <fragment ref="..."/> / <fragment name="..."/>.
+        /// Handles HTML-escaped XML and sanitizes generics inside expressions so XML parsing succeeds.
+        /// Returns an empty list if value is an xml-link URL.
+        /// </summary>
+        public static IReadOnlyList<string> ExtractFragmentIds(string rawValue)
+        {
+            if (string.IsNullOrWhiteSpace(rawValue))
+                return Array.Empty<string>();
+
+            var candidate = rawValue.Trim();
+
+            // Decode only if the text is HTML-escaped (starts with &lt;)
+            var xml = candidate.StartsWith("&lt;", StringComparison.OrdinalIgnoreCase)
+                       ? WebUtility.HtmlDecode(candidate)
+                       : candidate;
+
+            // Sanitize generics: As<string> -> As&lt;string&gt;, so the XML parser does not treat <string> as a tag
+            xml = GenericAngleRx.Replace(xml, m => $"&lt;{m.Groups[1].Value}&gt;");
+
+            // Parse XML with line info for better error messages
+            XDocument doc;
+            try
+            {
+                doc = XDocument.Parse(xml, LoadOptions.SetLineInfo);
+            }
+            catch (XmlException ex)
+            {
+                var msg = $"Invalid policy XML at line {ex.LineNumber}, position {ex.LinePosition}: {ex.Message}";
+                throw new InvalidOperationException(msg);
+            }
+
+            // Primary: <include-fragment fragment-id="..."/>
+            var includeFragmentIds =
+                doc.Descendants("include-fragment")
+                   .Select(e => (string?)e.Attribute("fragment-id"))
+                   .Where(s => !string.IsNullOrWhiteSpace(s))
+                   .Distinct(StringComparer.OrdinalIgnoreCase)
+                   .ToList();
+
+            // Secondary (optional): <fragment ref="..."/> or inline <fragment name="...">
+            var legacyRefs =
+                doc.Descendants("fragment")
+                   .Select(e => (string?)e.Attribute("ref") ?? (string?)e.Attribute("name"))
+                   .Where(s => !string.IsNullOrWhiteSpace(s))
+                   .Distinct(StringComparer.OrdinalIgnoreCase);
+
+            // Combine and deduplicate
+            return includeFragmentIds.Concat(legacyRefs)
+                                     .Distinct(StringComparer.OrdinalIgnoreCase)
+                                     .ToList();
         }
 
 
@@ -1269,11 +1354,20 @@ namespace APIManagementTemplate.Models
                 jObject["properties"]["oauth2"]["redirectUrl"] = $"[concat('{redirectUrl.Replace(service, "")}', {WrapParameterName(serviceName, false, false)})]";
             }
 
+            // parameterize tokenUrl if present
             var tokenUrl = jObject["properties"]?["oauth2"]?["grantTypes"]?["clientCredentials"]?.Value<string>("tokenUrl");
             if (tokenUrl != null)
             {
                 jObject["properties"]["oauth2"]["grantTypes"]["clientCredentials"]["tokenUrl"] =
                     WrapParameterName(AddParameter($"authorizationProvider_{name}_tokenUrl", "string", tokenUrl));
+            }
+
+            // parameterize resourceUri if present
+            var resourceUri = jObject["properties"]?["oauth2"]?["grantTypes"]?["clientCredentials"]?.Value<string>("resourceUri");
+            if (resourceUri != null)
+            {
+                jObject["properties"]["oauth2"]["grantTypes"]["clientCredentials"]["resourceUri"] =
+                    WrapParameterName(AddParameter($"authorizationProvider_{name}_resourceUri", "string", resourceUri));
             }
 
 
@@ -1371,6 +1465,12 @@ namespace APIManagementTemplate.Models
 
             obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'), {apiname})]");
             return JObject.FromObject(obj);
+        }
+
+        public JObject CreatePolicyfragments(JObject restObject, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/policyfragments", addResource);
+            return resource;
         }
 
         public JObject CreateDiagnostic(JObject restObject, JArray loggers, bool addResource)
@@ -1546,5 +1646,7 @@ namespace APIManagementTemplate.Models
                 }
             }
         }
+
+
     }
 }

@@ -111,6 +111,9 @@ namespace APIManagementTemplate
                 });
                 await AddServiceResource(apimTemplateResource, "/diagnostics",
                     diagnostic => template.CreateDiagnostic(diagnostic, loggers == null ? new JArray() : loggers.Value<JArray>("value"), false));
+                
+                await AddServiceResource(apimTemplateResource, "/policyfragments",
+                    policyfragments => template.CreatePolicyfragments(policyfragments, false));
 
                 if (this.exportTags)
                     await AddServiceResource(apimTemplateResource, "/tags",
