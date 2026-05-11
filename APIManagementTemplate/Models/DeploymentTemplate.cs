@@ -1071,6 +1071,27 @@ namespace APIManagementTemplate.Models
             return resource;
             //this.resources.Add(resource);
         }
+        public JObject CreatePolicyFragment(JObject restObject)
+        {
+            if (restObject == null)
+                return null;
+
+            var rid = new AzureResourceId(restObject.Value<string>("id"));
+            string servicename = rid.ValueAfter("service");
+            string type = restObject.Value<string>("type");
+            string name = restObject.Value<string>("name");
+            //name = $"'{name}'";
+
+            var obj = new ResourceTemplate();
+            obj.comments = "Generated for resource " + restObject.Value<string>("id");
+            obj.name = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/', '{name}')]";
+            obj.type = type;
+            var resource = JObject.FromObject(obj);
+            resource["properties"] = restObject["properties"];
+
+            return resource;
+        }
+
 
         public JObject AddApplicationInsightsInstance(JObject restObject)
         {
