@@ -490,6 +490,16 @@ namespace APIManagementTemplate
             foreach (string policyFragmentName in identifiedFragments)
             {
                 var policyFragment = await resourceCollector.GetResource(GetAPIMResourceIDString() + $"/policyFragments/{policyFragmentName}");
+
+                // Add the namedvalues which are used in the policy fragment
+                var policyContent = policyFragment["properties"].Value<string>("value");
+                HandleProperties("Global", "Global", policyContent);
+
+                // Policy fragments do not have the xml-link option.
+                // Create a parameter so the policy content can be overwritten by loading the contents from a file for example.
+                policyFragment["properties"]["value"] = $"[parameters('policyFragment_{policyFragmentName}_content')]";
+                template.AddParameter($"policyFragment_{policyFragmentName}_content", "string", policyContent);
+
                 var policyFragmentResource = template.CreatePolicyFragment(policyFragment);
 
                 // Add the policy fragment to the template resources
@@ -509,10 +519,6 @@ namespace APIManagementTemplate
                     // If not exporting APIM instance, add as top-level resource
                     template.resources.Add(policyFragmentResource);
                 }
-
-                // Add the namedvalues which are used in the policy fragment
-                var policyContent = policyFragment["properties"].Value<string>("value");
-                HandleProperties("Global", "Global", policyContent);
             }
 
             var properties = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/namedValues", suffix: "$top=1000");
