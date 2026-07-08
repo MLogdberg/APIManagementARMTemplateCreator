@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -497,8 +498,15 @@ namespace APIManagementTemplate
 
                 // Policy fragments do not have the xml-link option.
                 // Create a parameter so the policy content can be overwritten by loading the contents from a file for example.
-                policyFragment["properties"]["value"] = $"[parameters('policyFragment_{policyFragmentName}_content')]";
-                template.AddParameter($"policyFragment_{policyFragmentName}_content", "string", policyContent);
+                // It is base64 encoded, because it is very difficult to escape all special characters when overriding this parameter.
+                policyFragment["properties"] = new JObject
+                {
+                    ["description"] = policyFragment["properties"]?["description"]?.ToString(), // optioneel behouden
+                    ["format"] = "rawxml",
+                    ["value"] = $"[base64ToString(parameters('policyFragment_{policyFragmentName}_content'))]"
+                };
+
+                template.AddParameter($"policyFragment_{policyFragmentName}_content", "string", Convert.ToBase64String(Encoding.UTF8.GetBytes(policyContent))); 
 
                 var policyFragmentResource = template.CreatePolicyFragment(policyFragment);
 
