@@ -1,0 +1,16 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/contoso-rg/providers/Microsoft.ApiManagement/service/contosoapim/namedValues/planner_createorder_sig",
+      "type": "Microsoft.ApiManagement/service/namedValues",
+      "name": "planner_createorder_sig",
+      "properties": {
+        "displayName": "planner_createorder_sig",
+        "value": "Qm9ndXNTaWduYXR1cmVGb3JUZXN0aW5nT25seQ",
+        "tags": [],
+        "secret": true
+      }
+    }
+  ],
+  "nextLink": ""
+}

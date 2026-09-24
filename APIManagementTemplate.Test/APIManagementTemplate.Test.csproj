@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -70,6 +70,7 @@
     <Compile Include="DeploymentTemplateTests.cs" />
     <Compile Include="FunctionAppMixedWithLogicAppTests.cs" />
     <Compile Include="LogicAppAddedAsOperationTests.cs" />
+    <Compile Include="LogicAppStandardTests.cs" />
     <Compile Include="TemplateMergerTests.cs" />
     <Compile Include="TemplatesGeneratorTestsWithoutApiVersionSetId.cs" />
     <Compile Include="TemplatesGeneratorTestsWithListApiInProduct.cs" />
@@ -300,12 +301,40 @@
     <EmbeddedResource Include="Samples\LogicAppCustomTriggerName\service-ibizmalo-namedValues.json" />
     <EmbeddedResource Include="Samples\LogicAppManual\service-ibizmalo-namedValues.json" />
     <EmbeddedResource Include="Samples\LogicAppRequest\service-ibizmalo-namedValues.json" />
+    <EmbeddedResource Include="Samples\LogicAppStandard\service-contosoapim-apis.json" />
+    <EmbeddedResource Include="Samples\LogicAppStandard\service-contosoapim-apis-planner.json" />
+    <EmbeddedResource Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-policies.json" />
+    <EmbeddedResource Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-operations.json" />
+    <EmbeddedResource Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-operations-createorder.json" />
+    <EmbeddedResource Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-operations-cancelorder.json" />
+    <EmbeddedResource Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-operations-createorder-policies.json" />
+    <EmbeddedResource Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-operations-cancelorder-policies.json" />
+    <EmbeddedResource Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-diagnostics.json" />
+    <EmbeddedResource Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-schemas.json" />
+    <EmbeddedResource Include="Samples\LogicAppStandard\service-contosoapim-backends-LogicAppStandard_contosola.json" />
+    <EmbeddedResource Include="Samples\LogicAppStandard\service-contosoapim-namedValues.json" />
+    <EmbeddedResource Include="Samples\LogicAppStandard\service-contosoapim-loggers.json" />
+    <EmbeddedResource Include="Samples\LogicAppStandard\sites-contosola.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-namedValues.json" />
     <EmbeddedResource Include="Samples\UrlHandling\service-apidev-namedValues.json" />
     <EmbeddedResource Include="Samples\CustomURLBackends\service-cramoapidev-backends-CustomUrlWithoutCredentials.json" />
     <EmbeddedResource Include="Samples\CustomURLBackends\service-cramoapidev-backends-CustomUrlWithCredentials.json" />
     <EmbeddedResource Include="Samples\CustomURLBackends\service-cramoapidev-backends-CustomUrlWithCredentialsAndNamedValues.json" />
     <EmbeddedResource Include="Samples\WithoutApiVersionSetId\service-ibizmalo-policyfragments.json" />
+    <None Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-diagnostics.json" />
+    <None Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-operations-cancelorder-policies.json" />
+    <None Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-operations-cancelorder.json" />
+    <None Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-operations-createorder-policies.json" />
+    <None Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-operations-createorder.json" />
+    <None Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-operations.json" />
+    <None Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-policies.json" />
+    <None Include="Samples\LogicAppStandard\service-contosoapim-apis-planner-schemas.json" />
+    <None Include="Samples\LogicAppStandard\service-contosoapim-apis-planner.json" />
+    <None Include="Samples\LogicAppStandard\service-contosoapim-apis.json" />
+    <None Include="Samples\LogicAppStandard\service-contosoapim-backends-LogicAppStandard_contosola.json" />
+    <None Include="Samples\LogicAppStandard\service-contosoapim-loggers.json" />
+    <None Include="Samples\LogicAppStandard\service-contosoapim-namedValues.json" />
+    <None Include="Samples\LogicAppStandard\sites-contosola.json" />
     <None Include="Samples\workflows-salesinvoice-la.json" />
   </ItemGroup>
   <ItemGroup>

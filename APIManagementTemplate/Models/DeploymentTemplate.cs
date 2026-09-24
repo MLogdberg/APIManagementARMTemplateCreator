@@ -18,20 +18,9 @@ namespace APIManagementTemplate.Models
     {
 
         [JsonProperty("$schema")]
-        public string schema
-        {
-            get
-            {
-                return Constants.deploymentSchema;
-            }
-        }
-        public string contentVersion
-        {
-            get
-            {
-                return "1.0.0.0";
-            }
-        }
+        public string schema => Constants.deploymentSchema;
+
+        public string contentVersion => "1.0.0.0";
 
         public JObject parameters { get; set; }
         public JObject variables { get; set; }
@@ -68,7 +57,7 @@ namespace APIManagementTemplate.Models
             this.extractBackendCredentials = extractBackendCredentials;
         }
 
-        public static DeploymentTemplate FromString(string template)
+        public static DeploymentTemplate? FromString(string template)
         {
             return JsonConvert.DeserializeObject<DeploymentTemplate>(template);
         }
@@ -214,13 +203,13 @@ namespace APIManagementTemplate.Models
         private bool APIMInstanceAdded = false;
         private string apimservicename;
 
-        public JObject AddAPIManagementInstance(JObject restObject)
+        public JObject? AddAPIManagementInstance(JObject? restObject)
         {
             if (restObject == null)
                 return null;
 
-            string servicename = restObject.Value<string>("name").ToLowerInvariant();
-            string type = restObject.Value<string>("type");
+            string? servicename = restObject.Value<string>("name")?.ToLowerInvariant();
+            string? type = restObject.Value<string>("type");
             apimservicename = servicename;
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
@@ -288,13 +277,13 @@ namespace APIManagementTemplate.Models
             return addName ? $"service_{servicename}_name" : $"service_{servicename}";
         }
 
-        public JObject AddApi(JObject restObject)
+        public JObject? AddApi(JObject? restObject)
         {
             if (restObject == null)
                 return null;
 
-            string name = restObject.Value<string>("name");
-            string type = restObject.Value<string>("type");
+            string? name = restObject.Value<string>("name");
+            string? type = restObject.Value<string>("type");
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
 
@@ -344,13 +333,13 @@ namespace APIManagementTemplate.Models
             };
         }
 
-        public ResourceTemplate CreateAPITag(JObject restObject)
+        public ResourceTemplate? CreateAPITag(JObject? restObject)
         {
             if (restObject == null)
                 return null;
 
-            string name = restObject.Value<string>("name");
-            string type = restObject.Value<string>("type");
+            string? name = restObject.Value<string>("name");
+            string? type = restObject.Value<string>("type");
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
             string apiname = apiid.ValueAfter("apis");
@@ -418,13 +407,13 @@ namespace APIManagementTemplate.Models
             return obj;
         }
 
-        public JObject CreateOperation(JObject restObject)
+        public JObject? CreateOperation(JObject? restObject)
         {
             if (restObject == null)
                 return null;
 
-            string name = restObject.Value<string>("name");
-            string type = restObject.Value<string>("type");
+            string? name = restObject.Value<string>("name");
+            string? type = restObject.Value<string>("type");
 
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
@@ -574,14 +563,14 @@ namespace APIManagementTemplate.Models
         }
 
 
-        public Property AddBackend(JObject restObject, JObject azureResource, JObject? namedValues)
+        public Property? AddBackend(JObject? restObject, JObject azureResource, JObject? namedValues)
         {
-            Property retval = null;
+            Property? retval = null;
             if (restObject == null)
                 return retval;
 
-            string name = restObject.Value<string>("name");
-            string type = restObject.Value<string>("type");
+            string? name = restObject.Value<string>("name");
+            string? type = restObject.Value<string>("type");
 
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
@@ -657,69 +646,85 @@ namespace APIManagementTemplate.Models
                     //Determine the extrainfo based on the parameterizeBackendFunctionKey. When the backend should be parameterized use the name of the property
                     //in the x-functions-key header
                     //var extraInfo = $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key";
-                    var extraInfo = $"listKeys(resourceId(parameters('{subparamname}'),parameters('{rgparamname}'),concat('Microsoft.Web/sites/host'),parameters('{paramsitename}'),'default'),'2018-02-01').functionKeys.default";
-                    var functionAppPropertyName = sitename;
-                    var xFunctionKey = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();
-                    if (xFunctionKey != null)
+                    if (IsLogicAppStandard(azureResource))
                     {
-                        var value = xFunctionKey.Value<string>();
-
-                        if (value.StartsWith("{{") && value.EndsWith("}}"))
+                        // A Logic App Standard workflow is invoked with a shared access signature that can be resolved with listCallbackUrl.
+                        // The workflow and trigger name are only known per operation, so they are left as format placeholders.
+                        string listcallbackref = $"listCallbackUrl(resourceId(parameters('{subparamname}'),parameters('{rgparamname}'), 'Microsoft.Web/sites/hostruntime/webhooks/api/workflows/triggers', parameters('{paramsitename}'), 'runtime', 'workflow', 'management', '{{0}}', '{{1}}'), '2022-03-01')";
+                        retval = new Property()
                         {
-                            var parsed = value.Substring(2, value.Length - 4);
-                            functionAppPropertyName = parsed;
-                        }
+                            type = Property.PropertyType.LogicAppStandard,
+                            name = sitename.ToLower(),
+                            extraInfo = listcallbackref
+                        };
+                        retval.dependencies.Add(resource);
                     }
-                    if (parameterizeBackendFunctionKey)
+                    else
                     {
-                        var custom = false;
-
+                        var extraInfo = $"listKeys(resourceId(parameters('{subparamname}'),parameters('{rgparamname}'),concat('Microsoft.Web/sites/host'),parameters('{paramsitename}'),'default'),'2018-02-01').functionKeys.default";
+                        var functionAppPropertyName = sitename;
+                        var xFunctionKey = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();
                         if (xFunctionKey != null)
                         {
                             var value = xFunctionKey.Value<string>();
+
                             if (value.StartsWith("{{") && value.EndsWith("}}"))
                             {
                                 var parsed = value.Substring(2, value.Length - 4);
                                 functionAppPropertyName = parsed;
-                                extraInfo = $"parameters('{AddParameter($"{parsed}", "string", "")}')";
-                                custom = true;
                             }
                         }
-
-                        if (!custom)
+                        if (parameterizeBackendFunctionKey)
                         {
-                            functionAppPropertyName = $"{sitename}-key";
-                            extraInfo = $"parameters('{AddParameter($"{sitename}-key", "string", "")}')";
+                            var custom = false;
+
+                            if (xFunctionKey != null)
+                            {
+                                var value = xFunctionKey.Value<string>();
+                                if (value.StartsWith("{{") && value.EndsWith("}}"))
+                                {
+                                    var parsed = value.Substring(2, value.Length - 4);
+                                    functionAppPropertyName = parsed;
+                                    extraInfo = $"parameters('{AddParameter($"{parsed}", "string", "")}')";
+                                    custom = true;
+                                }
+                            }
+
+                            if (!custom)
+                            {
+                                functionAppPropertyName = $"{sitename}-key";
+                                extraInfo = $"parameters('{AddParameter($"{sitename}-key", "string", "")}')";
+                            }
                         }
-                    }
-                    else
-                    {
-                        //make sure to have dependency correct
-
-                    }
-
-                    retval = new Property()
-                    {
-                        type = Property.PropertyType.Function,
-                        name = functionAppPropertyName.ToLower(),
-
-                        extraInfo = extraInfo
-                    };
-                    retval.dependencies.Add(resource);
-                    var code = (resource["properties"]?["credentials"]?["query"]?.Value<JArray>("code") ?? new JArray()).FirstOrDefault();
-                    if (code == null)
-                    {
-                        //Fall back to the x functions key
-                        code = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault(); ;
-                    }
-
-                    if (code != null)
-                    {
-                        var value = code.Value<string>();
-                        if (value.StartsWith("{{") && value.EndsWith("}}") && parameterizeBackendFunctionKey)
+                        else
                         {
-                            var parsed = value.Substring(2, value.Length - 4);
-                            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('{GetServiceName(servicename)}'),'{parsed}')]");
+                            //make sure to have dependency correct
+
+                        }
+
+                        retval = new Property()
+                        {
+                            type = Property.PropertyType.Function,
+                            name = functionAppPropertyName.ToLower(),
+
+                            extraInfo = extraInfo
+                        };
+                        retval.dependencies.Add(resource);
+                        var code = (resource["properties"]?["credentials"]?["query"]?.Value<JArray>("code") ?? new JArray()).FirstOrDefault();
+                        if (code == null)
+                        {
+                            //Fall back to the x functions key
+                            code = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault(); ;
+                        }
+
+                        if (code != null)
+                        {
+                            var value = code.Value<string>();
+                            if (value.StartsWith("{{") && value.EndsWith("}}") && parameterizeBackendFunctionKey)
+                            {
+                                var parsed = value.Substring(2, value.Length - 4);
+                                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('{GetServiceName(servicename)}'),'{parsed}')]");
+                            }
                         }
                     }
                 }
@@ -750,10 +755,16 @@ namespace APIManagementTemplate.Models
                 resource["dependsOn"] = dependsOn;
             }
 
-            if (this.resources.Where(rr => rr.Value<string>("name") == obj.name).Count() == 0)
+            if (this.resources.Count(rr => rr.Value<string>("name") == obj.name) == 0)
                 this.resources.Add(resource);
 
             return retval;
+        }
+
+        private static bool IsLogicAppStandard(JObject azureResource)
+        {
+            var kind = azureResource?.Value<string>("kind");
+            return kind != null && kind.IndexOf("workflowapp", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private string GetPathFromUrl(string url)
@@ -764,13 +775,13 @@ namespace APIManagementTemplate.Models
             return uri.PathAndQuery.Substring(1);
         }
 
-        public ResourceTemplate AddVersionSet(JObject restObject)
+        public ResourceTemplate? AddVersionSet(JObject? restObject)
         {
             if (restObject == null)
                 return null;
 
-            string name = restObject.Value<string>("name");
-            string type = restObject.Value<string>("type");
+            string? name = restObject.Value<string>("name");
+            string? type = restObject.Value<string>("type");
 
 
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));

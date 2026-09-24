@@ -1,0 +1,13 @@
+{
+  "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/contoso-rg/providers/Microsoft.Web/sites/contosola",
+  "name": "contosola",
+  "type": "Microsoft.Web/sites",
+  "kind": "functionapp,workflowapp",
+  "location": "West Europe",
+  "properties": {
+    "state": "Running",
+    "hostNames": [
+      "contosola.azurewebsites.net"
+    ]
+  }
+}

@@ -13,84 +13,84 @@ namespace APIManagementTemplate
     [Cmdlet(VerbsCommon.Get, "APIManagementTemplate", ConfirmImpact = ConfirmImpact.None)]
     public class GeneratorCmdlet : PSCmdlet
     {
-        [Parameter(Mandatory = true,HelpMessage = "Name of the API Management instance")]
+        [Parameter(Mandatory = true, HelpMessage = "Name of the API Management instance")]
         public string APIManagement;
 
-        [Parameter(Mandatory = true,HelpMessage = "The name of the Resource Group")]
+        [Parameter(Mandatory = true, HelpMessage = "The name of the Resource Group")]
         public string ResourceGroup;
 
-        [Parameter(Mandatory = false,HelpMessage = "The Subscription id (guid)")]
+        [Parameter(Mandatory = false, HelpMessage = "The Subscription id (guid)")]
         public string SubscriptionId;
 
-        [Parameter(Mandatory = false,HelpMessage = "Name of the Tenant i.e. contoso.onmicrosoft.com")]
+        [Parameter(Mandatory = false, HelpMessage = "Name of the Tenant i.e. contoso.onmicrosoft.com")]
         public string TenantName = "";
 
         //see filter in https://learn.microsoft.com/en-us/rest/api/apimanagement/apis/list-by-service
         [Parameter(Mandatory = false, HelpMessage = "Filter for what API's to exort i.e: path eq 'api/v1/currencyconverter' or endswith(path,'currencyconverter'). In addition to this, is it also possible to filter on productname i.e.: productname eq 'product-x'")]
         public string APIFilters = null;
-        
-        [Parameter(Mandatory = false,HelpMessage = "Export AuthorizationServers")]
+
+        [Parameter(Mandatory = false, HelpMessage = "Export AuthorizationServers")]
         public bool ExportAuthorizationServers = true;
 
-        [Parameter(Mandatory = false,HelpMessage = "Export the API Management Instance")]
+        [Parameter(Mandatory = false, HelpMessage = "Export the API Management Instance")]
         public bool ExportPIManagementInstance = true;
 
-        [Parameter(Mandatory = false,HelpMessage = "Export the API Management Certificates")]
+        [Parameter(Mandatory = false, HelpMessage = "Export the API Management Certificates")]
         public bool ExportCertificates = true;
 
-        [Parameter(Mandatory = false,HelpMessage = "Export the API Management Groups, not builtin")]
+        [Parameter(Mandatory = false, HelpMessage = "Export the API Management Groups, not builtin")]
         public bool ExportGroups = true;
 
-        [Parameter(Mandatory = false,HelpMessage = "Export the API Management Products")]
+        [Parameter(Mandatory = false, HelpMessage = "Export the API Management Products")]
         public bool ExportProducts = true;
 
-        [Parameter(Mandatory = false,HelpMessage = "Export the API Management Tags and API Tags")]
+        [Parameter(Mandatory = false, HelpMessage = "Export the API Management Tags and API Tags")]
         public bool ExportTags = false;
 
-        [Parameter(Mandatory = false,HelpMessage = "Export the API operations and schemas as a swagger/Open API 2.0 definition")]
+        [Parameter(Mandatory = false, HelpMessage = "Export the API operations and schemas as a swagger/Open API 2.0 definition")]
         public bool ExportSwaggerDefinition = false;
 
-        [Parameter(Mandatory = false,HelpMessage = "Export the API properties and backend url used in the API policy.")]
+        [Parameter(Mandatory = false, HelpMessage = "Export the API properties and backend url used in the API policy.")]
         public bool ExportApiPropertiesAndBackend = true;
 
-        [Parameter(Mandatory = false,HelpMessage = "Export the API backend instances used in the API policy. Requires ExportApiPropertiesAndBackend to be true.")]
+        [Parameter(Mandatory = false, HelpMessage = "Export the API backend instances used in the API policy. Requires ExportApiPropertiesAndBackend to be true.")]
         public bool ExportBackendInstances = true;
 
-        [Parameter(Mandatory = false,HelpMessage = "Export the Authorization Providers.")]
+        [Parameter(Mandatory = false, HelpMessage = "Export the Authorization Providers.")]
         public bool ExportAuthorizationProviders = false;
 
-        [Parameter(Mandatory = false,HelpMessage = "List of named values to skip exporting. Has no effect if ExportApiPropertiesAndBackend is false")]
-        public string[] IgnoreProperties = new string[0];
-        
-        [Parameter(Mandatory = false,HelpMessage = "A Bearer token value")]
+        [Parameter(Mandatory = false, HelpMessage = "List of named values to skip exporting. Has no effect if ExportApiPropertiesAndBackend is false")]
+        public string[] IgnoreProperties = Array.Empty<string>();
+
+        [Parameter(Mandatory = false, HelpMessage = "A Bearer token value")]
         public string Token = "";
 
-        [Parameter(Mandatory = false,HelpMessage = "Set to 'true' when all environment-specific parameters are defined as properties")]
+        [Parameter(Mandatory = false, HelpMessage = "Set to 'true' when all environment-specific parameters are defined as properties")]
         public bool ParametrizePropertiesOnly = false;
 
-        [Parameter(Mandatory = false,HelpMessage = "Set to 'true' to replace the base-url of <set-backend-service> with a property")]
+        [Parameter(Mandatory = false, HelpMessage = "Set to 'true' to replace the base-url of <set-backend-service> with a property")]
         public bool ReplaceSetBackendServiceBaseUrlWithProperty = false;
 
-        [Parameter(Mandatory = false,HelpMessage = "If the parameter for the service name always should be called apimServiceName or depend on the name of the service")]
+        [Parameter(Mandatory = false, HelpMessage = "If the parameter for the service name always should be called apimServiceName or depend on the name of the service")]
         public bool FixedServiceNameParameter = false;
 
-        [Parameter(Mandatory = false,HelpMessage = "If the parameter for the keyvault name always should be called keyVaultName or depend on the name of the nameValue")]
+        [Parameter(Mandatory = false, HelpMessage = "If the parameter for the keyvault name always should be called keyVaultName or depend on the name of the nameValue")]
         public bool FixedKeyVaultNameParameter = false;
 
-        [Parameter(Mandatory = false,HelpMessage = "Set to 'true' to extract the credentials from the backend and parameterize the namedvalues used.")]
+        [Parameter(Mandatory = false, HelpMessage = "Set to 'true' to extract the credentials from the backend and parameterize the namedvalues used.")]
         public bool ExtractBackendCredentials = false;
 
-        [Parameter(Mandatory = false,HelpMessage = "If an Application Insights instance should be created. Otherwise you need to provide the instrumentation key of an existing Application Insights instance as a parameter")]
+        [Parameter(Mandatory = false, HelpMessage = "If an Application Insights instance should be created. Otherwise you need to provide the instrumentation key of an existing Application Insights instance as a parameter")]
         public bool CreateApplicationInsightsInstance = false;
 
         [Parameter(Mandatory = false, HelpMessage = "If set, result from rest interface will be saved to this folder")]
         public string DebugOutPutFolder = "";
 
-        [Parameter(Mandatory = false,HelpMessage = "Filter API version")]
+        [Parameter(Mandatory = false, HelpMessage = "Filter API version")]
         public string ApiVersion = "";
 
         [Parameter(Mandatory = false, HelpMessage = "Piped input from armclient", ValueFromPipeline = true)]
-        public string ClaimsDump;
+        public string? ClaimsDump;
 
         [Parameter(Mandatory = false, HelpMessage = "Set to 'true' if you want the backend function key to be parameterized.")]
         public bool ParameterizeBackendFunctionKey = false;
@@ -100,6 +100,9 @@ namespace APIManagementTemplate
 
         [Parameter(Mandatory = false, HelpMessage = "Set to 'true' if you get the error 'Operation on the API is in progress'. This option chains the product apis in order to reduce parallelism.")]
         public bool ChainDependencies = false;
+
+        [Parameter(Mandatory = false, HelpMessage = "Set to 'true' to replace a literal Logic App Standard signature (sig) in a rewrite-uri policy with a new named value. An existing named value is always resolved.")]
+        public bool ReplaceLogicAppStandardSignatureWithNamedValue = false;
 
         protected override void ProcessRecord()
         {
@@ -130,17 +133,17 @@ namespace APIManagementTemplate
                     createApplicationInsightsInstance: CreateApplicationInsightsInstance, apiVersion: ApiVersion, parameterizeBackendFunctionKey: ParameterizeBackendFunctionKey,
                     exportSwaggerDefinition: ExportSwaggerDefinition, exportCertificates: ExportCertificates, exportTags: ExportTags, separatePolicyOutputFolder: SeparatePolicyOutputFolder,
                     chainDependencies: ChainDependencies, exportApiPropertiesAndBackend: ExportApiPropertiesAndBackend, fixedKeyVaultNameParameter: FixedKeyVaultNameParameter, exportBackendInstances: ExportBackendInstances,
-                    ignoreProperties: IgnoreProperties, exportAuthorizationProviders:ExportAuthorizationProviders, extractBackendCredentials:ExtractBackendCredentials);
+                    ignoreProperties: IgnoreProperties, exportAuthorizationProviders: ExportAuthorizationProviders, extractBackendCredentials: ExtractBackendCredentials,
+                    replaceLogicAppStandardSignatureWithNamedValue: ReplaceLogicAppStandardSignatureWithNamedValue);
                 JObject result = generator.GenerateTemplate().Result;
                 WriteObject(result.ToString());
             }
             catch (Exception ex)
             {
-                if (ex is AggregateException)
+                if (ex is AggregateException ae)
                 {
-                    StringBuilder sb = new StringBuilder();
+                    var sb = new StringBuilder();
                     sb.AppendLine("Aggregation exception thrown, se following exceptions for more information");
-                    AggregateException ae = (AggregateException)ex;
                     foreach (var e in ae.InnerExceptions)
                     {
                         sb.AppendLine($"Exception: {e.Message}");
@@ -150,10 +153,7 @@ namespace APIManagementTemplate
                     WriteObject(sb.ToString());
                     throw new Exception($"Aggregation Exception thrown, {ae.Message}, first Exception message is: {ae.InnerExceptions.First().Message}, for more information read the output file.");
                 }
-                else
-                {
-                    throw ex;
-                }
+                throw;
             }
         }
     }

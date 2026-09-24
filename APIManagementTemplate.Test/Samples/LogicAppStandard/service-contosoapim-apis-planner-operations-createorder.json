@@ -1,0 +1,18 @@
+{
+  "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/contoso-rg/providers/Microsoft.ApiManagement/service/contosoapim/apis/planner/operations/createorder",
+  "type": "Microsoft.ApiManagement/service/apis/operations",
+  "name": "createorder",
+  "properties": {
+    "displayName": "Create Order",
+    "method": "POST",
+    "urlTemplate": "/order",
+    "templateParameters": [],
+    "description": "Starts the CreateOrder workflow.",
+    "request": {
+      "queryParameters": [],
+      "headers": [],
+      "representations": []
+    },
+    "responses": []
+  }
+}

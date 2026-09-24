@@ -1,0 +1,13 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/contoso-rg/providers/Microsoft.ApiManagement/service/contosoapim/apis/planner/operations/cancelorder/policies/policy",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "name": "policy",
+      "properties": {
+        "policyContent": "<policies>\r\n  <inbound>\r\n    <base />\r\n    <set-method id=\"apim-generated-policy\">POST</set-method>\r\n    <rewrite-uri id=\"apim-generated-policy\" template=\"/CancelOrder/triggers/When_a_HTTP_request_is_received/invoke?api-version=2022-05-01&amp;sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&amp;sv=1.0&amp;sig=Xo9KpzDqQJ1nO2Ic6rT3lVuB4aWmE5HsN7Yg0FdCbUk\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n  <on-error>\r\n    <base />\r\n  </on-error>\r\n</policies>"
+      }
+    }
+  ],
+  "nextLink": ""
+}
