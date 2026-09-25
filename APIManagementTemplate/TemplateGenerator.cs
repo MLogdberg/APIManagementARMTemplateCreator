@@ -40,6 +40,7 @@ namespace APIManagementTemplate
         private bool exportApiPropertiesAndBackend;
         private readonly string[] ignoreProperties;
         private bool exportAuthorizationProviders;
+        private readonly bool replaceLogicAppStandardSignatureWithNamedValue;
 
 
         public TemplateGenerator(string servicename, string subscriptionId, string resourceGroup, string apiFilters,
@@ -51,7 +52,8 @@ namespace APIManagementTemplate
             bool exportCertificates = true, bool exportTags = false, string separatePolicyOutputFolder = "",
             bool chainDependencies = false, bool exportApiPropertiesAndBackend = true,
             bool fixedKeyVaultNameParameter = false, bool exportBackendInstances = true,
-            string[] ignoreProperties = null, bool exportAuthorizationProviders = false, bool extractBackendCredentials = false)
+            string[] ignoreProperties = null, bool exportAuthorizationProviders = false, bool extractBackendCredentials = false,
+            bool replaceLogicAppStandardSignatureWithNamedValue = false)
         {
             this.servicename = servicename;
             this.subscriptionId = subscriptionId;
@@ -78,6 +80,7 @@ namespace APIManagementTemplate
             this.exportApiPropertiesAndBackend = exportApiPropertiesAndBackend;
             this.ignoreProperties = ignoreProperties;
             this.exportAuthorizationProviders = exportAuthorizationProviders;
+            this.replaceLogicAppStandardSignatureWithNamedValue = replaceLogicAppStandardSignatureWithNamedValue;
         }
 
         private string GetAPIMResourceIDString()
@@ -111,6 +114,9 @@ namespace APIManagementTemplate
                 });
                 await AddServiceResource(apimTemplateResource, "/diagnostics",
                     diagnostic => template.CreateDiagnostic(diagnostic, loggers == null ? new JArray() : loggers.Value<JArray>("value"), false));
+                
+                await AddServiceResource(apimTemplateResource, "/policyfragments",
+                    policyfragments => template.CreatePolicyfragments(policyfragments, false));
 
                 if (this.exportTags)
                     await AddServiceResource(apimTemplateResource, "/tags",
@@ -187,11 +193,19 @@ namespace APIManagementTemplate
                     }
 
                     var operations = await resourceCollector.GetResource(id + "/operations");
-                    string previousOperationName = null;
-                    foreach (JObject operation in (operations == null
-                        ? new JArray()
-                        : operations.Value<JArray>("value")))
+                    string? previousOperationName = null;
+
+                    // The backend can be configured on the API policy instead of on the operation policy. Resolve the id up
+                    // front so that operation policies can fall back to it, for example a Logic App Standard rewrite-uri.
+                    string? apiLevelBackendId = null;
+                    if (exportApiPropertiesAndBackend && exportBackendInstances)
                     {
+                        apiLevelBackendId = await GetApiLevelBackendId(id);
+                    }
+
+                    foreach (var jToken in operations?.Value<JArray>("value") ?? new JArray())
+                    {
+                        var operation = (JObject)jToken;
                         var opId = operation.Value<string>("id");
 
                         var operationInstance = await resourceCollector.GetResource(opId);
@@ -201,10 +215,9 @@ namespace APIManagementTemplate
                             apiTemplateResource.Value<JArray>("resources").Add(operationTemplateResource);
                         }
                         var operationPolicies = await resourceCollector.GetResource(opId + "/policies");
-                        foreach (JObject policy in (operationPolicies == null
-                            ? new JArray()
-                            : operationPolicies.Value<JArray>("value")))
+                        foreach (var jToken1 in (operationPolicies?.Value<JArray>("value") ?? new JArray()))
                         {
+                            var policy = (JObject)jToken1;
                             var pol = template.CreatePolicy(policy);
 
                             //add properties
@@ -233,33 +246,44 @@ namespace APIManagementTemplate
 
                             var backendid = TemplateHelper.GetBackendIdFromnPolicy(policyContent);
 
+                            BackendObject? bo = null;
                             if (!string.IsNullOrEmpty(backendid) && exportBackendInstances)
                             {
-                                BackendObject bo = await HandleBackend(template, operationSuffix, backendid);
-                                JObject backendInstance = bo?.backendInstance;
+                                bo = await HandleBackend(template, operationSuffix, backendid);
+                                JObject? backendInstance = bo?.backendInstance;
                                 if (backendInstance != null)
                                 {
                                     //add dependeOn
                                     apiTemplateResource.Value<JArray>("dependsOn").Add(
                                         $"[resourceId('Microsoft.ApiManagement/service/backends', parameters('{GetServiceName(servicename)}'), '{backendInstance.Value<string>("name")}')]");
                                 }
-                                if (bo?.backendProperty != null)
+                            }
+                            else if (!string.IsNullOrEmpty(apiLevelBackendId) && exportBackendInstances)
+                            {
+                                //the backend is not set on the operation policy, fall back to the backend of the API policy
+                                bo = await HandleBackend(template, operationSuffix, apiLevelBackendId);
+                            }
+
+                            if (bo?.backendProperty != null)
+                            {
+                                if (bo.backendProperty.type == Property.PropertyType.LogicApp)
                                 {
-                                    if (bo.backendProperty.type == Property.PropertyType.LogicApp)
+                                    var urltemplatestring = TemplateHelper.GetAPIMGenereatedRewritePolicyTemplate(policyContent);
+                                    var match = Regex.Match(urltemplatestring, "{{(?<name>[-_.a-zA-Z0-9]*)}}");
+                                    if (match.Success)
                                     {
-                                        var urltemplatestring = TemplateHelper.GetAPIMGenereatedRewritePolicyTemplate(policyContent);
-                                        var match = Regex.Match(urltemplatestring, "{{(?<name>[-_.a-zA-Z0-9]*)}}");
-                                        if (match.Success)
+                                        var name = match.Groups["name"].Value;
+                                        var idp = identifiedProperties.FirstOrDefault(pp => pp.name == name);
+                                        if (idp != null)
                                         {
-                                            var name = match.Groups["name"].Value;
-                                            var idp = identifiedProperties.FirstOrDefault(pp => pp.name == name);
-                                            if (idp != null)
-                                            {
-                                                idp.extraInfo = bo.backendProperty.extraInfo;
-                                                idp.type = Property.PropertyType.LogicAppRevisionGa;
-                                            }
+                                            idp.extraInfo = bo.backendProperty.extraInfo;
+                                            idp.type = Property.PropertyType.LogicAppRevisionGa;
                                         }
                                     }
+                                }
+                                else if (bo.backendProperty.type == Property.PropertyType.LogicAppStandard)
+                                {
+                                    HandleLogicAppStandardSignature(template, pol, apiTemplateResource, bo.backendProperty);
                                 }
                             }
                             if (exportCertificates) await AddCertificate(policy, template);
@@ -545,6 +569,10 @@ namespace APIManagementTemplate
                     {
                         propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo}.queries.sig]";
                     }
+                    else if (identifiedProperty.type == Property.PropertyType.LogicAppStandard)
+                    {
+                        propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo}.queries.sig]";
+                    }
                     else if (identifiedProperty.type == Property.PropertyType.Function)
                     {
                         propertyObject["properties"]["value"] = $"[{identifiedProperty.extraInfo}]";
@@ -643,15 +671,31 @@ namespace APIManagementTemplate
         }
 
 
+        /// <summary>
+        /// Returns the backend-id that is configured in the policy on API level, or null when there is none.
+        /// </summary>
+        private async Task<string> GetApiLevelBackendId(string apiId)
+        {
+            var apiPolicies = await resourceCollector.GetResource(apiId + "/policies");
+            foreach (JObject policy in (apiPolicies == null ? new JArray() : apiPolicies.Value<JArray>("value")))
+            {
+                var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
+                var backendId = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>(policyPropertyName));
+                if (!string.IsNullOrEmpty(backendId))
+                    return backendId;
+            }
+            return null;
+        }
+
         public class BackendObject
         {
             public JObject backendInstance { get; set; }
             public Property backendProperty { get; set; }
         }
-        private async Task<BackendObject> HandleBackend(DeploymentTemplate template, string startname, string backendid)
+        private async Task<BackendObject?> HandleBackend(DeploymentTemplate template, string startname, string backendid)
         {
             var backendInstance = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/backends/" + backendid);
-            JObject azureResource = null;
+            JObject? azureResource = null;
             if (backendInstance["properties"]["resourceId"] != null)
             {
                 string version = "2018-02-01";
@@ -693,6 +737,81 @@ namespace APIManagementTemplate
             }
 
             return new BackendObject() { backendInstance = backendInstance, backendProperty = property };
+        }
+
+        private static readonly Regex LogicAppStandardWorkflowRegex = new Regex(@"^/?(?<workflow>[^/?]+)/triggers/(?<trigger>[^/?]+)/invoke", RegexOptions.IgnoreCase);
+        private static readonly Regex SignatureRegex = new Regex(@"[?&]sig=(?<sig>[^&""]+)");
+        private static readonly Regex NamedValueRegex = new Regex(@"^{{(?<name>[-_.a-zA-Z0-9]*)}}$");
+
+        /// <summary>
+        /// Resolves the shared access signature (sig) of a Logic App Standard workflow in a rewrite-uri policy
+        /// into a named value that is populated with listCallbackUrl in the ARM template.
+        /// </summary>
+        private void HandleLogicAppStandardSignature(DeploymentTemplate template, JObject policy, JObject apiTemplateResource, Property backendProperty)
+        {
+            var policyPropertyName = policy["properties"].Value<string>("policyContent") == null ? "value" : "policyContent";
+            var policyContent = policy["properties"].Value<string>(policyPropertyName);
+            if (string.IsNullOrEmpty(policyContent))
+                return;
+
+            var uriTemplate = XDocument.Parse(policyContent).Descendants("rewrite-uri")
+                .LastOrDefault(d => d.Attribute("template") != null)?.Attribute("template").Value;
+            if (string.IsNullOrEmpty(uriTemplate))
+                return;
+
+            var signatureMatch = SignatureRegex.Match(uriTemplate);
+            var workflowMatch = LogicAppStandardWorkflowRegex.Match(uriTemplate);
+            if (!signatureMatch.Success || !workflowMatch.Success)
+                return;
+
+            var workflowName = workflowMatch.Groups["workflow"].Value;
+            var callbackUrl = string.Format(backendProperty.extraInfo, workflowName, workflowMatch.Groups["trigger"].Value);
+            var signature = signatureMatch.Groups["sig"].Value;
+
+            var namedValueMatch = NamedValueRegex.Match(signature);
+            if (namedValueMatch.Success)
+            {
+                var idp = identifiedProperties.FirstOrDefault(pp => pp.name == namedValueMatch.Groups["name"].Value);
+                if (idp != null)
+                {
+                    idp.extraInfo = callbackUrl;
+                    idp.type = Property.PropertyType.LogicAppStandard;
+                }
+                return;
+            }
+
+            if (!replaceLogicAppStandardSignatureWithNamedValue)
+                return;
+
+            var namedValueName = $"{workflowName}-sig";
+            var namedValue = new
+            {
+                id = $"{GetAPIMResourceIDString()}/namedValues/{namedValueName}",
+                type = "Microsoft.ApiManagement/service/namedValues",
+                name = namedValueName,
+                properties = new
+                {
+                    displayName = namedValueName,
+                    value = $"[{callbackUrl}.queries.sig]",
+                    secret = true
+                }
+            };
+            template.AddNamedValues(JObject.FromObject(namedValue));
+            policy["properties"][policyPropertyName] = policyContent.Replace(signature, $"{{{{{namedValueName}}}}}");
+
+            if (parametrizePropertiesOnly)
+                return;
+
+            var resourceId = $"[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('{GetServiceName(servicename)}'), '{namedValueName}')]";
+            if (apiTemplateResource.Value<JArray>("dependsOn").All(d => d.Value<string>() != resourceId))
+                apiTemplateResource.Value<JArray>("dependsOn").Add(resourceId);
+            foreach (var dependency in backendProperty.dependencies)
+            {
+                if (dependency["dependsOn"] == null)
+                    dependency["dependsOn"] = new JArray();
+                if (dependency.Value<JArray>("dependsOn").All(d => d.Value<string>() != resourceId))
+                    dependency.Value<JArray>("dependsOn").Add(resourceId);
+            }
         }
 
         public void PolicyHandleProperties(JObject policy, string apiname, string operationName)

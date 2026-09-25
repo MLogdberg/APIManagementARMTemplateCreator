@@ -1,13 +1,16 @@
+using APIManagementTemplate.Templates;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
+using System.Net;
 using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
-using APIManagementTemplate.Templates;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace APIManagementTemplate.Models
 {
@@ -15,20 +18,9 @@ namespace APIManagementTemplate.Models
     {
 
         [JsonProperty("$schema")]
-        public string schema
-        {
-            get
-            {
-                return Constants.deploymentSchema;
-            }
-        }
-        public string contentVersion
-        {
-            get
-            {
-                return "1.0.0.0";
-            }
-        }
+        public string schema => Constants.deploymentSchema;
+
+        public string contentVersion => "1.0.0.0";
 
         public JObject parameters { get; set; }
         public JObject variables { get; set; }
@@ -65,7 +57,7 @@ namespace APIManagementTemplate.Models
             this.extractBackendCredentials = extractBackendCredentials;
         }
 
-        public static DeploymentTemplate FromString(string template)
+        public static DeploymentTemplate? FromString(string template)
         {
             return JsonConvert.DeserializeObject<DeploymentTemplate>(template);
         }
@@ -211,13 +203,13 @@ namespace APIManagementTemplate.Models
         private bool APIMInstanceAdded = false;
         private string apimservicename;
 
-        public JObject AddAPIManagementInstance(JObject restObject)
+        public JObject? AddAPIManagementInstance(JObject? restObject)
         {
             if (restObject == null)
                 return null;
 
-            string servicename = restObject.Value<string>("name").ToLowerInvariant();
-            string type = restObject.Value<string>("type");
+            string? servicename = restObject.Value<string>("name")?.ToLowerInvariant();
+            string? type = restObject.Value<string>("type");
             apimservicename = servicename;
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
@@ -285,13 +277,13 @@ namespace APIManagementTemplate.Models
             return addName ? $"service_{servicename}_name" : $"service_{servicename}";
         }
 
-        public JObject AddApi(JObject restObject)
+        public JObject? AddApi(JObject? restObject)
         {
             if (restObject == null)
                 return null;
 
-            string name = restObject.Value<string>("name");
-            string type = restObject.Value<string>("type");
+            string? name = restObject.Value<string>("name");
+            string? type = restObject.Value<string>("type");
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
 
@@ -341,13 +333,13 @@ namespace APIManagementTemplate.Models
             };
         }
 
-        public ResourceTemplate CreateAPITag(JObject restObject)
+        public ResourceTemplate? CreateAPITag(JObject? restObject)
         {
             if (restObject == null)
                 return null;
 
-            string name = restObject.Value<string>("name");
-            string type = restObject.Value<string>("type");
+            string? name = restObject.Value<string>("name");
+            string? type = restObject.Value<string>("type");
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
             string apiname = apiid.ValueAfter("apis");
@@ -372,7 +364,7 @@ namespace APIManagementTemplate.Models
             return obj;
         }
 
-        public ResourceTemplate CreateAPISchema(JObject restObject)
+        public ResourceTemplate? CreateAPISchema(JObject? restObject)
         {
             if (restObject == null)
                 return null;
@@ -415,13 +407,13 @@ namespace APIManagementTemplate.Models
             return obj;
         }
 
-        public JObject CreateOperation(JObject restObject)
+        public JObject? CreateOperation(JObject? restObject)
         {
             if (restObject == null)
                 return null;
 
-            string name = restObject.Value<string>("name");
-            string type = restObject.Value<string>("type");
+            string? name = restObject.Value<string>("name");
+            string? type = restObject.Value<string>("type");
 
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
@@ -437,15 +429,18 @@ namespace APIManagementTemplate.Models
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
 
-            //Schema list
+            //Schema list to keep track of all schemas that are used in the operation, so we can add them as dependencies.
+            //This is needed to make sure they are created before the operation tries to reference them.
             var schemalist = new List<string>();
 
+            //Check for request and extract schema from there
             var request = resource["properties"].Value<JObject>("request");
             if (request != null)
             {
                 schemalist = schemalist.Union(FixRepresentations(request.Value<JArray>("representations"))).ToList();
             }
 
+            //Check for responses and extract schemas from there as well
             var responses = resource["properties"].Value<JArray>("responses");
             if (responses != null)
             {
@@ -454,7 +449,8 @@ namespace APIManagementTemplate.Models
                     schemalist = schemalist.Union(FixRepresentations(resp.Value<JArray>("representations"))).ToList();
                 }
             }
-
+            //Also check for template parameters
+            schemalist = schemalist.Union(FixRepresentations(resource["properties"].Value<JArray>("templateParameters"))).ToList();
 
             var dependsOn = new JArray();
             if (APIMInstanceAdded)
@@ -550,7 +546,7 @@ namespace APIManagementTemplate.Models
                 }
             }
         }
-        
+
         private bool IsNamedValueToken(string? value) =>
             value != null && value.StartsWith("{{") && value.EndsWith("}}");
 
@@ -567,14 +563,14 @@ namespace APIManagementTemplate.Models
         }
 
 
-        public Property AddBackend(JObject restObject, JObject azureResource, JObject? namedValues)
+        public Property? AddBackend(JObject? restObject, JObject azureResource, JObject? namedValues)
         {
-            Property retval = null;
+            Property? retval = null;
             if (restObject == null)
                 return retval;
 
-            string name = restObject.Value<string>("name");
-            string type = restObject.Value<string>("type");
+            string? name = restObject.Value<string>("name");
+            string? type = restObject.Value<string>("type");
 
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
@@ -650,69 +646,85 @@ namespace APIManagementTemplate.Models
                     //Determine the extrainfo based on the parameterizeBackendFunctionKey. When the backend should be parameterized use the name of the property
                     //in the x-functions-key header
                     //var extraInfo = $"listsecrets(resourceId(parameters('{rgparamname}'),'Microsoft.Web/sites/functions', parameters('{paramsitename}'), 'replacewithfunctionoperationname'),'2015-08-01').key";
-                    var extraInfo = $"listKeys(resourceId(parameters('{subparamname}'),parameters('{rgparamname}'),concat('Microsoft.Web/sites/host'),parameters('{paramsitename}'),'default'),'2018-02-01').functionKeys.default";
-                    var functionAppPropertyName = sitename;
-                    var xFunctionKey = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();
-                    if (xFunctionKey != null)
+                    if (IsLogicAppStandard(azureResource))
                     {
-                        var value = xFunctionKey.Value<string>();
-
-                        if (value.StartsWith("{{") && value.EndsWith("}}"))
+                        // A Logic App Standard workflow is invoked with a shared access signature that can be resolved with listCallbackUrl.
+                        // The workflow and trigger name are only known per operation, so they are left as format placeholders.
+                        string listcallbackref = $"listCallbackUrl(resourceId(parameters('{subparamname}'),parameters('{rgparamname}'), 'Microsoft.Web/sites/hostruntime/webhooks/api/workflows/triggers', parameters('{paramsitename}'), 'runtime', 'workflow', 'management', '{{0}}', '{{1}}'), '2022-03-01')";
+                        retval = new Property()
                         {
-                            var parsed = value.Substring(2, value.Length - 4);
-                            functionAppPropertyName = parsed;
-                        }
+                            type = Property.PropertyType.LogicAppStandard,
+                            name = sitename.ToLower(),
+                            extraInfo = listcallbackref
+                        };
+                        retval.dependencies.Add(resource);
                     }
-                    if (parameterizeBackendFunctionKey)
+                    else
                     {
-                        var custom = false;
-
+                        var extraInfo = $"listKeys(resourceId(parameters('{subparamname}'),parameters('{rgparamname}'),concat('Microsoft.Web/sites/host'),parameters('{paramsitename}'),'default'),'2018-02-01').functionKeys.default";
+                        var functionAppPropertyName = sitename;
+                        var xFunctionKey = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault();
                         if (xFunctionKey != null)
                         {
                             var value = xFunctionKey.Value<string>();
+
                             if (value.StartsWith("{{") && value.EndsWith("}}"))
                             {
                                 var parsed = value.Substring(2, value.Length - 4);
                                 functionAppPropertyName = parsed;
-                                extraInfo = $"parameters('{AddParameter($"{parsed}", "string", "")}')";
-                                custom = true;
                             }
                         }
-
-                        if (!custom)
+                        if (parameterizeBackendFunctionKey)
                         {
-                            functionAppPropertyName = $"{sitename}-key";
-                            extraInfo = $"parameters('{AddParameter($"{sitename}-key", "string", "")}')";
+                            var custom = false;
+
+                            if (xFunctionKey != null)
+                            {
+                                var value = xFunctionKey.Value<string>();
+                                if (value.StartsWith("{{") && value.EndsWith("}}"))
+                                {
+                                    var parsed = value.Substring(2, value.Length - 4);
+                                    functionAppPropertyName = parsed;
+                                    extraInfo = $"parameters('{AddParameter($"{parsed}", "string", "")}')";
+                                    custom = true;
+                                }
+                            }
+
+                            if (!custom)
+                            {
+                                functionAppPropertyName = $"{sitename}-key";
+                                extraInfo = $"parameters('{AddParameter($"{sitename}-key", "string", "")}')";
+                            }
                         }
-                    }
-                    else
-                    {
-                        //make sure to have dependency correct
-
-                    }
-
-                    retval = new Property()
-                    {
-                        type = Property.PropertyType.Function,
-                        name = functionAppPropertyName.ToLower(),
-
-                        extraInfo = extraInfo
-                    };
-                    retval.dependencies.Add(resource);
-                    var code = (resource["properties"]?["credentials"]?["query"]?.Value<JArray>("code") ?? new JArray()).FirstOrDefault();
-                    if (code == null)
-                    {
-                        //Fall back to the x functions key
-                        code = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault(); ;
-                    }
-
-                    if (code != null)
-                    {
-                        var value = code.Value<string>();
-                        if (value.StartsWith("{{") && value.EndsWith("}}") && parameterizeBackendFunctionKey)
+                        else
                         {
-                            var parsed = value.Substring(2, value.Length - 4);
-                            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('{GetServiceName(servicename)}'),'{parsed}')]");
+                            //make sure to have dependency correct
+
+                        }
+
+                        retval = new Property()
+                        {
+                            type = Property.PropertyType.Function,
+                            name = functionAppPropertyName.ToLower(),
+
+                            extraInfo = extraInfo
+                        };
+                        retval.dependencies.Add(resource);
+                        var code = (resource["properties"]?["credentials"]?["query"]?.Value<JArray>("code") ?? new JArray()).FirstOrDefault();
+                        if (code == null)
+                        {
+                            //Fall back to the x functions key
+                            code = (resource["properties"]?["credentials"]?["header"]?["x-functions-key"] ?? new JArray()).FirstOrDefault(); ;
+                        }
+
+                        if (code != null)
+                        {
+                            var value = code.Value<string>();
+                            if (value.StartsWith("{{") && value.EndsWith("}}") && parameterizeBackendFunctionKey)
+                            {
+                                var parsed = value.Substring(2, value.Length - 4);
+                                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/namedValues', parameters('{GetServiceName(servicename)}'),'{parsed}')]");
+                            }
                         }
                     }
                 }
@@ -743,10 +755,16 @@ namespace APIManagementTemplate.Models
                 resource["dependsOn"] = dependsOn;
             }
 
-            if (this.resources.Where(rr => rr.Value<string>("name") == obj.name).Count() == 0)
+            if (this.resources.Count(rr => rr.Value<string>("name") == obj.name) == 0)
                 this.resources.Add(resource);
 
             return retval;
+        }
+
+        private static bool IsLogicAppStandard(JObject azureResource)
+        {
+            var kind = azureResource?.Value<string>("kind");
+            return kind != null && kind.IndexOf("workflowapp", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private string GetPathFromUrl(string url)
@@ -757,13 +775,13 @@ namespace APIManagementTemplate.Models
             return uri.PathAndQuery.Substring(1);
         }
 
-        public ResourceTemplate AddVersionSet(JObject restObject)
+        public ResourceTemplate? AddVersionSet(JObject? restObject)
         {
             if (restObject == null)
                 return null;
 
-            string name = restObject.Value<string>("name");
-            string type = restObject.Value<string>("type");
+            string? name = restObject.Value<string>("name");
+            string? type = restObject.Value<string>("type");
 
 
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
@@ -933,7 +951,7 @@ namespace APIManagementTemplate.Models
 
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
-            
+
             // Check if resource already exists
             string expectedName = $"[concat(parameters('{GetServiceName(servicename)}'), '/', '{name}')]";
             if (this.resources.Any(r =>
@@ -1005,7 +1023,7 @@ namespace APIManagementTemplate.Models
         }
 
         //need to return an object with property list and so on
-        public JObject CreatePolicy(JObject restObject)
+        public JObject? CreatePolicy(JObject? restObject)
         {
             if (restObject == null)
                 return null;
@@ -1015,6 +1033,7 @@ namespace APIManagementTemplate.Models
             string servicename = "";
             string apiname = "";
             string operationname = "";
+            IReadOnlyList<string> policyFragments = Array.Empty<string>();
             bool servicePolicy = false;
 
             name = $"'{name}'";
@@ -1045,6 +1064,10 @@ namespace APIManagementTemplate.Models
                 servicename = rid.ValueAfter("service");
                 obj.name = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/', 'policy')]";
                 servicePolicy = true;
+
+                //Extract policy fragments used in the service policy
+                var raw = restObject["properties"]?["value"]?.Value<string>() ?? string.Empty;
+                policyFragments = ExtractFragmentIds(raw);
             }
 
             obj.type = type;
@@ -1055,6 +1078,17 @@ namespace APIManagementTemplate.Models
             if (APIMInstanceAdded)
             {
                 dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
+
+                //Check for dependency on a policy fragment
+                if (policyFragments.Count > 0)
+                {
+                    //Extract policy fragments used in the service policy
+                    foreach (var policyFragmentId in policyFragments)
+                    {
+                        //add dependency on policy fragment
+                        dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/policyfragments', parameters('apimServiceName'), '{policyFragmentId}')]");
+                    }
+                }
             }
 
             if (!servicePolicy)
@@ -1090,6 +1124,68 @@ namespace APIManagementTemplate.Models
             resource["properties"] = restObject["properties"];
 
             return resource;
+        }
+
+
+
+
+        // Matches generics in APIM expressions (e.g., As<string>, As<Guid>, As<System.Type>)
+        private static readonly Regex GenericAngleRx = new Regex(
+            @"(?<=\bAs)\s*<\s*([A-Za-z0-9_.]+)\s*>",
+            RegexOptions.Compiled);
+
+        /// <summary>
+        /// Extracts fragment names used in an APIM policy XML string.
+        /// Supports: <include-fragment fragment-id="..."/>, and falls back to <fragment ref="..."/> / <fragment name="..."/>.
+        /// Handles HTML-escaped XML and sanitizes generics inside expressions so XML parsing succeeds.
+        /// Returns an empty list if value is an xml-link URL.
+        /// </summary>
+        public static IReadOnlyList<string> ExtractFragmentIds(string rawValue)
+        {
+            if (string.IsNullOrWhiteSpace(rawValue))
+                return Array.Empty<string>();
+
+            var candidate = rawValue.Trim();
+
+            // Decode only if the text is HTML-escaped (starts with &lt;)
+            var xml = candidate.StartsWith("&lt;", StringComparison.OrdinalIgnoreCase)
+                       ? WebUtility.HtmlDecode(candidate)
+                       : candidate;
+
+            // Sanitize generics: As<string> -> As&lt;string&gt;, so the XML parser does not treat <string> as a tag
+            xml = GenericAngleRx.Replace(xml, m => $"&lt;{m.Groups[1].Value}&gt;");
+
+            // Parse XML with line info for better error messages
+            XDocument doc;
+            try
+            {
+                doc = XDocument.Parse(xml, LoadOptions.SetLineInfo);
+            }
+            catch (XmlException ex)
+            {
+                var msg = $"Invalid policy XML at line {ex.LineNumber}, position {ex.LinePosition}: {ex.Message}";
+                throw new InvalidOperationException(msg);
+            }
+
+            // Primary: <include-fragment fragment-id="..."/>
+            var includeFragmentIds =
+                doc.Descendants("include-fragment")
+                   .Select(e => (string?)e.Attribute("fragment-id"))
+                   .Where(s => !string.IsNullOrWhiteSpace(s))
+                   .Distinct(StringComparer.OrdinalIgnoreCase)
+                   .ToList();
+
+            // Secondary (optional): <fragment ref="..."/> or inline <fragment name="...">
+            var legacyRefs =
+                doc.Descendants("fragment")
+                   .Select(e => (string?)e.Attribute("ref") ?? (string?)e.Attribute("name"))
+                   .Where(s => !string.IsNullOrWhiteSpace(s))
+                   .Distinct(StringComparer.OrdinalIgnoreCase);
+
+            // Combine and deduplicate
+            return includeFragmentIds.Concat(legacyRefs)
+                                     .Distinct(StringComparer.OrdinalIgnoreCase)
+                                     .ToList();
         }
 
 
@@ -1269,11 +1365,20 @@ namespace APIManagementTemplate.Models
                 jObject["properties"]["oauth2"]["redirectUrl"] = $"[concat('{redirectUrl.Replace(service, "")}', {WrapParameterName(serviceName, false, false)})]";
             }
 
+            // parameterize tokenUrl if present
             var tokenUrl = jObject["properties"]?["oauth2"]?["grantTypes"]?["clientCredentials"]?.Value<string>("tokenUrl");
             if (tokenUrl != null)
             {
                 jObject["properties"]["oauth2"]["grantTypes"]["clientCredentials"]["tokenUrl"] =
                     WrapParameterName(AddParameter($"authorizationProvider_{name}_tokenUrl", "string", tokenUrl));
+            }
+
+            // parameterize resourceUri if present
+            var resourceUri = jObject["properties"]?["oauth2"]?["grantTypes"]?["clientCredentials"]?.Value<string>("resourceUri");
+            if (resourceUri != null)
+            {
+                jObject["properties"]["oauth2"]["grantTypes"]["clientCredentials"]["resourceUri"] =
+                    WrapParameterName(AddParameter($"authorizationProvider_{name}_resourceUri", "string", resourceUri));
             }
 
 
@@ -1371,6 +1476,12 @@ namespace APIManagementTemplate.Models
 
             obj.dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{GetServiceName(servicename)}'), {apiname})]");
             return JObject.FromObject(obj);
+        }
+
+        public JObject CreatePolicyfragments(JObject restObject, bool addResource)
+        {
+            var resource = CreateServiceResource(restObject, "Microsoft.ApiManagement/service/policyfragments", addResource);
+            return resource;
         }
 
         public JObject CreateDiagnostic(JObject restObject, JArray loggers, bool addResource)
@@ -1546,5 +1657,7 @@ namespace APIManagementTemplate.Models
                 }
             }
         }
+
+
     }
 }

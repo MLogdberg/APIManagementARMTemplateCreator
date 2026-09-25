@@ -39,12 +39,19 @@ Example when user is connected to multitenants:
 | ExportPIManagementInstance | Flag indicating if the API Management instance should be exported | false| true | 
 | ExportGroups | Flag indicating if Groups should be exported | false | true |
 | ExportProducts | Flag indicating if Products should be exported | false | true |
-| ExportTags | Flag indicating if Tags should be exported | false
+| ExportCertificates | Flag indicating if Certificates should be exported | false | true |
+| ExportTags | Flag indicating if Tags should be exported | false | false |
 | ExportSwaggerDefinition | Export the API operations and schemas as a swagger/Open API 2.0 definition. If set to false then the operations and schemas of the API will be included as arm templates  | false | false |
+| ExportApiPropertiesAndBackend | Export the named values and backend url used in the API policy | false | true |
+| ExportBackendInstances | Export the backend instances used in the API policy. Requires ExportApiPropertiesAndBackend to be true | false | true |
+| ExportAuthorizationProviders | Flag indicating if Authorization Providers should be exported | false | false |
+| IgnoreProperties | List of named values to skip exporting. Has no effect if ExportApiPropertiesAndBackend is false | false | |
 | Token | An AAD Token to access the resources - should not include `Bearer`, only the token | false  |  |
 | ParametrizePropertiesOnly | If parameters only should be created for properties such as names of apim services or logic apps and not names of groups, apis or products | false | false |
 | ReplaceSetBackendServiceBaseUrlWithProperty | If the base-url of <set-backend-service> with should be replaced with a property instead of a parameter. If this is false you will not be able to set SeparatePolicyFile=true for Write-APIManagementTemplates when you have set-backend-service with base-url-attribute in a policy | false | false |
 | FixedServiceNameParameter | True if the parameter for the name of the service should have a fixed name (apimServiceName). Otherwise the parameter name will depend on the name of the service (service_PreDemoTest_name)| false | false |
+| FixedKeyVaultNameParameter | True if the parameter for the Key Vault name should have a fixed name (keyVaultName). Otherwise the parameter name will depend on the name of the named value | false | false |
+| ExtractBackendCredentials | Set to 'true' to extract the credentials from the backend and parameterize the named values used | false | false |
 | CreateApplicationInsightsInstance | If an Application Insights instance should be created when used by a logger. Otherwise you need to provide the instrumentation key of an existing Application Insights instance as a parameter| false | false |
 | DebugOutPutFolder | If set, result from rest interface will be saved to this folder | false | |
 | ApiVersion | If set, api result will be filtered based on this value i.e: v2 | false | |
@@ -52,6 +59,7 @@ Example when user is connected to multitenants:
 | ParameterizeBackendFunctionKey | Set to 'true' if you want the backend function key to be parameterized | false | false |
 | SeparatePolicyOutputFolder | Set to an output folder if you want to save the policies in a separate file. The output folder must be relative to the directory _artifactsLocation/_artifactsBlobPrefix. Parameters _artifactsLocation, _artifactsBlobPrefix and _artifactsSASToken are added to the template automatically. This parameter is useful when the policy size exceeds the 16KB limit and you do not want separate ARM templates for all objects. | false | |
 | ChainDependencies | Set to 'true' if you get the error "Operation on the API is in progress". This option chains the product apis in order to reduce parallelism | false | false |
+| ReplaceLogicAppStandardSignatureWithNamedValue | Set to 'true' to replace a literal Logic App Standard signature (`sig`) in a `<rewrite-uri>` policy with a new named value. An existing named value is always resolved, regardless of this setting | false | false |
   
 After extraction a parameters file can be created off the ARMTemplate.
 
@@ -73,8 +81,6 @@ Use Write-APIManagementTemplates generate many small ARM templates (as suggested
 | GenerateParameterFiles | If parameter files should be generated | false | false | 
 | ReplaceListSecretsWithParameter | If the key to an Azure Function should be defined in a parameter instead of calling listsecrets | false | false |
 | AlwaysAddPropertiesAndBackend | Always add properties and backend, usefull when having logicapp backends and this service is not generated | false | false |
-
-
 | DebugTemplateFile | If set, the input ARM template is written to this file | false | |
 | ARMTemplate | The ARM template piped from Get-APIManagementTemplate - should not be manually set | false | |
 
@@ -93,3 +99,20 @@ If you have a host property in your OpenAPI/Swagger definition it will override 
 So if you want to have different serviceUrls for different environments (for example test and production environments) you need to do one of the following two options
 * Write a policy that changes the backend url
 * Modify the OpenAPI/Swagger definition file so that it contains the correct url in host, basePath and schemes before you deploy it
+
+### Logic App backends
+
+When an API calls a Logic App, the callback url contains a shared access signature (the `sig` query parameter). That signature differs per environment, so it must not be hard coded in the generated template.
+
+#### Consumption Logic Apps
+The signature is replaced with a `listCallbackUrl(...)` expression that resolves the value at deployment time. This is done automatically.
+
+#### Standard Logic Apps (workflow apps)
+A Standard Logic App is hosted on a `Microsoft.Web/sites` resource with `kind` containing `workflowapp`, so it is detected as a separate backend type. The signature in the `<rewrite-uri>` policy is handled as follows:
+
+* If the `sig` value already refers to a named value (for example `{{my-workflow-sig}}`), that named value is exported and resolved to a `listCallbackUrl(...)` expression. This always happens.
+* If the `sig` value is a literal signature, it is left untouched by default. Set `ReplaceLogicAppStandardSignatureWithNamedValue` to `$true` to have a new named value generated for it instead.
+
+The opt-in exists because creating a named value changes the policy of the source API Management instance on your next deployment, which is not always desired.
+
+`armclient token 80d4fe69-xxxx-4dd2-a938-9250f1c8ab03 | Get-APIManagementTemplate -APIManagement MyApiManagementInstance -ResourceGroup myResourceGroup -SubscriptionId 80d4fe69-xxxx-4dd2-a938-9250f1c8ab03 -ReplaceLogicAppStandardSignatureWithNamedValue $true | Write-APIManagementTemplates -OutputDirectory C:\temp\templates`

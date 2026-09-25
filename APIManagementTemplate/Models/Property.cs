@@ -22,6 +22,7 @@ namespace APIManagementTemplate.Models
             Standard,
             LogicApp,
             LogicAppRevisionGa,
+            LogicAppStandard,
             Function
         }
     }

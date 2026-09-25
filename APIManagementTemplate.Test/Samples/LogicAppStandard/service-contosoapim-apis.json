@@ -1,0 +1,23 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/c107df29-a4af-4bc9-a733-f88f0eaa4296/resourceGroups/contoso-rg/providers/Microsoft.ApiManagement/service/contosoapim/apis/planner",
+      "type": "Microsoft.ApiManagement/service/apis",
+      "name": "planner",
+      "properties": {
+        "displayName": "Planner",
+        "apiRevision": "1",
+        "description": "Logic App Standard workflows.",
+        "serviceUrl": "https://contosola.azurewebsites.net/api",
+        "path": "planner",
+        "protocols": [
+          "https"
+        ],
+        "authenticationSettings": null,
+        "subscriptionKeyParameterNames": null,
+        "isCurrent": true
+      }
+    }
+  ],
+  "nextLink": ""
+}

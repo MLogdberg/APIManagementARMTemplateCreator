@@ -820,12 +820,68 @@ namespace APIManagementTemplate
             if (t?["properties"]?["document"]?["components"]?["schemas"] is JObject schemas)
             {
                 //loop through the patterns and search for patterns starting with [
-                foreach (var pattern in schemas.SelectTokens("$..properties..pattern").Where(_ => _ is JValue))
+                foreach (var pattern in schemas.SelectTokens("$..properties..pattern").OfType<JValue>())
                 {
-                    //When pattern is found, add a additional [
-                    if (pattern is JValue child && child.Value<string>().StartsWith("["))
+                    CleanupJValue(pattern);
+                }
+
+            }
+            if (t?["properties"]?["document"]?["definitions"] is JObject definitions)
+            {
+                //loop through the patterns and search for patterns starting with [
+                foreach (var jValue in definitions.SelectTokens("$..properties..description").OfType<JValue>())
+                {
+                    CleanupJValue(jValue);
+                }
+
+            }
+            //fix ARM template problem in defaultValue in swagger-definition
+            var operations = apiObject["resources"].Where(x => x.Value<string>("type") == ApiOperationResourceType);
+            //Find the operations request object and continue when found
+            foreach (var o in operations)
+            {
+                if (o?["properties"]?["request"] is JObject request)
+                {
+                    //loop through the defaultValue and search for patterns starting with [
+                    foreach (var defaultValue in request.SelectTokens("$..queryParameters..defaultValue").OfType<JValue>())
                     {
-                        /* Only checking for a [ is not enough, to determine if a escape character has to be set we use a regex
+                        //When pattern is found, add a additional [
+                        if (defaultValue.Value<string>()?.StartsWith("[") is true)
+                        {
+                            defaultValue.Value = $"[{defaultValue.Value}";
+                        }
+                    }
+                }
+
+            }
+
+            template.parameters = GetParameters(parsedTemplate["parameters"], apiObject);
+            SetFilenameAndDirectory(apiObject, parsedTemplate, generatedTemplate, false);
+            template.resources.Add(apiStandalone ? RemoveServiceDependencies(apiObject) : apiObject);
+
+            if (apiStandalone)
+                AddProductAPI(apiObject, parsedTemplate, template.resources);
+            generatedTemplate.Content = JObject.FromObject(template);
+            return generatedTemplate;
+        }
+
+        /// <summary>
+        /// This method checks if the jValue starts with a [ and if so it checks with a regex if it is an ARM function or not.
+        /// </summary>
+        /// <param name="jValue"></param>
+        private static void CleanupJValue (JValue jValue)
+        {
+            //Get the value of the jValue
+            var value = jValue.Value<string>();
+
+            //When value is null, skip
+            if (value is null)
+                return;
+
+            //When jValue is found, add an additional [
+            if (value.StartsWith("["))
+            {
+                /* Only checking for a [ is not enough, to determine if an escape character has to be set we use a regex
                         * ARM function (so escape)
                         *    [1]
                         *    [eh]
@@ -849,45 +905,13 @@ namespace APIManagementTemplate
                         *    [sdf][df]{dsf}
                         */
 
-                        //Regex to match ARM function
-                        var regEx = new Regex(
-                            @"(^\[\w*\]$)|(^\[(\w*\(\w*\))\]$)|(^\[[\w-]*\]\{{\w*\}}$)|(^\[[\w-]*\]\{{?\w+\}}?\[\w*\](\{{\w*\}})?$)|(^\[[\w-]*\]$)", RegexOptions.Compiled);
+                //Regex to match ARM function
+                var regEx = new Regex(
+                    @"(^\[\w*\]$)|(^\[(\w*\(\w*\))\]$)|(^\[[\w-]*\]\{{\w*\}}$)|(^\[[\w-]*\]\{{?\w+\}}?\[\w*\](\{{\w*\}})?$)|(^\[[\w-]*\]$)", RegexOptions.Compiled);
 
-                        if (regEx.IsMatch(child.Value<string>()))
-                            child.Value = $"[{child.Value}";
-                    }
-                }
-
+                if (regEx.IsMatch(value))
+                    jValue.Value = $"[{value}";
             }
-
-            //fix ARM template problem in defaultValue in swagger-definition
-            var operations = apiObject["resources"].Where(x => x.Value<string>("type") == ApiOperationResourceType);
-            //Find the operations request object and continue when found
-            foreach (var o in operations)
-            {
-                if (o?["properties"]?["request"] is JObject request)
-                {
-                    //loop through the defaultValue and search for patterns starting with [
-                    foreach (var defaultValue in request.SelectTokens("$..queryParameters..defaultValue").Where(_ => _ is JValue))
-                    {
-                        //When pattern is found, add a additional [
-                        if (defaultValue is JValue child && child.Value<string>().StartsWith("["))
-                        {
-                            child.Value = $"[{child.Value}";
-                        }
-                    }
-                }
-
-            }
-
-            template.parameters = GetParameters(parsedTemplate["parameters"], apiObject);
-            SetFilenameAndDirectory(apiObject, parsedTemplate, generatedTemplate, false);
-            template.resources.Add(apiStandalone ? RemoveServiceDependencies(apiObject) : apiObject);
-
-            if (apiStandalone)
-                AddProductAPI(apiObject, parsedTemplate, template.resources);
-            generatedTemplate.Content = JObject.FromObject(template);
-            return generatedTemplate;
         }
 
         private void AddProductAPI(JToken api, JObject parsedTemplate, IList<JObject> templateResources)
