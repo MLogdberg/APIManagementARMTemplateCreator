@@ -502,18 +502,32 @@ namespace APIManagementTemplate.Models
         /// Replaces {{...}} credential tokens with namedValue references from provided namedValues JObject.
         /// Adds the namedValue resource to the ARM template using AddNamedValues.
         /// </summary>
-        private void ParameterizeCredentials(JObject credentials, JArray dependsOn, string servicename, JObject? namedValues)
+        private void ParameterizeCredentials(JObject credentials, JArray dependsOn, string servicename, JObject? namedValues, string? backendName)
         {
             foreach (var sectionName in new[] { "query", "header", "authorization" })
             {
                 if (!(credentials[sectionName] is JObject section)) continue;
 
-                foreach (var field in section.Properties())
+                foreach (var field in section.Properties().ToList())
                 {
+                    // The management API masks secret credential values (returned as null), so expose them as secure parameters.
+                    if (field.Value.Type == JTokenType.Null)
+                    {
+                        var secureValue = WrapParameterName(AddParameter($"{backendName}_{sectionName}_{field.Name}", "securestring", string.Empty));
+                        section[field.Name] = sectionName == "authorization" ? (JToken)secureValue : new JArray(secureValue);
+                        continue;
+                    }
+
                     if (field.Value is JArray valueArray)
                     {
                         for (var i = 0; i < valueArray.Count; i++)
                         {
+                            if (valueArray[i].Type == JTokenType.Null)
+                            {
+                                valueArray[i] = WrapParameterName(AddParameter($"{backendName}_{sectionName}_{field.Name}", "securestring", string.Empty));
+                                continue;
+                            }
+
                             var value = valueArray[i].ToString();
                             if (namedValues != null && IsNamedValueToken(value))
                             {
@@ -737,7 +751,7 @@ namespace APIManagementTemplate.Models
                 //Extract credentials and parameterize namedvalues used in credentials to template.
                 if (extractBackendCredentials && resource["properties"]?["credentials"] is JObject credentialsObj)
                 {
-                    ParameterizeCredentials(credentialsObj, dependsOn, servicename, namedValues);
+                    ParameterizeCredentials(credentialsObj, dependsOn, servicename, namedValues, name);
                 }
                 else
                 {
