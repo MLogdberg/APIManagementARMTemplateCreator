@@ -89,7 +89,7 @@ namespace APIManagementTemplate.Test
         {
             var template = GetMasterTemplate();
             var deployments = template.WithDirectResources(ResourceType.Deployment)
-                .Where(x => x.Value<string>("name").Contains(fileName));
+                .Where(x => x.Value<string>("name") == TemplatesGeneratorTests.ExpectedDeploymentName(fileName));
             Assert.AreEqual(1, deployments.Count());
             var deployment = deployments.First();
             var properties = deployment.Index(Arm.Properties);

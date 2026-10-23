@@ -22,6 +22,7 @@ namespace APIManagementTemplate.Test
         private const string MasterTemplateFilename = "master.template.json";
         private const string ApiEchoApiDirectory = "api-Echo-API";
         private const string DeploymentResourceType = "Microsoft.Resources/deployments";
+        private const string DeploymentResourceIdPrefix = "[resourceId('Microsoft.Resources/deployments', ";
         private TemplatesGenerator _templatesGenerator;
         private string _sourceTemplate;
         private IList<GeneratedTemplate> _generatedTemplates;
@@ -554,7 +555,7 @@ namespace APIManagementTemplate.Test
             var masterTemplate = GetMasterTemplate();
             Assert.IsNotNull(masterTemplate);
             var apis = masterTemplate.Content.SelectTokens($"$..resources[?(@.type=='{DeploymentResourceType}')]")
-                .Where(x => x.Value<string>("name").StartsWith("api-"));
+                .Where(x => x.Value<string>("name").StartsWith("[concat('api-"));
             Assert.AreEqual(0, apis.Count());
         }
 
@@ -605,12 +606,89 @@ namespace APIManagementTemplate.Test
             Assert.AreNotEqual(0, dependsOn.Count());
         }
 
-      
+        [TestMethod]
+        public void TestAllMasterTemplateDeploymentNamesContainDeploymentName()
+        {
+            var names = GetAllMasterTemplates()
+                .SelectMany(GetDeployments)
+                .Select(x => x.Value<string>("name"))
+                .ToList();
+            Assert.AreNotEqual(0, names.Count);
+            Assert.IsTrue(names.All(x => x.StartsWith("[concat(") && x.Contains("uniqueString(deployment().name, ")), string.Join(Environment.NewLine, names));
+        }
+
+        [TestMethod]
+        public void TestAllMasterTemplateDeploymentDependsOnMatchDeploymentInSameTemplate()
+        {
+            var unresolved = new List<string>();
+            foreach (var template in GetAllMasterTemplates())
+            {
+                var deployments = GetDeployments(template).ToList();
+                var names = new HashSet<string>(deployments.Select(x => x.Value<string>("name").TrimStart('[').TrimEnd(']')));
+                var targets = deployments
+                    .SelectMany(x => x.Value<JArray>("dependsOn")?.Values<string>() ?? Enumerable.Empty<string>())
+                    .Where(x => x.StartsWith(DeploymentResourceIdPrefix))
+                    .Select(x => x.Substring(DeploymentResourceIdPrefix.Length, x.Length - DeploymentResourceIdPrefix.Length - 2));
+                unresolved.AddRange(targets.Where(x => !names.Contains(x)).Select(x => $"{template.GetPath()}: {x}"));
+            }
+            Assert.AreEqual(0, unresolved.Count, string.Join(Environment.NewLine, unresolved));
+        }
+
+        [TestMethod]
+        public void TestApiMasterTemplateDependsOnMatchDeploymentInSameTemplate()
+        {
+            var apiMaster = GetAllMasterTemplates().FirstOrDefault(x => x.FileName.StartsWith("api-"));
+            Assert.IsNotNull(apiMaster);
+            Assert.AreNotEqual(0, GetDeployments(apiMaster).Count());
+        }
+
+        [TestMethod]
+        public void TestVeryLongApiNameProducesReadablePartOfMax50Characters()
+        {
+            var longName = new string('a', 80);
+            var source = JObject.Parse(_sourceTemplate);
+            var api = source.SelectTokens("$.resources[?(@.type=='Microsoft.ApiManagement/service/apis')]")
+                .First(x => x["properties"]["apiVersionSetId"] == null);
+            api["properties"]["displayName"] = longName;
+            var templates = new TemplatesGenerator().Generate(source.ToString(), false);
+
+            var names = templates.Where(x => x.FileName.EndsWith(MasterTemplateFilename))
+                .SelectMany(GetDeployments)
+                .Select(x => x.Value<string>("name"))
+                .Where(x => x.StartsWith("[concat('api-aaaa"))
+                .ToList();
+            Assert.AreNotEqual(0, names.Count);
+            Assert.IsTrue(names.All(x => x.IndexOf("-', uniqueString") - "[concat('".Length <= 50), string.Join(Environment.NewLine, names));
+        }
+
+        private IEnumerable<GeneratedTemplate> GetAllMasterTemplates()
+        {
+            return _generatedTemplates.Where(x => x.FileName.EndsWith(MasterTemplateFilename));
+        }
+
+        private static IEnumerable<JToken> GetDeployments(GeneratedTemplate template)
+        {
+            return template.Content.SelectTokens("$.resources[?(@.type=='Microsoft.Resources/deployments')]");
+        }
+
+        internal static string ExpectedDeploymentNameExpression(string shortPath)
+        {
+            var readable = shortPath.Replace(".template.json", string.Empty);
+            if (readable.Length > 50)
+                readable = readable.Substring(0, 50);
+            return $"concat('{readable}-', uniqueString(deployment().name, '{shortPath}'))";
+        }
+
+        internal static string ExpectedDeploymentName(string shortPath)
+        {
+            return $"[{ExpectedDeploymentNameExpression(shortPath)}]";
+        }
+
         private JToken AssertMasterTemplateDeployment(string path, string fileName, bool checkRepoBaseUrl = true)
         {
             var template = GetMasterTemplate();
             var deployments = template.Content.SelectTokens("$.resources[?(@.type=='Microsoft.Resources/deployments')]")
-                .Where(x => x.Value<string>("name").Contains(fileName));
+                .Where(x => x.Value<string>("name") == ExpectedDeploymentName(fileName));
             Assert.AreEqual(1, deployments.Count());
             var deployment = deployments.First();
             var properties = deployment["properties"];

@@ -332,14 +332,153 @@ namespace APIManagementTemplate.Test
         }
 
 
+        private const string BackendName = "CredentialsBackend";
+
+        private static JObject CreateCustomUrlBackend(JObject credentials) => new JObject
+        {
+            ["id"] = $"/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ApiManagement/service/apim/backends/{BackendName}",
+            ["type"] = "Microsoft.ApiManagement/service/backends",
+            ["name"] = BackendName,
+            ["properties"] = new JObject
+            {
+                ["url"] = "https://backend.example.com/api",
+                ["protocol"] = "http",
+                ["credentials"] = credentials
+            }
+        };
+
+        private static JObject CreateNamedValues(params string[] names) => new JObject
+        {
+            ["value"] = new JArray(names.Select(n => new JObject
+            {
+                ["id"] = $"/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ApiManagement/service/apim/namedValues/{n}",
+                ["type"] = "Microsoft.ApiManagement/service/namedValues",
+                ["name"] = n,
+                ["properties"] = new JObject { ["displayName"] = n, ["secret"] = true }
+            }))
+        };
+
+        private static JObject GetBackendCredentials(DeploymentTemplate template) =>
+            (JObject)template.resources.First(r => r.Value<string>("type") == "Microsoft.ApiManagement/service/backends")["properties"]["credentials"];
+
+        [TestMethod]
+        public void WhenBackendHeaderValueIsMaskedThenHeaderIsParameterizedAsSecureString()
+        {
+            var dtemplate = new DeploymentTemplate(extractBackendCredentials: true);
+            var backend = CreateCustomUrlBackend(JObject.Parse("{\"header\":{\"X-Api-Key\":null},\"query\":{}}"));
+
+            dtemplate.AddBackend(backend, null, CreateNamedValues());
+
+            Assert.AreEqual($"[parameters('{BackendName}_header_X-Api-Key')]", GetBackendCredentials(dtemplate)["header"]["X-Api-Key"][0].ToString());
+        }
+
+        [TestMethod]
+        public void WhenBackendHeaderValueIsMaskedThenSecureStringParameterIsAdded()
+        {
+            var dtemplate = new DeploymentTemplate(extractBackendCredentials: true);
+            var backend = CreateCustomUrlBackend(JObject.Parse("{\"header\":{\"X-Api-Key\":null},\"query\":{}}"));
+
+            dtemplate.AddBackend(backend, null, CreateNamedValues());
+
+            Assert.AreEqual("securestring", dtemplate.parameters[$"{BackendName}_header_X-Api-Key"]?.Value<string>("type"));
+        }
+
+        [TestMethod]
+        public void WhenBackendHeaderArrayValueIsMaskedThenArrayItemIsParameterized()
+        {
+            var dtemplate = new DeploymentTemplate(extractBackendCredentials: true);
+            var backend = CreateCustomUrlBackend(JObject.Parse("{\"header\":{\"X-Api-Key\":[null]}}"));
+
+            dtemplate.AddBackend(backend, null, CreateNamedValues());
+
+            Assert.AreEqual($"[parameters('{BackendName}_header_X-Api-Key')]", GetBackendCredentials(dtemplate)["header"]["X-Api-Key"][0].ToString());
+        }
+
+        [TestMethod]
+        public void WhenBackendAuthorizationParameterIsMaskedThenParameterIsParameterizedAsString()
+        {
+            var dtemplate = new DeploymentTemplate(extractBackendCredentials: true);
+            var backend = CreateCustomUrlBackend(JObject.Parse("{\"authorization\":{\"scheme\":\"Basic\",\"parameter\":null}}"));
+
+            dtemplate.AddBackend(backend, null, CreateNamedValues());
+
+            Assert.AreEqual($"[parameters('{BackendName}_authorization_parameter')]", GetBackendCredentials(dtemplate)["authorization"].Value<string>("parameter"));
+        }
+
+        [TestMethod]
+        public void WhenBackendAuthorizationParameterIsMaskedThenSchemeIsPreserved()
+        {
+            var dtemplate = new DeploymentTemplate(extractBackendCredentials: true);
+            var backend = CreateCustomUrlBackend(JObject.Parse("{\"authorization\":{\"scheme\":\"Basic\",\"parameter\":null}}"));
+
+            dtemplate.AddBackend(backend, null, CreateNamedValues());
+
+            Assert.AreEqual("Basic", GetBackendCredentials(dtemplate)["authorization"].Value<string>("scheme"));
+        }
+
+        [TestMethod]
+        public void WhenBackendHeaderReferencesNamedValueThenReferenceIsPreserved()
+        {
+            var dtemplate = new DeploymentTemplate(extractBackendCredentials: true);
+            var backend = CreateCustomUrlBackend(JObject.Parse("{\"header\":{\"X-Api-Key\":[\"{{apikey}}\"]}}"));
+
+            dtemplate.AddBackend(backend, null, CreateNamedValues("apikey"));
+
+            Assert.AreEqual("{{apikey}}", GetBackendCredentials(dtemplate)["header"]["X-Api-Key"][0].ToString());
+        }
+
+        [TestMethod]
+        public void WhenBackendAuthorizationReferencesNamedValueThenReferenceIsPreserved()
+        {
+            var dtemplate = new DeploymentTemplate(extractBackendCredentials: true);
+            var backend = CreateCustomUrlBackend(JObject.Parse("{\"authorization\":{\"scheme\":\"Basic\",\"parameter\":\"{{basicauth}}\"}}"));
+
+            dtemplate.AddBackend(backend, null, CreateNamedValues("basicauth"));
+
+            Assert.AreEqual("{{basicauth}}", GetBackendCredentials(dtemplate)["authorization"].Value<string>("parameter"));
+        }
+
+        [TestMethod]
+        public void WhenBackendCredentialsReferenceNamedValuesThenNamedValuesAreAdded()
+        {
+            var dtemplate = new DeploymentTemplate(extractBackendCredentials: true);
+            var backend = CreateCustomUrlBackend(JObject.Parse("{\"header\":{\"X-Api-Key\":[\"{{apikey}}\"]},\"authorization\":{\"scheme\":\"Basic\",\"parameter\":\"{{basicauth}}\"}}"));
+
+            dtemplate.AddBackend(backend, null, CreateNamedValues("apikey", "basicauth"));
+
+            Assert.AreEqual(2, dtemplate.resources.Count(r => r.Value<string>("type") == "Microsoft.ApiManagement/service/namedValues"));
+        }
+
+        [TestMethod]
+        public void WhenBackendCredentialsReferenceNamedValuesThenNoSecureParametersAreAdded()
+        {
+            var dtemplate = new DeploymentTemplate(extractBackendCredentials: true);
+            var backend = CreateCustomUrlBackend(JObject.Parse("{\"header\":{\"X-Api-Key\":[\"{{apikey}}\"]},\"authorization\":{\"scheme\":\"Basic\",\"parameter\":\"{{basicauth}}\"}}"));
+
+            dtemplate.AddBackend(backend, null, CreateNamedValues("apikey", "basicauth"));
+
+            Assert.IsFalse(dtemplate.parameters.Properties().Any(p => p.Name.StartsWith($"{BackendName}_header_") || p.Name.StartsWith($"{BackendName}_authorization_")), string.Join(",", dtemplate.parameters.Properties().Select(p => p.Name)));
+        }
+
+        [TestMethod]
+        public void WhenExtractBackendCredentialsIsDisabledThenCredentialsAreParameterizedAsSecureObject()
+        {
+            var dtemplate = new DeploymentTemplate();
+            var backend = CreateCustomUrlBackend(JObject.Parse("{\"header\":{\"X-Api-Key\":null},\"authorization\":{\"scheme\":\"Basic\",\"parameter\":null}}"));
+
+            dtemplate.AddBackend(backend, null, null);
+
+            Assert.AreEqual($"[parameters('{BackendName}_credentials')]", dtemplate.resources[0]["properties"].Value<string>("credentials"));
+        }
+
         [TestMethod]
         public async Task TryFetchDeploymentSchemas()
         {
             var deploymentSchemaResponse = await _httpClient.GetAsync(Constants.deploymentSchema);
             Assert.IsTrue(deploymentSchemaResponse.IsSuccessStatusCode);
 
-            var deploymenParameterSchemaResponse = await _httpClient.GetAsync(Constants.deploymenParameterSchema);
-            Assert.IsTrue(deploymenParameterSchemaResponse.IsSuccessStatusCode);
+            var deploymentParameterSchemaResponse = await _httpClient.GetAsync(Constants.deploymenParameterSchema);
+            Assert.IsTrue(deploymentParameterSchemaResponse.IsSuccessStatusCode);
 
             var parameterSchemaResponse = await _httpClient.GetAsync(Constants.parameterSchema);
             Assert.IsTrue(parameterSchemaResponse.IsSuccessStatusCode);

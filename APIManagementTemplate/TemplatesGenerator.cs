@@ -152,10 +152,22 @@ namespace APIManagementTemplate
             var resourceType = GetSplitPart(1, name);
             if (resourceType == string.Empty)
                 return true;
+            if (resourceType == "Microsoft.Resources/deployments")
+                return IsLocalDeploymentDependency(name, template);
             var nameParts = name.Split(',').Skip(1).Select(x => x.Trim().Replace("'))]", "')").Replace("')]", "')"));
             var localDependency = template.Content.SelectTokens($"$..resources[?(@.type=='{resourceType}')]")
                 .Any(resource => nameParts.All(namePart => NameContainsPart(resource, namePart)));
             return localDependency;
+        }
+
+        private static bool IsLocalDeploymentDependency(string name, GeneratedTemplate template)
+        {
+            const string prefix = "[resourceId('Microsoft.Resources/deployments', ";
+            if (!name.StartsWith(prefix) || !name.EndsWith(")]"))
+                return false;
+            var deploymentName = $"[{name.Substring(prefix.Length, name.Length - prefix.Length - 2)}]";
+            return template.Content.SelectTokens("$..resources[?(@.type=='Microsoft.Resources/deployments')]")
+                .Any(resource => resource.Value<string>("name") == deploymentName);
         }
 
         private static bool NameContainsPart(JToken resource, string namePart)
@@ -267,7 +279,7 @@ namespace APIManagementTemplate
             var deployment = new
             {
                 apiVersion = "2017-05-10",
-                name = template2.GetShortPath(),
+                name = $"[{GetDeploymentNameExpression(template2.GetShortPath())}]",
                 type = "Microsoft.Resources/deployments",
                 properties = new
                 {
@@ -301,7 +313,7 @@ namespace APIManagementTemplate
                 if (matches.Any())
                 {
                     var match = matches.First();
-                    dependsOn.Add($"[resourceId('Microsoft.Resources/deployments', '{match.GetShortPath()}')]");
+                    dependsOn.Add($"[resourceId('Microsoft.Resources/deployments', {GetDeploymentNameExpression(match.GetShortPath())})]");
                 }
                 else
                 {
@@ -309,8 +321,17 @@ namespace APIManagementTemplate
                 }
             }
             if (template.FileName.EndsWith(".swagger.template.json"))
-                dependsOn.Add($"[resourceId('Microsoft.Resources/deployments', '{template.FileName.Replace(".swagger.template.json", ".template.json")}')]");
+                dependsOn.Add($"[resourceId('Microsoft.Resources/deployments', {GetDeploymentNameExpression(template.FileName.Replace(".swagger.template.json", ".template.json"))})]");
             return dependsOn;
+        }
+
+        private static string GetDeploymentNameExpression(string shortPath)
+        {
+            // Max deployment name length is 64; uniqueString is 13 chars, so the readable part is limited to 50 chars.
+            var readable = shortPath.Replace(".template.json", string.Empty);
+            if (readable.Length > 50)
+                readable = readable.Substring(0, 50);
+            return $"concat('{readable}-', uniqueString(deployment().name, '{shortPath}'))";
         }
 
         private JObject GenerateDeploymentParameters(GeneratedTemplate template2)
@@ -845,8 +866,9 @@ namespace APIManagementTemplate
                     //loop through the defaultValue and search for patterns starting with [
                     foreach (var defaultValue in request.SelectTokens("$..queryParameters..defaultValue").OfType<JValue>())
                     {
-                        //When pattern is found, add a additional [
-                        if (defaultValue.Value<string>()?.StartsWith("[") is true)
+                        //When pattern is found, add [ (ARM only unescapes values that start with [ and end with ])
+                        var value = defaultValue.Value<string>();
+                        if (value != null && value.StartsWith("[") && value.EndsWith("]"))
                         {
                             defaultValue.Value = $"[{defaultValue.Value}";
                         }

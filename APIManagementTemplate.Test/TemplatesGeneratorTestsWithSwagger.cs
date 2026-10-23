@@ -125,7 +125,7 @@ namespace APIManagementTemplate.Test
         {
             var api = _generatedTemplates.With(Filename.HttpBinMaster);
             Assert.IsNotNull(api);
-            Assert.IsNull(api.WithDirectResource(Filename.HttpBinV1Swagger, Property.Name));
+            Assert.IsNull(FindDeployment(api, Filename.HttpBinV1Swagger));
         }
 
         [TestMethod]
@@ -133,12 +133,23 @@ namespace APIManagementTemplate.Test
         {
             var api = _generatedTemplates.With(Filename.MasterTemplate);
             Assert.IsNotNull(api);
-            var productStarter = api.WithDirectResource(Filename.ProductStarter, Property.Name);
+            var productStarter = FindDeployment(api, Filename.ProductStarter);
             Assert.IsNotNull(productStarter);
             var dependsOn = productStarter.Index(Arm.DependsOn);
             Assert.AreEqual(2, dependsOn.Count());
-            Assert.IsTrue(dependsOn.Any(x => x.Value<string>().Contains(Filename.Service)));
-            Assert.IsTrue(dependsOn.Any(x => x.Value<string>().Contains(Filename.Groups)));
+            Assert.IsTrue(dependsOn.Any(x => x.Value<string>() == DeploymentResourceId(Filename.Service)));
+            Assert.IsTrue(dependsOn.Any(x => x.Value<string>() == DeploymentResourceId(Filename.Groups)));
+        }
+
+        private static JToken FindDeployment(GeneratedTemplate template, Filename filename)
+        {
+            var name = TemplatesGeneratorTests.ExpectedDeploymentName(filename.ToDescription());
+            return template.WithDirectResources(ResourceType.Deployment).FirstOrDefault(x => x.Value<string>("name") == name);
+        }
+
+        private static string DeploymentResourceId(Filename filename)
+        {
+            return $"[resourceId('Microsoft.Resources/deployments', {TemplatesGeneratorTests.ExpectedDeploymentNameExpression(filename.ToDescription())})]";
         }
 
         [TestMethod]
@@ -146,12 +157,12 @@ namespace APIManagementTemplate.Test
         {
             var api = _generatedTemplates.With(Filename.HttpBinMaster);
             Assert.IsNotNull(api);
-            var swaggerTemplate = api.WithDirectResource(Filename.HttpBinV2SwaggerTemplate, Property.Name);
+            var swaggerTemplate = FindDeployment(api, Filename.HttpBinV2SwaggerTemplate);
             Assert.IsNotNull(swaggerTemplate);
             var dependsOn = (JArray) swaggerTemplate.Index(Arm.DependsOn);
-            Assert.AreEqual(2, dependsOn.Count);
+            Assert.AreEqual(2, dependsOn.Count, dependsOn.ToString());
             Assert.IsTrue(dependsOn.Any(x =>
-                x.Value<string>().Contains(Filename.HttpBinV2)));
+                x.Value<string>() == DeploymentResourceId(Filename.HttpBinV2)), dependsOn.ToString());
         }
 
         [TestMethod]
