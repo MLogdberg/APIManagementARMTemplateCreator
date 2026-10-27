@@ -452,6 +452,17 @@ namespace APIManagementTemplate.Models
             //Also check for template parameters
             schemalist = schemalist.Union(FixRepresentations(resource["properties"].Value<JArray>("templateParameters"))).ToList();
 
+            // Ugly fix to escape [ by [[ in defaultValue like is done for other fields.
+            foreach (var qp in request.Value<JArray>("queryParameters"))
+            {
+                string defaultValue = qp.Value<string>("defaultValue") ?? "";
+
+                if (defaultValue.StartsWith("["))
+                {
+                    qp["defaultValue"] = "[" + defaultValue;
+                }
+            }
+
             var dependsOn = new JArray();
             if (APIMInstanceAdded)
             {
